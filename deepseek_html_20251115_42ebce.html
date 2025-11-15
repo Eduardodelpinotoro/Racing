@@ -196,7 +196,7 @@
             async loadTrack() {
                 try {
                     // Cargar el modelo GLB de la pista
-                    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "laguna_seca.glb", "", this.scene);
+                    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "laguna_seca.usdz", "", this.scene);
                     
                     // Configurar colisiones para todos los meshes
                     result.meshes.forEach(mesh => {
