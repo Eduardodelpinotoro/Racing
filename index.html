@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Recorrido Circuito SPA - Colisiones Suaves</title>
+<style>
+  html,body{margin:0;overflow:hidden;background:#000}
+  #renderCanvas{width:100%;height:100%}
+  #joystick-container{position:absolute;bottom:30px;left:30px;width:150px;height:150px;z-index:10}
+  .button{position:absolute;bottom:30px;width:60px;height:60px;background:rgba(255,255,255,0.2);border-radius:50%;pointer-events:auto;}
+  #btnForward{right:100px} #btnBackward{right:180px}
+  #speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
+  #speedBar{height:100%;width:0%;background:#0f0;transition:width .3s}
+  #debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;}
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<div id="joystick-container"></div>
+<div id="speedBarContainer"><div id="speedBar"></div></div>
+<div id="debug">Cargando circuito SPA...</div>
+<div class="button" id="btnForward"></div>
+<div class="button" id="btnBackward"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas,true);
+const scene = new BABYLON.Scene(engine);
+scene.preventDefaultOnDoubleClick = false;
+
+// Configuración de colisiones más suave
+scene.collisionsEnabled = true;
+scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
+
+// Crear un mesh invisible para el jugador con colisiones MÁS SUAVES
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {
+  height: 1.8,
+  radius: 0.4  // Radio un poco más grande para detección temprana
+}, scene);
+playerMesh.isVisible = false;
+playerMesh.checkCollisions = true;
+
+// ELLIPSOID MÁS GRANDE para detección temprana de colisiones
+playerMesh.ellipsoid = new BABYLON.Vector3(0.6, 0.9, 0.6); // Más ancho
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0);
+
+// Cámara en primera persona unida al mesh del jugador
+const camera = new BABYLON.FreeCamera("fpCamera", new BABYLON.Vector3(0, 0, 0), scene);
+camera.parent = playerMesh;
+camera.rotation = new BABYLON.Vector3(0, 0, 0);
+camera.position = new BABYLON.Vector3(0, 0.9, 0);
+camera.attachControl(canvas, true);
+camera.inputs.attached.mousewheel?.detachControl(canvas);
+camera.checkCollisions = false;
+camera.applyGravity = false;
+camera.speed = 0;
+camera.angularSensibility = 2000;
+camera.minZ = 0.1;
+
+// Luz ambiental
+const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+light.intensity = 0.8;
+
+// Variables de movimiento
+let moveForward = false;
+let moveBackward = false;
+let currentSpeed = 0;
+const maxSpeed = 0.3; // Velocidad reducida para más control
+const acceleration = 0.015;
+const friction = 0.025;
+
+const speedBar = document.getElementById("speedBar");
+const debug = document.getElementById("debug");
+
+function updateSpeedBar(){
+  const porcentaje = Math.min((Math.abs(currentSpeed) / maxSpeed) * 100, 100);
+  speedBar.style.width = porcentaje + "%";
+  
+  if (currentSpeed > 0) {
+    speedBar.style.background = "#0f0";
+  } else if (currentSpeed < 0) {
+    speedBar.style.background = "#f00";
+  } else {
+    speedBar.style.background = "#888";
+  }
+}
+
+// Controles de joystick
+let joyX=0, joyY=0;
+const joystick = nipplejs.create({
+  zone: document.getElementById("joystick-container"),
+  mode: "static", position:{left:"75px",bottom:"75px"},
+  size:120, color:"white"
+});
+joystick.on("move", (_,d)=>{ 
+  joyX = d.vector.x; 
+  joyY = d.vector.y;
+});
+joystick.on("end", ()=>{ 
+  joyX = 0; 
+  joyY = 0;
+});
+
+// Cargar el circuito SPA
+BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
+  console.log("Circuito SPA cargado, meshes:", scene.meshes.length);
+  
+  // Configurar colisiones SUAVES para todos los meshes
+  scene.meshes.forEach(mesh => {
+    if (mesh !== playerMesh) {
+      mesh.checkCollisions = true;
+      
+      // Configurar impostor de física con parámetros más suaves
+      if (!mesh.physicsImpostor) {
+        mesh.physicsImpostor = new BABYLON.PhysicsImpostor(
+          mesh, 
+          BABYLON.PhysicsImpostor.MeshImpostor, 
+          { 
+            mass: 0, 
+            restitution: 0.01,  // RESTITUCIÓN MUY BAJA para menos rebote
+            friction: 0.8       // Más fricción para movimiento más suave
+          }, 
+          scene
+        );
+      }
+    }
+  });
+  
+  // Posición por defecto en línea de meta
+  playerMesh.position.x = -3780;
+  playerMesh.position.z = -3980;
+  playerMesh.position.y = 330;
+  
+  console.log("Jugador posicionado en línea de meta");
+  
+  // Physics impostor para el jugador con parámetros SUAVES
+  playerMesh.physicsImpostor = new BABYLON.PhysicsImpostor(
+    playerMesh,
+    BABYLON.PhysicsImpostor.CapsuleImpostor,
+    { 
+      mass: 1, 
+      friction: 0.9,      // Más fricción
+      restitution: 0.01   // Muy poca restitución para menos rebote
+    },
+    scene
+  );
+  
+  debug.textContent = "Circuito cargado - Colisiones SUAVES activadas";
+  
+}, null, (scene, message) => {
+  console.error("Error cargando spa.glb:", message);
+  debug.textContent = "Error cargando spa.glb: " + message;
+});
+
+// Controles de movimiento
+document.getElementById("btnForward").onclick = function() {
+  moveForward = true;
+};
+document.getElementById("btnForward").addEventListener("touchstart", function() {
+  moveForward = true;
+});
+document.getElementById("btnForward").addEventListener("touchend", function() {
+  moveForward = false;
+});
+
+document.getElementById("btnBackward").onclick = function() {
+  moveBackward = true;
+};
+document.getElementById("btnBackward").addEventListener("touchstart", function() {
+  moveBackward = true;
+});
+document.getElementById("btnBackward").addEventListener("touchend", function() {
+  moveBackward = false;
+});
+
+// Teclado para debugging
+window.addEventListener("keydown", (e) => {
+  if (e.key === 'w' || e.key === 'ArrowUp') moveForward = true;
+  if (e.key === 's' || e.key === 'ArrowDown') moveBackward = true;
+});
+
+window.addEventListener("keyup", (e) => {
+  if (e.key === 'w' || e.key === 'ArrowUp') moveForward = false;
+  if (e.key === 's' || e.key === 'ArrowDown') moveBackward = false;
+});
+
+// Variables para movimiento suave
+let lastPosition = new BABYLON.Vector3(0, 0, 0);
+let smoothMovement = true;
+
+// Bucle principal del juego
+engine.runRenderLoop(()=>{
+  // Control de velocidad
+  if (moveForward) {
+    currentSpeed = Math.min(currentSpeed + acceleration, maxSpeed);
+  } else if (moveBackward) {
+    currentSpeed = Math.max(currentSpeed - acceleration, -maxSpeed * 0.7);
+  } else {
+    // Fricción más suave
+    if (currentSpeed > 0) {
+      currentSpeed = Math.max(currentSpeed - friction, 0);
+    } else if (currentSpeed < 0) {
+      currentSpeed = Math.min(currentSpeed + friction, 0);
+    }
+  }
+  
+  // MOVIMIENTO CON DETECCIÓN ANTICIPADA DE COLISIONES
+  if (Math.abs(currentSpeed) > 0.01) {
+    const direction = new BABYLON.Vector3(
+      Math.sin(camera.rotation.y),
+      0,
+      Math.cos(camera.rotation.y)
+    );
+    
+    // Verificar colisión ANTES de mover
+    const predictedPosition = playerMesh.position.add(direction.scale(currentSpeed));
+    if (!checkCollisionAtPosition(predictedPosition)) {
+      // Si no hay colisión, mover suavemente
+      playerMesh.moveWithCollisions(direction.scale(currentSpeed));
+    } else {
+      // Si hay colisión, reducir velocidad bruscamente
+      currentSpeed *= 0.3;
+    }
+  }
+  
+  // Movimiento con joystick con detección anticipada
+  if (Math.abs(joyX) > 0.1 || Math.abs(joyY) > 0.1) {
+    // Rotación suave de la cámara
+    camera.rotation.y -= joyX * 0.025;
+    
+    // Movimiento con joystick vertical
+    const moveSpeed = joyY * 0.12;
+    if (Math.abs(moveSpeed) > 0.01) {
+      const direction = new BABYLON.Vector3(
+        Math.sin(camera.rotation.y),
+        0,
+        Math.cos(camera.rotation.y)
+      );
+      
+      // Verificar colisión ANTES de mover
+      const predictedPosition = playerMesh.position.add(direction.scale(moveSpeed));
+      if (!checkCollisionAtPosition(predictedPosition)) {
+        playerMesh.moveWithCollisions(direction.scale(moveSpeed));
+      }
+    }
+  }
+  
+  // Sistema de suavizado de posición
+  smoothPlayerPosition();
+  
+  // Actualizar UI
+  updateSpeedBar();
+  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(0)}, ${playerMesh.position.y.toFixed(0)}, ${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed * 100).toFixed(0)}`;
+  
+  scene.render();
+});
+
+// FUNCIÓN MEJORADA: Detección anticipada de colisiones
+function checkCollisionAtPosition(position) {
+  // Crear un rayo desde la posición actual hacia la posición predicha
+  const direction = position.subtract(playerMesh.position);
+  const distance = direction.length();
+  
+  if (distance < 0.1) return false;
+  
+  direction.normalize();
+  
+  const ray = new BABYLON.Ray(
+    playerMesh.position,
+    direction,
+    distance + 0.8  // Distancia del rayo más larga para detección temprana
+  );
+  
+  const hit = scene.pickWithRay(ray, (mesh) => mesh !== playerMesh && mesh.checkCollisions);
+  
+  return hit && hit.hit && hit.distance < distance + 0.5;
+}
+
+// FUNCIÓN NUEVA: Suavizado de posición para eliminar saltos
+function smoothPlayerPosition() {
+  const currentPos = playerMesh.position;
+  
+  // Calcular diferencia con la última posición
+  const delta = BABYLON.Vector3.Distance(currentPos, lastPosition);
+  
+  // Si el movimiento es muy brusco (posible salto), suavizar
+  if (delta > 0.5) {
+    // Interpolar suavemente hacia la nueva posición
+    const smoothFactor = 0.3;
+    playerMesh.position.x = lastPosition.x + (currentPos.x - lastPosition.x) * smoothFactor;
+    playerMesh.position.z = lastPosition.z + (currentPos.z - lastPosition.z) * smoothFactor;
+  }
+  
+  // Mantener altura constante sobre el suelo
+  const groundHeight = getGroundHeight();
+  if (groundHeight !== null) {
+    const targetHeight = groundHeight + 1.8;
+    // Suavizar transición de altura
+    const heightDiff = targetHeight - playerMesh.position.y;
+    if (Math.abs(heightDiff) > 0.1) {
+      playerMesh.position.y += heightDiff * 0.2; // Suavizado de altura
+    }
+  }
+  
+  // Actualizar última posición
+  lastPosition.copyFrom(playerMesh.position);
+}
+
+// FUNCIÓN MEJORADA: Obtener altura del suelo con múltiples rayos
+function getGroundHeight() {
+  const rayOrigins = [
+    new BABYLON.Vector3(0, 2, 0),
+    new BABYLON.Vector3(0.6, 2, 0),
+    new BABYLON.Vector3(-0.6, 2, 0),
+    new BABYLON.Vector3(0, 2, 0.6),
+    new BABYLON.Vector3(0, 2, -0.6)
+  ];
+  
+  let groundHeight = null;
+  let hitCount = 0;
+  
+  rayOrigins.forEach(offset => {
+    const rayOrigin = playerMesh.position.add(offset);
+    const ray = new BABYLON.Ray(rayOrigin, new BABYLON.Vector3(0, -1, 0), 5);
+    const hit = scene.pickWithRay(ray, (mesh) => mesh !== playerMesh);
+    
+    if (hit && hit.hit) {
+      hitCount++;
+      if (groundHeight === null || hit.pickedPoint.y > groundHeight) {
+        groundHeight = hit.pickedPoint.y;
+      }
+    }
+  });
+  
+  return hitCount >= 2 ? groundHeight : null; // Solo retornar si hay suficientes hits
+}
+
+window.addEventListener("resize",()=>engine.resize());
+</script>
+</body>
+</html>
