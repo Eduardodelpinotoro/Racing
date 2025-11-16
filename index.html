@@ -148,7 +148,6 @@
 <script>
 // SOLO MÓVIL
 if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    // No forzar alert para pruebas en escritorio, pero puedes descomentar la línea siguiente
     // alert("Esta aplicación está pensada para móvil.");
 }
 
@@ -167,16 +166,14 @@ const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radi
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.5,3,0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0); // MODIFICADO: de 0.9 a 2
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0);
 
 // CÁMARA - CON ALTURA MODIFICADA
-const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene); // MODIFICADO: altura 335
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
 camera.parent = playerMesh;
 camera.checkCollisions = false;
 camera.applyGravity = false;
-// NO limpiar inputs para permitir touch look
-camera.attachControl(canvas, true); // habilita rotación con touch
-// Desactivar zoom por rueda si alguna vez se usa
+camera.attachControl(canvas, true);
 if (camera.inputs && camera.inputs.attached && camera.inputs.attached.mousewheel) {
   camera.inputs.attached.mousewheel.detachControl(canvas);
 }
@@ -191,11 +188,11 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=350;      // ajustar según quieras (m/s)
+const maxSpeed=350;
 const maxReverseSpeed=50;
-const accel=50;         // m/s^2
+const accel=50;
 const airFriction=8;
-const brakeFriction=150;  // AUMENTADO: Frenado más fuerte
+const brakeFriction=150;
 
 const btnF=document.getElementById("btnForward");
 const btnB=document.getElementById("btnBackward");
@@ -211,30 +208,22 @@ const joystickHandle = document.getElementById("joystickHandle");
 
 let isJoystickActive = false;
 let joystickRotation = 0; // -1 a 1 (izquierda a derecha)
-const rotationSpeed = 0.5; // REDUCIDO: Velocidad de rotación (radianes/segundo)
-const minSpeedForSteering = 5; // Velocidad mínima para poder girar (m/s)
+const rotationSpeed = 0.5; // rad/s
+const minSpeedForSteering = 5;
 
-// Configurar eventos del joystick
 joystickContainer.addEventListener('touchstart', handleJoystickStart);
 joystickContainer.addEventListener('touchmove', handleJoystickMove);
 joystickContainer.addEventListener('touchend', handleJoystickEnd);
 
 function handleJoystickStart(e) {
-  // Solo activar si estamos en movimiento
   if (Math.abs(currentSpeed) < minSpeedForSteering) return;
-  
   e.preventDefault();
   isJoystickActive = true;
   updateJoystickPosition(e.touches[0]);
 }
 
 function handleJoystickMove(e) {
-  // Solo activar si estamos en movimiento
-  if (Math.abs(currentSpeed) < minSpeedForSteering) {
-    resetJoystick();
-    return;
-  }
-  
+  if (Math.abs(currentSpeed) < minSpeedForSteering) { resetJoystick(); return; }
   if (!isJoystickActive) return;
   e.preventDefault();
   updateJoystickPosition(e.touches[0]);
@@ -250,38 +239,19 @@ function updateJoystickPosition(touch) {
   const rect = joystickBase.getBoundingClientRect();
   const baseCenterX = rect.left + rect.width / 2;
   const baseCenterY = rect.top + rect.height / 2;
-  
   const touchX = touch.clientX;
   const touchY = touch.clientY;
-  
-  // Calcular distancia desde el centro
   const deltaX = touchX - baseCenterX;
   const deltaY = touchY - baseCenterY;
-  
-  // Limitar el movimiento del joystick al área del base
   const maxDistance = rect.width / 2 - joystickHandle.offsetWidth / 2;
   const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxDistance);
-  
-  // Calcular ángulo para determinar dirección
   const angle = Math.atan2(deltaY, deltaX);
-  
-  // Actualizar posición del handle
   const handleX = Math.cos(angle) * distance;
   joystickHandle.style.transform = `translate(calc(-50% + ${handleX}px), -50%)`;
-  
-  // Calcular rotación (-1 a 1) con curva de sensibilidad
   let rawRotation = handleX / maxDistance;
-  
-  // Aplicar curva de sensibilidad (menos sensible al inicio)
-  if (Math.abs(rawRotation) < 0.3) {
-    joystickRotation = rawRotation * 0.3; // Muy suave al inicio
-  } else if (Math.abs(rawRotation) < 0.7) {
-    joystickRotation = rawRotation * 0.6; // Sensibilidad media
-  } else {
-    joystickRotation = rawRotation; // Sensibilidad completa al final
-  }
-  
-  // Limitar valores extremos
+  if (Math.abs(rawRotation) < 0.3) joystickRotation = rawRotation * 0.3;
+  else if (Math.abs(rawRotation) < 0.7) joystickRotation = rawRotation * 0.6;
+  else joystickRotation = rawRotation;
   joystickRotation = Math.max(-1, Math.min(1, joystickRotation));
 }
 
@@ -291,7 +261,6 @@ function resetJoystick() {
 }
 
 function updateJoystickState() {
-  // Activar/desactivar joystick según la velocidad
   if (Math.abs(currentSpeed) >= minSpeedForSteering) {
     joystickContainer.classList.remove('joystick-disabled');
   } else {
@@ -317,15 +286,16 @@ let bestLapTime = 0;
 let lapCount = 0;
 let isRacing = false;
 let hasCrossedFinishLine = false;
-let finishLineCrossDirection = 0; // 0 = no cruzado, 1 = dirección positiva, -1 = dirección negativa
+let prevPosZ = 0;
 
-// LÍNEA DE META CORREGIDA - Coordenadas ajustadas según la posición inicial
+// LÍNEA DE META CORREGIDA
 const finishLine = {
-  minX: -3700,  // Ajustado para estar cerca de la posición inicial
-  maxX: -3800,  // Ajustado para estar cerca de la posición inicial  
-  z: -4025,     // Misma Z que la posición inicial
-  width: 100,    // Margen de detección aumentado
-  direction: 1  // Dirección positiva para detectar cruce
+  minX: -3820,      // rango X (asegúrate de que cubra la pista)
+  maxX: -3740,
+  z: -3980,         // misma Z que la posición inicial del jugador / marcador
+  width: 30,        // margen de detección (en Z)
+  resetDistance: 100, // distancia en Z para permitir reset del cruce
+  centerX: -3780    // centro visual para el marcador
 };
 
 function formatTime(milliseconds) {
@@ -342,8 +312,6 @@ function updateTimerDisplay() {
   } else {
     currentTimer.textContent = "00:00.000";
   }
-  
-  // Actualizar mejor vuelta
   if (bestLapTime > 0) {
     bestLapDisplay.textContent = `MEJOR VUELTA: ${formatTime(bestLapTime)}`;
   } else {
@@ -351,85 +319,75 @@ function updateTimerDisplay() {
   }
 }
 
+function registerCross(pos) {
+  // Si no hay carrera, empezamos
+  if (!isRacing) {
+    isRacing = true;
+    raceStartTime = Date.now();
+    currentLapStartTime = raceStartTime;
+    lapCount = 1;
+    timerStatus.textContent = "VUELTA 1";
+    timerStatus.style.color = "#0f0";
+    console.log("¡CARRERA INICIADA! Pos:", pos.x.toFixed(1), pos.z.toFixed(1));
+    return;
+  }
+  // Si ya estamos en carrera, registrar vuelta
+  const lapTime = Date.now() - currentLapStartTime;
+  lastLapTime = lapTime;
+  if (bestLapTime === 0 || lapTime < bestLapTime) bestLapTime = lapTime;
+  const lapElement = document.createElement("div");
+  lapElement.className = "lap-time";
+  if (lapTime === bestLapTime) lapElement.classList.add("best-lap");
+  lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}` + (lapTime === bestLapTime ? " ★" : "");
+  lapTimes.insertBefore(lapElement, lapTimes.firstChild);
+  lapCount++;
+  currentLapStartTime = Date.now();
+  timerStatus.textContent = `VUELTA ${lapCount}`;
+  console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)} en posición:`, pos.x.toFixed(1), pos.z.toFixed(1));
+}
+
 function checkFinishLine() {
   const pos = playerMesh.position;
-  
-  // Verificar si estamos cerca de la línea de meta en Z
-  if (Math.abs(pos.z - finishLine.z) < finishLine.width) {
-    // Verificar si estamos en el rango correcto de X
-    if (pos.x >= finishLine.minX && pos.x <= finishLine.maxX) {
-      
-      // Determinar dirección de cruce basada en el vector de velocidad
-      const yaw = camera.rotation.y;
-      const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-      const dotProduct = BABYLON.Vector3.Dot(forward, new BABYLON.Vector3(0, 0, finishLine.direction));
-      
-      // Solo registrar cruce si vamos en la dirección correcta
-      if (dotProduct > 0.5) { // Umbral para evitar detecciones falsas
-        if (!hasCrossedFinishLine) {
-          hasCrossedFinishLine = true;
-          
-          if (!isRacing) {
-            // Comenzar carrera
-            isRacing = true;
-            raceStartTime = Date.now();
-            currentLapStartTime = raceStartTime;
-            lapCount = 1;
-            timerStatus.textContent = "VUELTA 1";
-            timerStatus.style.color = "#0f0";
-            console.log("¡CARRERA INICIADA! Posición:", pos.x.toFixed(1), pos.z.toFixed(1));
-          } else {
-            // Finalizar vuelta
-            const lapTime = Date.now() - currentLapStartTime;
-            lastLapTime = lapTime;
-            
-            // Actualizar mejor tiempo
-            if (bestLapTime === 0 || lapTime < bestLapTime) {
-              bestLapTime = lapTime;
-            }
-            
-            // Agregar vuelta a la lista
-            const lapElement = document.createElement("div");
-            lapElement.className = "lap-time";
-            if (lapTime === bestLapTime) {
-              lapElement.classList.add("best-lap");
-            }
-            lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
-            if (lapTime === bestLapTime) {
-              lapElement.textContent += " ★";
-            }
-            
-            lapTimes.insertBefore(lapElement, lapTimes.firstChild);
-            
-            // Actualizar contadores
-            lapCount++;
-            currentLapStartTime = Date.now();
-            timerStatus.textContent = `VUELTA ${lapCount}`;
-            console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)} en posición:`, pos.x.toFixed(1), pos.z.toFixed(1));
-          }
-        }
-      }
+  // Chequear X dentro del rango
+  const insideX = (pos.x >= finishLine.minX && pos.x <= finishLine.maxX);
+  // Si está dentro del rango X, comprobar cruce por Z usando prevPosZ
+  if (insideX) {
+    // Cruce en dirección positiva (subimos Z)
+    if (!hasCrossedFinishLine && prevPosZ < finishLine.z && pos.z >= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) {
+      hasCrossedFinishLine = true;
+      registerCross(pos);
     }
-  } else {
-    // Ya no estamos cerca de la línea de meta
+    // Cruce en dirección negativa (bajamos Z)
+    else if (!hasCrossedFinishLine && prevPosZ > finishLine.z && pos.z <= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) {
+      hasCrossedFinishLine = true;
+      registerCross(pos);
+    }
+  }
+  // Si nos alejamos suficientemente de la línea (en Z), permitir que se detecte un nuevo cruce
+  if (Math.abs(pos.z - finishLine.z) > finishLine.resetDistance) {
     hasCrossedFinishLine = false;
   }
+  prevPosZ = pos.z;
 }
 
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    // Posición inicial del jugador (con coordenadas en 'grandes' como en tu escena)
     playerMesh.position.set(-3780,330,-3980);
+    prevPosZ = playerMesh.position.z; // inicializar prevZ
+    
     debug.textContent = "Circuito cargado - Línea de meta activa cerca de la posición inicial";
     
-    // DEBUG: Crear marcador visual de la línea de meta CORREGIDA
-    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 40, height: 10, depth: 2}, scene);
-    finishLineMarker.position.set(-3800, 340, -3980); // Posición CORREGIDA de la línea de meta
+    // MARCADOR visual de la línea de meta
+    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: (finishLine.maxX - finishLine.minX), height: 10, depth: 2}, scene);
+    finishLineMarker.position.set(finishLine.centerX, playerMesh.position.y + 10, finishLine.z);
     finishLineMarker.isVisible = true;
+    finishLineMarker.rotation.y = 0;
     
     const finishMaterial = new BABYLON.StandardMaterial("finishMat", scene);
-    finishMaterial.emissiveColor = new BABYLON.Color3(0, 1, 0); // Verde brillante para mejor visibilidad
-    finishMaterial.alpha = 0.7; // Menos transparente
+    finishMaterial.emissiveColor = new BABYLON.Color3(0, 1, 0);
+    finishMaterial.alpha = 0.6;
     finishLineMarker.material = finishMaterial;
     
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
@@ -438,42 +396,32 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
 function keepGround(){
   const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0), 50);
   const hit=scene.pickWithRay(ray, m=>m!==playerMesh);
-  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; // Ajustado a la nueva altura
+  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2;
 }
 
-// LOOP principal (usamos solo yaw de la cámara - rotación y)
+// LOOP principal
 engine.runRenderLoop(()=>{
   const dt = engine.getDeltaTime()/1000;
 
-  // ACELERACIÓN / FRENO MEJORADO
   if(moveForward && !moveBackward) {
     currentSpeed = Math.min(currentSpeed + accel*dt, maxSpeed);
   } else if(moveBackward && !moveForward) {
-    // FRENO MÁS FUERTE: Aplicar fricción de freno en lugar de aceleración negativa
-    if (currentSpeed > 0) {
-      currentSpeed = Math.max(currentSpeed - brakeFriction*dt, 0);
-    } else {
-      currentSpeed = Math.max(currentSpeed - accel*dt, -maxReverseSpeed);
-    }
+    if (currentSpeed > 0) currentSpeed = Math.max(currentSpeed - brakeFriction*dt, 0);
+    else currentSpeed = Math.max(currentSpeed - accel*dt, -maxReverseSpeed);
   } else {
-    // Fricción normal cuando no se presiona ningún botón
     if(currentSpeed > 0) currentSpeed = Math.max(currentSpeed - airFriction*dt, 0);
     else if(currentSpeed < 0) currentSpeed = Math.min(currentSpeed + airFriction*dt, 0);
   }
 
-  // Actualizar estado del joystick (activar/desactivar según velocidad)
   updateJoystickState();
 
-  // ROTACIÓN con joystick (solo si estamos en movimiento)
   if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
     camera.rotation.y += joystickRotation * rotationSpeed * dt;
   }
 
-  // Actualizar barra
   speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
   speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
 
-  // Desplazamiento: usar SOLO yaw (rotación Y) de la cámara; ignorar pitch
   if(Math.abs(currentSpeed) > 0.001){
     const yaw = camera.rotation.y;
     const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
@@ -487,11 +435,8 @@ engine.runRenderLoop(()=>{
   // Mantener en suelo y render
   keepGround();
   
-  // Información de debug MEJORADA
   const joystickStatus = Math.abs(currentSpeed) >= minSpeedForSteering ? "ACTIVO" : "INACTIVO";
   const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO EN META";
-  const nearFinish = Math.abs(playerMesh.position.z - finishLine.z) < 50 ? "CERCA META" : "";
-  
   debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${(currentSpeed * 3.6).toFixed(0)} km/h | Meta: X[${finishLine.minX},${finishLine.maxX}] Z${finishLine.z}`;
   
   scene.render();
@@ -500,4 +445,5 @@ engine.runRenderLoop(()=>{
 window.addEventListener('resize', ()=>engine.resize());
 </script>
 </body>
-</html>
+  </html>
+    
