@@ -50,7 +50,7 @@ playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0);
 const camera = new BABYLON.FreeCamera("fpCamera", new BABYLON.Vector3(0, 0, 0), scene);
 camera.parent = playerMesh;
 camera.rotation = new BABYLON.Vector3(0, 0, 0);
-camera.position = new BABYLON.Vector3(0, 0.9, 0); // A la altura de los ojos
+camera.position = new BABYLON.Vector3(0, 1.5, 0); // A la altura de los ojos
 
 // Configurar controles de la cámara
 camera.attachControl(canvas, true);
@@ -73,9 +73,9 @@ dirLight.intensity = 0.5;
 let moveForward = false;
 let moveBackward = false;
 let currentSpeed = 0;
-const maxSpeed = 1.5;
-const acceleration = 0.06;
-const friction = 0.3;
+const maxSpeed = 2;
+const acceleration = 2;
+const friction = 0;
 
 const speedBar = document.getElementById("speedBar");
 const debug = document.getElementById("debug");
