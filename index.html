@@ -62,6 +62,14 @@ const engine=new BABYLON.Engine(canvas,true);
 const scene=new BABYLON.Scene(engine);
 scene.collisionsEnabled=true;
 
+// --- CIELO DE NUBES ---
+const sky = new BABYLON.Layer(
+    "sky", 
+    "https://assets.babylonjs.com/environments/clouds/clouds.jpg", // imagen de nubes
+    scene
+);
+  
+
 // PLAYER
 const playerMesh=BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
