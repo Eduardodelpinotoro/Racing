@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Solo Horizontal</title>
+<title>SPA - Control por Vista (Touch Look) - Con Joystick Horizontal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -13,6 +13,48 @@
   #speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
   #speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
   #debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+  
+  /* Estilos para el joystick */
+  #joystickContainer {
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+    width: 120px;
+    height: 120px;
+    pointer-events: auto;
+    z-index: 10;
+  }
+  
+  #joystickBase {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  #joystickHandle {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.05s;
+  }
+  
+  #joystickAxis {
+    position: absolute;
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.2);
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+  }
 </style>
 </head>
 <body>
@@ -21,6 +63,14 @@
 <div id="debug">Cargando circuito...</div>
 <div class="button" id="btnForward" title="Acelerar"></div>
 <div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
+
+<!-- Joystick para rotación horizontal -->
+<div id="joystickContainer">
+  <div id="joystickBase">
+    <div id="joystickAxis"></div>
+    <div id="joystickHandle"></div>
+  </div>
+</div>
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
@@ -83,6 +133,70 @@ btnF.addEventListener("touchend",(e)=>{ e.preventDefault(); moveForward=false; }
 btnB.addEventListener("touchstart",(e)=>{ e.preventDefault(); moveBackward=true; });
 btnB.addEventListener("touchend",(e)=>{ e.preventDefault(); moveBackward=false; });
 
+// JOYSTICK para rotación horizontal
+const joystickContainer = document.getElementById("joystickContainer");
+const joystickBase = document.getElementById("joystickBase");
+const joystickHandle = document.getElementById("joystickHandle");
+
+let isJoystickActive = false;
+let joystickRotation = 0; // -1 a 1 (izquierda a derecha)
+const rotationSpeed = 1.5; // Velocidad de rotación (radianes/segundo)
+
+// Configurar eventos del joystick
+joystickContainer.addEventListener('touchstart', handleJoystickStart);
+joystickContainer.addEventListener('touchmove', handleJoystickMove);
+joystickContainer.addEventListener('touchend', handleJoystickEnd);
+
+function handleJoystickStart(e) {
+  e.preventDefault();
+  isJoystickActive = true;
+  updateJoystickPosition(e.touches[0]);
+}
+
+function handleJoystickMove(e) {
+  if (!isJoystickActive) return;
+  e.preventDefault();
+  updateJoystickPosition(e.touches[0]);
+}
+
+function handleJoystickEnd(e) {
+  e.preventDefault();
+  isJoystickActive = false;
+  resetJoystick();
+}
+
+function updateJoystickPosition(touch) {
+  const rect = joystickBase.getBoundingClientRect();
+  const baseCenterX = rect.left + rect.width / 2;
+  const baseCenterY = rect.top + rect.height / 2;
+  
+  const touchX = touch.clientX;
+  const touchY = touch.clientY;
+  
+  // Calcular distancia desde el centro
+  const deltaX = touchX - baseCenterX;
+  const deltaY = touchY - baseCenterY;
+  
+  // Limitar el movimiento del joystick al área del base
+  const maxDistance = rect.width / 2 - joystickHandle.offsetWidth / 2;
+  const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxDistance);
+  
+  // Calcular ángulo para determinar dirección
+  const angle = Math.atan2(deltaY, deltaX);
+  
+  // Actualizar posición del handle
+  const handleX = Math.cos(angle) * distance;
+  joystickHandle.style.transform = `translate(calc(-50% + ${handleX}px), -50%)`;
+  
+  // Calcular rotación (-1 a 1)
+  joystickRotation = Math.max(-1, Math.min(1, handleX / maxDistance));
+}
+
+function resetJoystick() {
+  joystickHandle.style.transform = 'translate(-50%, -50%)';
+  joystickRotation = 0;
+}
+
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
@@ -109,6 +223,11 @@ engine.runRenderLoop(()=>{
     else if(currentSpeed < 0) currentSpeed = Math.min(currentSpeed + airFriction*dt, 0);
   }
 
+  // ROTACIÓN con joystick
+  if (isJoystickActive && Math.abs(joystickRotation) > 0.1) {
+    camera.rotation.y += joystickRotation * rotationSpeed * dt;
+  }
+
   // Actualizar barra
   speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
   speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
@@ -122,7 +241,7 @@ engine.runRenderLoop(()=>{
 
   // Mantener en suelo y render
   keepGround();
-  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | Yaw: ${(camera.rotation.y*180/Math.PI).toFixed(1)}° | Vel: ${currentSpeed.toFixed(2)} m/s`;
+  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | Yaw: ${(camera.rotation.y*180/Math.PI).toFixed(1)}° | Vel: ${currentSpeed.toFixed(2)} m/s | Joystick: ${joystickRotation.toFixed(2)}`;
   scene.render();
 });
 
