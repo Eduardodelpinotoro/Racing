@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Cronómetro Corregido</title>
+<title>SPA - Control por Vista (Touch Look) - Cronómetro y Dirección Corregidos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -131,7 +131,7 @@
 <div id="timerPanel">
   <div id="currentTimer">00:00.000</div>
   <div id="lapTimes"></div>
-  <div id="timerStatus">ESPERANDO</div>
+  <div id="timerStatus">ESPERANDO EN META</div>
 </div>
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -159,15 +159,19 @@ const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radi
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.5,0.9,0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0); // MODIFICADO: de 0.9 a 2
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0);
 
-// CÁMARA - CON ALTURA MODIFICADA
-const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene); // MODIFICADO: altura 335
+// CÁMARA - CON ALTURA MODIFICADA Y DIRECCIÓN INICIAL CORREGIDA
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
 camera.parent = playerMesh;
 camera.checkCollisions = false;
 camera.applyGravity = false;
+
+// CORREGIR DIRECCIÓN INICIAL - Rotar 180 grados para mirar hacia adelante
+camera.rotation.y = Math.PI; // 180 grados en radianes
+
 // NO limpiar inputs para permitir touch look
-camera.attachControl(canvas, true); // habilita rotación con touch
+camera.attachControl(canvas, true);
 // Desactivar zoom por rueda si alguna vez se usa
 if (camera.inputs && camera.inputs.attached && camera.inputs.attached.mousewheel) {
   camera.inputs.attached.mousewheel.detachControl(canvas);
@@ -183,9 +187,9 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=200;      // ajustar según quieras (m/s)
+const maxSpeed=200;
 const maxReverseSpeed=120;
-const accel=50;         // m/s^2
+const accel=50;
 const airFriction=8;
 
 const btnF=document.getElementById("btnForward");
@@ -201,9 +205,9 @@ const joystickBase = document.getElementById("joystickBase");
 const joystickHandle = document.getElementById("joystickHandle");
 
 let isJoystickActive = false;
-let joystickRotation = 0; // -1 a 1 (izquierda a derecha)
-const rotationSpeed = 0.5; // REDUCIDO: Velocidad de rotación (radianes/segundo)
-const minSpeedForSteering = 5; // Velocidad mínima para poder girar (m/s)
+let joystickRotation = 0;
+const rotationSpeed = 0.5;
+const minSpeedForSteering = 5;
 
 // Configurar eventos del joystick
 joystickContainer.addEventListener('touchstart', handleJoystickStart);
@@ -211,21 +215,17 @@ joystickContainer.addEventListener('touchmove', handleJoystickMove);
 joystickContainer.addEventListener('touchend', handleJoystickEnd);
 
 function handleJoystickStart(e) {
-  // Solo activar si estamos en movimiento
   if (Math.abs(currentSpeed) < minSpeedForSteering) return;
-  
   e.preventDefault();
   isJoystickActive = true;
   updateJoystickPosition(e.touches[0]);
 }
 
 function handleJoystickMove(e) {
-  // Solo activar si estamos en movimiento
   if (Math.abs(currentSpeed) < minSpeedForSteering) {
     resetJoystick();
     return;
   }
-  
   if (!isJoystickActive) return;
   e.preventDefault();
   updateJoystickPosition(e.touches[0]);
@@ -245,34 +245,24 @@ function updateJoystickPosition(touch) {
   const touchX = touch.clientX;
   const touchY = touch.clientY;
   
-  // Calcular distancia desde el centro
   const deltaX = touchX - baseCenterX;
   const deltaY = touchY - baseCenterY;
   
-  // Limitar el movimiento del joystick al área del base
   const maxDistance = rect.width / 2 - joystickHandle.offsetWidth / 2;
   const distance = Math.min(Math.sqrt(deltaX * deltaX + deltaY * deltaY), maxDistance);
   
-  // Calcular ángulo para determinar dirección
   const angle = Math.atan2(deltaY, deltaX);
-  
-  // Actualizar posición del handle
   const handleX = Math.cos(angle) * distance;
   joystickHandle.style.transform = `translate(calc(-50% + ${handleX}px), -50%)`;
   
-  // Calcular rotación (-1 a 1) con curva de sensibilidad
   let rawRotation = handleX / maxDistance;
-  
-  // Aplicar curva de sensibilidad (menos sensible al inicio)
   if (Math.abs(rawRotation) < 0.3) {
-    joystickRotation = rawRotation * 0.3; // Muy suave al inicio
+    joystickRotation = rawRotation * 0.3;
   } else if (Math.abs(rawRotation) < 0.7) {
-    joystickRotation = rawRotation * 0.6; // Sensibilidad media
+    joystickRotation = rawRotation * 0.6;
   } else {
-    joystickRotation = rawRotation; // Sensibilidad completa al final
+    joystickRotation = rawRotation;
   }
-  
-  // Limitar valores extremos
   joystickRotation = Math.max(-1, Math.min(1, joystickRotation));
 }
 
@@ -282,7 +272,6 @@ function resetJoystick() {
 }
 
 function updateJoystickState() {
-  // Activar/desactivar joystick según la velocidad
   if (Math.abs(currentSpeed) >= minSpeedForSteering) {
     joystickContainer.classList.remove('joystick-disabled');
   } else {
@@ -294,7 +283,7 @@ function updateJoystickState() {
   }
 }
 
-// SISTEMA DE CRONÓMETRO MEJORADO
+// SISTEMA DE CRONÓMETRO COMPLETAMENTE REVISADO
 const timerPanel = document.getElementById("timerPanel");
 const currentTimer = document.getElementById("currentTimer");
 const lapTimes = document.getElementById("lapTimes");
@@ -308,13 +297,10 @@ let lapCount = 0;
 let isRacing = false;
 let hasCrossedFinishLine = false;
 
-// Línea de meta CORREGIDA - usando las coordenadas originales del circuito
-// Las coordenadas del circuito no cambian aunque modifiquemos la altura del jugador
+// LÍNEA DE META SIMPLIFICADA - Solo verificar coordenada Z
 const finishLine = {
-  minX: 3750,
-  maxX: 3800,
-  z: 4025,
-  width: 10 // Aumentamos el margen de detección
+  z: -3980,     // Misma Z que la posición inicial
+  width: 20     // Margen de detección aumentado
 };
 
 function formatTime(milliseconds) {
@@ -336,57 +322,64 @@ function updateTimerDisplay() {
 function checkFinishLine() {
   const pos = playerMesh.position;
   
-  // DEBUG: Mostrar información de posición cerca de la línea de meta
-  const nearFinishLine = Math.abs(pos.z - finishLine.z) < 50;
-  if (nearFinishLine) {
-    console.log(`Cerca de meta: X=${pos.x.toFixed(1)}, Z=${pos.z.toFixed(1)}`);
-  }
+  // DEBUG: Mostrar información de posición
+  console.log(`Posición: X=${pos.x.toFixed(1)}, Z=${pos.z.toFixed(1)}`);
   
-  // Verificar si estamos cerca de la línea de meta en Z
-  if (Math.abs(pos.z - finishLine.z) < finishLine.width) {
-    // Verificar si estamos en el rango correcto de X
-    if (pos.x >= finishLine.minX && pos.x <= finishLine.maxX) {
-      if (!hasCrossedFinishLine) {
-        hasCrossedFinishLine = true;
+  // VERIFICACIÓN SIMPLIFICADA - Solo coordenada Z
+  const distanceToFinish = Math.abs(pos.z - finishLine.z);
+  
+  if (distanceToFinish < finishLine.width) {
+    if (!hasCrossedFinishLine) {
+      hasCrossedFinishLine = true;
+      
+      if (!isRacing) {
+        // Comenzar carrera
+        isRacing = true;
+        raceStartTime = Date.now();
+        currentLapStartTime = raceStartTime;
+        lapCount = 1;
+        timerStatus.textContent = "VUELTA 1";
+        timerStatus.style.color = "#0f0";
+        console.log("¡CARRERA INICIADA! Posición:", pos.x.toFixed(1), pos.z.toFixed(1));
         
-        if (!isRacing) {
-          // Comenzar carrera
-          isRacing = true;
-          raceStartTime = Date.now();
-          currentLapStartTime = raceStartTime;
-          lapCount = 1;
-          timerStatus.textContent = "VUELTA 1";
-          timerStatus.style.color = "#0f0";
-          console.log("¡CARRERA INICIADA!");
-        } else {
-          // Finalizar vuelta
-          const lapTime = Date.now() - currentLapStartTime;
-          lastLapTime = lapTime;
-          
-          // Actualizar mejor tiempo
-          if (bestLapTime === 0 || lapTime < bestLapTime) {
-            bestLapTime = lapTime;
-          }
-          
-          // Agregar vuelta a la lista
-          const lapElement = document.createElement("div");
-          lapElement.className = "lap-time";
-          if (lapTime === bestLapTime) {
-            lapElement.classList.add("best-lap");
-          }
-          lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
-          if (lapTime === bestLapTime) {
-            lapElement.textContent += " ★";
-          }
-          
-          lapTimes.insertBefore(lapElement, lapTimes.firstChild);
-          
-          // Actualizar contadores
-          lapCount++;
-          currentLapStartTime = Date.now();
-          timerStatus.textContent = `VUELTA ${lapCount}`;
-          console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
+        // Agregar primera vuelta a la lista
+        const lapElement = document.createElement("div");
+        lapElement.className = "lap-time";
+        lapElement.textContent = `Vuelta ${lapCount}: En curso...`;
+        lapTimes.insertBefore(lapElement, lapTimes.firstChild);
+      } else {
+        // Finalizar vuelta
+        const lapTime = Date.now() - currentLapStartTime;
+        lastLapTime = lapTime;
+        
+        // Actualizar mejor tiempo
+        if (bestLapTime === 0 || lapTime < bestLapTime) {
+          bestLapTime = lapTime;
         }
+        
+        // Actualizar el elemento de vuelta existente
+        const lapElements = lapTimes.getElementsByClassName('lap-time');
+        if (lapElements.length > 0) {
+          const currentLapElement = lapElements[0];
+          currentLapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
+          if (lapTime === bestLapTime) {
+            currentLapElement.classList.add('best-lap');
+            currentLapElement.textContent += " ★";
+          }
+        }
+        
+        // Actualizar contadores y agregar nueva vuelta
+        lapCount++;
+        currentLapStartTime = Date.now();
+        timerStatus.textContent = `VUELTA ${lapCount}`;
+        
+        // Crear nuevo elemento para la siguiente vuelta
+        const newLapElement = document.createElement("div");
+        newLapElement.className = "lap-time";
+        newLapElement.textContent = `Vuelta ${lapCount}: En curso...`;
+        lapTimes.insertBefore(newLapElement, lapTimes.firstChild);
+        
+        console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
       }
     }
   } else {
@@ -399,16 +392,16 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
     playerMesh.position.set(-3780,330,-3980);
-    debug.textContent = "Circuito cargado - Busca la línea de meta en X:3750-3800, Z:4025";
+    debug.textContent = "Circuito cargado - Línea de meta activa en Z: -3980";
     
     // DEBUG: Crear marcador visual de la línea de meta
-    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 50, height: 10, depth: 2}, scene);
-    finishLineMarker.position.set(3775, 340, 4025); // Posición de la línea de meta
+    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 100, height: 10, depth: 5}, scene);
+    finishLineMarker.position.set(-3780, 340, -3980);
     finishLineMarker.isVisible = true;
     
     const finishMaterial = new BABYLON.StandardMaterial("finishMat", scene);
-    finishMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0); // Rojo brillante
-    finishMaterial.alpha = 0.5; // Semi-transparente
+    finishMaterial.emissiveColor = new BABYLON.Color3(0, 1, 0);
+    finishMaterial.alpha = 0.7;
     finishLineMarker.material = finishMaterial;
     
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
@@ -417,10 +410,10 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
 function keepGround(){
   const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0), 50);
   const hit=scene.pickWithRay(ray, m=>m!==playerMesh);
-  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; // Ajustado a la nueva altura
+  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2;
 }
 
-// LOOP principal (usamos solo yaw de la cámara - rotación y)
+// LOOP principal
 engine.runRenderLoop(()=>{
   const dt = engine.getDeltaTime()/1000;
 
@@ -432,10 +425,10 @@ engine.runRenderLoop(()=>{
     else if(currentSpeed < 0) currentSpeed = Math.min(currentSpeed + airFriction*dt, 0);
   }
 
-  // Actualizar estado del joystick (activar/desactivar según velocidad)
+  // Actualizar estado del joystick
   updateJoystickState();
 
-  // ROTACIÓN con joystick (solo si estamos en movimiento)
+  // ROTACIÓN con joystick
   if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
     camera.rotation.y += joystickRotation * rotationSpeed * dt;
   }
@@ -444,7 +437,7 @@ engine.runRenderLoop(()=>{
   speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
   speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
 
-  // Desplazamiento: usar SOLO yaw (rotación Y) de la cámara; ignorar pitch
+  // Desplazamiento
   if(Math.abs(currentSpeed) > 0.001){
     const yaw = camera.rotation.y;
     const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
@@ -458,12 +451,11 @@ engine.runRenderLoop(()=>{
   // Mantener en suelo y render
   keepGround();
   
-  // Información de debug MEJORADA
-  const joystickStatus = Math.abs(currentSpeed) >= minSpeedForSteering ? "ACTIVO" : "INACTIVO";
+  // Información de debug
   const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO EN META";
   const nearFinish = Math.abs(playerMesh.position.z - finishLine.z) < 50 ? "CERCA META" : "";
   
-  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(0)} km/h ${nearFinish}`;
+  debug.textContent = `Pos: X${pos.x.toFixed(0)} Z${pos.z.toFixed(0)} | ${raceStatus} | Vel: ${(currentSpeed * 3.6).toFixed(0)} km/h ${nearFinish}`;
   
   scene.render();
 });
@@ -471,4 +463,4 @@ engine.runRenderLoop(()=>{
 window.addEventListener('resize', ()=>engine.resize());
 </script>
 </body>
-</html>
+  </html> 
