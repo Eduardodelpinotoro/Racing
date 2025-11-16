@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Joystick Horizontal</title>
+<title>SPA - Control por Vista (Touch Look) - Con Joystick Mejorado</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -55,6 +55,12 @@
     left: 0;
     transform: translateY(-50%);
   }
+  
+  /* Indicador de joystick desactivado */
+  .joystick-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
 </style>
 </head>
 <body>
@@ -65,7 +71,7 @@
 <div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
 
 <!-- Joystick para rotación horizontal -->
-<div id="joystickContainer">
+<div id="joystickContainer" class="joystick-disabled">
   <div id="joystickBase">
     <div id="joystickAxis"></div>
     <div id="joystickHandle"></div>
@@ -140,7 +146,8 @@ const joystickHandle = document.getElementById("joystickHandle");
 
 let isJoystickActive = false;
 let joystickRotation = 0; // -1 a 1 (izquierda a derecha)
-const rotationSpeed = 1.5; // Velocidad de rotación (radianes/segundo)
+const rotationSpeed = 0.8; // REDUCIDO: Velocidad de rotación (radianes/segundo)
+const minSpeedForSteering = 5; // Velocidad mínima para poder girar (m/s)
 
 // Configurar eventos del joystick
 joystickContainer.addEventListener('touchstart', handleJoystickStart);
@@ -148,12 +155,21 @@ joystickContainer.addEventListener('touchmove', handleJoystickMove);
 joystickContainer.addEventListener('touchend', handleJoystickEnd);
 
 function handleJoystickStart(e) {
+  // Solo activar si estamos en movimiento
+  if (Math.abs(currentSpeed) < minSpeedForSteering) return;
+  
   e.preventDefault();
   isJoystickActive = true;
   updateJoystickPosition(e.touches[0]);
 }
 
 function handleJoystickMove(e) {
+  // Solo activar si estamos en movimiento
+  if (Math.abs(currentSpeed) < minSpeedForSteering) {
+    resetJoystick();
+    return;
+  }
+  
   if (!isJoystickActive) return;
   e.preventDefault();
   updateJoystickPosition(e.touches[0]);
@@ -188,13 +204,38 @@ function updateJoystickPosition(touch) {
   const handleX = Math.cos(angle) * distance;
   joystickHandle.style.transform = `translate(calc(-50% + ${handleX}px), -50%)`;
   
-  // Calcular rotación (-1 a 1)
-  joystickRotation = Math.max(-1, Math.min(1, handleX / maxDistance));
+  // Calcular rotación (-1 a 1) con curva de sensibilidad
+  let rawRotation = handleX / maxDistance;
+  
+  // Aplicar curva de sensibilidad (menos sensible al inicio)
+  if (Math.abs(rawRotation) < 0.3) {
+    joystickRotation = rawRotation * 0.3; // Muy suave al inicio
+  } else if (Math.abs(rawRotation) < 0.7) {
+    joystickRotation = rawRotation * 0.6; // Sensibilidad media
+  } else {
+    joystickRotation = rawRotation; // Sensibilidad completa al final
+  }
+  
+  // Limitar valores extremos
+  joystickRotation = Math.max(-1, Math.min(1, joystickRotation));
 }
 
 function resetJoystick() {
   joystickHandle.style.transform = 'translate(-50%, -50%)';
   joystickRotation = 0;
+}
+
+function updateJoystickState() {
+  // Activar/desactivar joystick según la velocidad
+  if (Math.abs(currentSpeed) >= minSpeedForSteering) {
+    joystickContainer.classList.remove('joystick-disabled');
+  } else {
+    joystickContainer.classList.add('joystick-disabled');
+    if (isJoystickActive) {
+      resetJoystick();
+      isJoystickActive = false;
+    }
+  }
 }
 
 // Cargar circuito
@@ -223,8 +264,11 @@ engine.runRenderLoop(()=>{
     else if(currentSpeed < 0) currentSpeed = Math.min(currentSpeed + airFriction*dt, 0);
   }
 
-  // ROTACIÓN con joystick
-  if (isJoystickActive && Math.abs(joystickRotation) > 0.1) {
+  // Actualizar estado del joystick (activar/desactivar según velocidad)
+  updateJoystickState();
+
+  // ROTACIÓN con joystick (solo si estamos en movimiento)
+  if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
     camera.rotation.y += joystickRotation * rotationSpeed * dt;
   }
 
@@ -241,7 +285,11 @@ engine.runRenderLoop(()=>{
 
   // Mantener en suelo y render
   keepGround();
-  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | Yaw: ${(camera.rotation.y*180/Math.PI).toFixed(1)}° | Vel: ${currentSpeed.toFixed(2)} m/s | Joystick: ${joystickRotation.toFixed(2)}`;
+  
+  // Información de debug
+  const joystickStatus = Math.abs(currentSpeed) >= minSpeedForSteering ? "ACTIVO" : "INACTIVO";
+  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | Yaw: ${(camera.rotation.y*180/Math.PI).toFixed(1)}° | Vel: ${currentSpeed.toFixed(2)} m/s | Joystick: ${joystickRotation.toFixed(2)} (${joystickStatus})`;
+  
   scene.render();
 });
 
