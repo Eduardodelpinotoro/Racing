@@ -63,7 +63,86 @@ const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
+// CREAR CIELO NUBLADO CON HEATMAP
+const createCloudySky = () => {
+    // Crear esfera del cielo
+    const skybox = BABYLON.MeshBuilder.CreateSphere("skyBox", { diameter: 10000 }, scene);
+    
+    // Material del cielo con efecto heatmap
+    const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
+    skyMaterial.backFaceCulling = false;
+    skyMaterial.disableLighting = true;
+    
+    // Crear gradiente para el heatmap
+    const skyTexture = new BABYLON.DynamicTexture("skyTexture", 1024, scene, true);
+    const context = skyTexture.getContext();
+    
+    // Crear gradiente radial para el heatmap
+    const gradient = context.createRadialGradient(512, 512, 0, 512, 512, 512);
+    
+    // Colores del heatmap (de azul frío a naranja/rojo cálido)
+    gradient.addColorStop(0, "#87CEEB");    // Azul cielo claro (centro)
+    gradient.addColorStop(0.3, "#98D8E8");  // Azul muy claro
+    gradient.addColorStop(0.5, "#B0E0E6");  // Azul polvo
+    gradient.addColorStop(0.6, "#D4F1F9");  // Azul muy tenue
+    gradient.addColorStop(0.7, "#E8F4F8");  // Blanco azulado
+    gradient.addColorStop(0.8, "#F5F5DC");  // Beige (transición)
+    gradient.addColorStop(0.9, "#FFE4B5");  // Moccasin (nubes cálidas)
+    gradient.addColorStop(1, "#FFA07A");    // Light Salmon (nubes densas)
+    
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, 1024, 1024);
+    
+    // Añadir textura de nubes procedural
+    const cloudCanvas = document.createElement("canvas");
+    cloudCanvas.width = 1024;
+    cloudCanvas.height = 1024;
+    const cloudContext = cloudCanvas.getContext("2d");
+    
+    // Dibujar patrones de nubes
+    cloudContext.fillStyle = "rgba(255, 255, 255, 0.8)";
+    for (let i = 0; i < 50; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 512; // Nubes solo en la parte superior
+        const width = 100 + Math.random() * 200;
+        const height = 30 + Math.random() * 50;
+        
+        cloudContext.beginPath();
+        cloudContext.ellipse(x, y, width, height, 0, 0, Math.PI * 2);
+        cloudContext.fill();
+    }
+    
+    // Crear textura de nubes
+    const cloudTexture = new BABYLON.Texture("", scene);
+    cloudTexture._texture = engine.wrapWebGLTexture(cloudCanvas, scene.getEngine());
+    
+    // Combinar texturas
+    skyMaterial.diffuseTexture = skyTexture;
+    skyMaterial.emissiveTexture = cloudTexture;
+    skyMaterial.opacityTexture = cloudTexture;
+    skyMaterial.emissiveColor = new BABYLON.Color3(0.8, 0.8, 0.9);
+    
+    // Configurar propiedades del material
+    skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyMaterial.alpha = 0.95;
+    
+    // Aplicar material
+    skybox.material = skyMaterial;
+    skybox.infiniteDistance = true;
+    
+    return skybox;
+};
 
+// Crear el cielo después de cargar la escena
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
+    
+    // CREAR EL CIELO NUBLADO
+    createCloudySky();
+    
+    debug.textContent="Circuito cargado - Línea de meta activa - Cielo nublado activo";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
