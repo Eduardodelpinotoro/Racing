@@ -62,12 +62,7 @@ const engine=new BABYLON.Engine(canvas,true);
 const scene=new BABYLON.Scene(engine);
 scene.collisionsEnabled=true;
 
-// --- CIELO DE NUBES PROCEDURAL ---
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 100.0 }, scene);
-const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
-skyboxMaterial.backFaceCulling = false;
-skyboxMaterial.disableLighting = true;
-skybox.material = skyboxMaterial;
+
   
   
 
