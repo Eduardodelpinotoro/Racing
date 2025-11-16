@@ -127,8 +127,8 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=300;      // ajustar según quieras (m/s)
-const maxReverseSpeed=20;
+const maxSpeed=200;      // ajustar según quieras (m/s)
+const maxReverseSpeed=50;
 const accel=50;         // m/s^2
 const airFriction=8;
 
@@ -241,7 +241,7 @@ function updateJoystickState() {
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(-3780,330,-3980);
+    playerMesh.position.set(-3780,340,-3980);
     debug.textContent = "Circuito cargado - Usa la vista para orientar y botones para avanzar";
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
 
