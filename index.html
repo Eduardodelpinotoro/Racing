@@ -137,7 +137,7 @@ function loadLambo() {
     
     // Configurar el coche
     carMesh.name = "lambo";
-    carMesh.position = new BABYLON.Vector3(1, 0, 0);
+    carMesh.position = new BABYLON.Vector3(-1, 5, 0);
     carMesh.scaling = new BABYLON.Vector3(2, 2, 2);
     
     // Configurar colisiones del coche
@@ -169,7 +169,7 @@ function positionCarOnTrack() {
   // Buscar una posición plana en el circuito
   const ray = new BABYLON.Ray(
     new BABYLON.Vector3(0, 100, 0), // Desde arriba
-    new BABYLON.Vector3(0, -1, 0),  // Hacia abajo
+    new BABYLON.Vector3(0, 0, 0),  // Hacia abajo
     200                             // Longitud del rayo
   );
   
