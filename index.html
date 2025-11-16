@@ -89,7 +89,7 @@ const speedBar = document.getElementById("speedBar");
 
 // MOVIMIENTO
 let moveForward=false, moveBackward=false, currentSpeed=0;
-const maxSpeed=350, maxReverseSpeed=50, accel=50, airFriction=8, brakeFriction=150;
+const maxSpeed=330, maxReverseSpeed=50, accel=50, airFriction=8, brakeFriction=150;
 
 document.getElementById("btnForward").addEventListener("touchstart",e=>{ e.preventDefault(); moveForward=true; });
 document.getElementById("btnForward").addEventListener("touchend",e=>{ e.preventDefault(); moveForward=false; });
@@ -176,7 +176,7 @@ function keepGround(){
 }
 
 // FACTOR VELOCIDAD REALISTA PARA EL MARCADOR
-const maxRealKmH = 330; // Velocidad máxima GT3
+const maxRealKmH = 305; // Velocidad máxima GT3
 const speedFactor = maxRealKmH / maxSpeed;
 
 // LOOP principal
