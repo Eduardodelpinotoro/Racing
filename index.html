@@ -19,8 +19,8 @@
     position: absolute;
     bottom: 30px;
     left: 40px;
-    width: 120px;
-    height: 120px;
+    width: 150px;
+    height: 150px;
     pointer-events: auto;
     z-index: 10;
   }
@@ -58,16 +58,16 @@
   
   /* Indicador de joystick desactivado */
   .joystick-disabled {
-    opacity: 0.5;
+    opacity: 0.8;
     pointer-events: none;
   }
   
   /* Panel de cronómetro */
   #timerPanel {
     position: absolute;
-    top: 70px;
+    top: 90px;
     right: 10px;
-    width: 200px;
+    width: 100px;
     background: rgba(0, 0, 0, 0.7);
     border: 2px solid #fff;
     border-radius: 10px;
@@ -78,7 +78,7 @@
   }
   
   #currentTimer {
-    font-size: 24px;
+    font-size: 20px;
     text-align: center;
     margin-bottom: 10px;
     color: #0f0;
@@ -184,7 +184,7 @@ const speedBar = document.getElementById("speedBar");
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
 const maxSpeed=300;      // ajustar según quieras (m/s)
-const maxReverseSpeed=200;
+const maxReverseSpeed=300;
 const accel=50;         // m/s^2
 const airFriction=8;
 
