@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Cronómetro Corregido</title>
+<title>SPA - Control por Vista (Touch Look) - Cronómetro Corregido</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -131,7 +131,7 @@
 <div id="timerPanel">
   <div id="currentTimer">00:00.000</div>
   <div id="lapTimes"></div>
-  <div id="timerStatus">ESPERANDO</div>
+  <div id="timerStatus">ESPERANDO EN META</div>
 </div>
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -183,8 +183,8 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=200;      // ajustar según quieras (m/s)
-const maxReverseSpeed=120;
+const maxSpeed=300;      // ajustar según quieras (m/s)
+const maxReverseSpeed=1000;
 const accel=50;         // m/s^2
 const airFriction=8;
 
@@ -294,7 +294,7 @@ function updateJoystickState() {
   }
 }
 
-// SISTEMA DE CRONÓMETRO MEJORADO
+// SISTEMA DE CRONÓMETRO CORREGIDO
 const timerPanel = document.getElementById("timerPanel");
 const currentTimer = document.getElementById("currentTimer");
 const lapTimes = document.getElementById("lapTimes");
@@ -308,13 +308,12 @@ let lapCount = 0;
 let isRacing = false;
 let hasCrossedFinishLine = false;
 
-// Línea de meta CORREGIDA - usando las coordenadas originales del circuito
-// Las coordenadas del circuito no cambian aunque modifiquemos la altura del jugador
+// LÍNEA DE META CORREGIDA - Coordenadas ajustadas según la posición inicial
 const finishLine = {
-  minX: 3750,
-  maxX: 3800,
-  z: 4025,
-  width: 10 // Aumentamos el margen de detección
+  minX: -3820,  // Ajustado para estar cerca de la posición inicial
+  maxX: -3780,  // Ajustado para estar cerca de la posición inicial  
+  z: -3980,     // Misma Z que la posición inicial
+  width: 15     // Margen de detección aumentado
 };
 
 function formatTime(milliseconds) {
@@ -357,7 +356,7 @@ function checkFinishLine() {
           lapCount = 1;
           timerStatus.textContent = "VUELTA 1";
           timerStatus.style.color = "#0f0";
-          console.log("¡CARRERA INICIADA!");
+          console.log("¡CARRERA INICIADA! Posición:", pos.x.toFixed(1), pos.z.toFixed(1));
         } else {
           // Finalizar vuelta
           const lapTime = Date.now() - currentLapStartTime;
@@ -385,7 +384,7 @@ function checkFinishLine() {
           lapCount++;
           currentLapStartTime = Date.now();
           timerStatus.textContent = `VUELTA ${lapCount}`;
-          console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
+          console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)} en posición:`, pos.x.toFixed(1), pos.z.toFixed(1));
         }
       }
     }
@@ -399,16 +398,16 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
     playerMesh.position.set(-3780,330,-3980);
-    debug.textContent = "Circuito cargado - Busca la línea de meta en X:3750-3800, Z:4025";
+    debug.textContent = "Circuito cargado - Línea de meta activa cerca de la posición inicial";
     
-    // DEBUG: Crear marcador visual de la línea de meta
-    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 50, height: 10, depth: 2}, scene);
-    finishLineMarker.position.set(3775, 340, 4025); // Posición de la línea de meta
+    // DEBUG: Crear marcador visual de la línea de meta CORREGIDA
+    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 40, height: 10, depth: 2}, scene);
+    finishLineMarker.position.set(-3800, 340, -3980); // Posición CORREGIDA de la línea de meta
     finishLineMarker.isVisible = true;
     
     const finishMaterial = new BABYLON.StandardMaterial("finishMat", scene);
-    finishMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0); // Rojo brillante
-    finishMaterial.alpha = 0.5; // Semi-transparente
+    finishMaterial.emissiveColor = new BABYLON.Color3(0, 1, 0); // Verde brillante para mejor visibilidad
+    finishMaterial.alpha = 0.7; // Menos transparente
     finishLineMarker.material = finishMaterial;
     
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
@@ -463,7 +462,7 @@ engine.runRenderLoop(()=>{
   const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO EN META";
   const nearFinish = Math.abs(playerMesh.position.z - finishLine.z) < 50 ? "CERCA META" : "";
   
-  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(0)} km/h ${nearFinish}`;
+  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${(currentSpeed * 3.6).toFixed(0)} km/h | Meta: X[${finishLine.minX},${finishLine.maxX}] Z${finishLine.z}`;
   
   scene.render();
 });
@@ -471,4 +470,4 @@ engine.runRenderLoop(()=>{
 window.addEventListener('resize', ()=>engine.resize());
 </script>
 </body>
-</html>
+  </html>
