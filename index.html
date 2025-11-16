@@ -160,8 +160,8 @@ engine.runRenderLoop(()=>{
   // LATERAL CON GYRONORM
   const correctedTilt = tilt - calibrationOffset;
   if(Math.abs(correctedTilt) > 1){
-      const side=new BABYLON.Vector3(Math.cos(camera.rotation.y),0,-Math.sin(camera.rotation.y));
-      const sideSpeed = (correctedTilt / 45) * 60;
+      const side = new BABYLON.Vector3(-Math.cos(camera.rotation.y), 0, Math.sin(camera.rotation.y));
+      const sideSpeed = (correctedTilt / 45) * 140;
       playerMesh.moveWithCollisions(side.scale(sideSpeed * dt));
   }
 
@@ -176,3 +176,4 @@ window.addEventListener("resize",()=>engine.resize());
 </script>
 </body>
 </html>
+
