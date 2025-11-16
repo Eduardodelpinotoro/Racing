@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Juego de Coches - Circuito SPA</title>
+<style>
+  html,body{margin:0;overflow:hidden;background:#000}
+  #renderCanvas{width:100%;height:100%}
+  #joystick-container{position:absolute;bottom:30px;left:30px;width:150px;height:150px;z-index:10}
+  .button{position:absolute;bottom:30px;width:60px;height:60px;background:rgba(255,255,255,0.2);border-radius:50%;pointer-events:auto;}
+  #btnAccelerate{right:100px} #btnBrake{right:180px}
+  #speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
+  #speedBar{height:100%;width:0%;background:#0f0;transition:width .3s}
+  #lapCounter{position:absolute;top:40px;left:10px;color:#fff;font-size:18px;font-weight:bold}
+  #checkpointMsg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#0ff;font-weight:bold;font-size:22px;opacity:0;pointer-events:none;transition:opacity .3s;}
+  #debugInfo{position:absolute;top:70px;left:10px;color:#fff;font-size:12px;}
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<div id="joystick-container"></div>
+<div id="speedBarContainer"><div id="speedBar"></div></div>
+<div id="lapCounter">Vuelta: 1/3</div>
+<div id="checkpointMsg"></div>
+<div id="debugInfo"></div>
+<div class="button" id="btnAccelerate"></div>
+<div class="button" id="btnBrake"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas,true);
+const scene = new BABYLON.Scene(engine);
+scene.preventDefaultOnDoubleClick = false;
+scene.collisionsEnabled = true;
+scene.gravity = new BABYLON.Vector3(0,-9.81,0);
+
+// Cámara para juego de coches
+const camera = new BABYLON.FollowCamera("followCam", new BABYLON.Vector3(0, 5, -10), scene);
+camera.lockedTarget = null;
+camera.radius = 15;
+camera.heightOffset = 5;
+camera.rotationOffset = 0;
+camera.cameraAcceleration = 0.1;
+camera.maxCameraSpeed = 20;
+camera.attachControl(canvas,true);
+
+// Luz ambiental
+new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0,1,0), scene);
+
+// Variables del juego - TRIPLE DE VELOCIDAD
+let velocidad = 0;
+let acelerando = false;
+let frenando = false;
+const velocidadMaxima = 1.5; // 3x más rápido (antes era 0.5)
+const aceleracion = 0.03; // 3x más rápido
+const friccion = 0.02;
+const frenada = 0.08; // 3x más rápido
+
+const speedBar = document.getElementById("speedBar");
+const lapCounter = document.getElementById("lapCounter");
+const checkpointMsg = document.getElementById("checkpointMsg");
+const debugInfo = document.getElementById("debugInfo");
+
+function updateSpeedBar(){
+  const porcentaje = Math.min((velocidad / velocidadMaxima) * 100, 100);
+  speedBar.style.width = porcentaje + "%";
+  
+  if (porcentaje < 30) {
+    speedBar.style.background = "#0f0";
+  } else if (porcentaje < 70) {
+    speedBar.style.background = "#ff0";
+  } else {
+    speedBar.style.background = "#f00";
+  }
+}
+
+function showCheckpointMessage(text){
+  checkpointMsg.textContent = text;
+  checkpointMsg.style.opacity = 1;
+  setTimeout(()=> checkpointMsg.style.opacity = 0, 1500);
+}
+
+// Controles
+let joyX=0, joyY=0;
+const joystick = nipplejs.create({
+  zone: document.getElementById("joystick-container"),
+  mode: "static", position:{left:"75px",bottom:"75px"},
+  size:120, color:"white"
+});
+joystick.on("move", (_,d)=>{ joyX=d.vector.x; joyY=d.vector.y; });
+joystick.on("end", ()=>{ joyX=0; joyY=0; });
+
+// Variables del juego
+let carMesh = null;
+let circuitMesh = null;
+let currentLap = 1;
+let totalLaps = 3;
+let checkpoints = [];
+let currentCheckpoint = 0;
+let startPosition = new BABYLON.Vector3(0, 0, 0);
+
+// Carga del circuito SPA
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+  console.log("Circuito SPA cargado, buscando meshes...");
+  
+  // Buscar el mesh del circuito
+  scene.meshes.forEach(m => {
+    m.checkCollisions = true;
+    if (m.name.toLowerCase().includes("circuit") || m.name.toLowerCase().includes("track") || 
+        m.name.toLowerCase().includes("spa") || m.name.toLowerCase().includes("road") ||
+        m.name.toLowerCase().includes("pista")) {
+      circuitMesh = m;
+      console.log("Circuito identificado:", m.name);
+      
+      // Encontrar posición de inicio en la pista
+      findStartPosition();
+    }
+  });
+  
+  // Si no encontramos el circuito, usar el primer mesh grande
+  if (!circuitMesh && scene.meshes.length > 0) {
+    circuitMesh = scene.meshes[0];
+    console.log("Usando primer mesh como circuito:", circuitMesh.name);
+    findStartPosition();
+  }
+  
+  // Crear el coche después de cargar el circuito
+  createCar();
+  initCheckpoints();
+});
+
+function findStartPosition() {
+  if (!circuitMesh) return;
+  
+  // Obtener el bounding box del circuito
+  const boundingBox = circuitMesh.getBoundingInfo().boundingBox;
+  
+  // Posición de inicio en el centro del circuito en XZ, pero en la superficie
+  startPosition = new BABYLON.Vector3(
+    (boundingBox.minimum.x + boundingBox.maximum.x) / 2,
+    boundingBox.maximum.y + 0.5, // Encima del circuito
+    (boundingBox.minimum.z + boundingBox.maximum.z) / 2 - 10 // Un poco desplazado
+  );
+  
+  console.log("Posición de inicio encontrada:", startPosition);
+}
+
+function createCar() {
+  console.log("Cargando Lamborghini...");
+  
+  // Cargar el modelo Lamborghini
+  BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes) => {
+    console.log("Lamborghini cargado, meshes:", meshes.length);
+    
+    // Buscar el mesh principal del coche
+    carMesh = meshes[0];
+    if (!carMesh) {
+      console.error("No se pudo encontrar el mesh principal del coche");
+      return;
+    }
+    
+    // Configurar el coche
+    carMesh.name = "lambo";
+    carMesh.position = startPosition.clone();
+    carMesh.scaling = new BABYLON.Vector3(1, 1, 1);
+    
+    // Configurar colisiones
+    carMesh.checkCollisions = true;
+    
+    // Crear un ellipsoid de colisión apropiado
+    const boundingBox = carMesh.getBoundingInfo().boundingBox;
+    const size = boundingBox.maximum.subtract(boundingBox.minimum);
+    carMesh.ellipsoid = new BABYLON.Vector3(size.x/2, size.y/3, size.z/2);
+    carMesh.ellipsoidOffset = new BABYLON.Vector3(0, size.y/3, 0);
+    
+    // Configurar la cámara para seguir el coche
+    camera.lockedTarget = carMesh;
+    camera.position = carMesh.position.add(new BABYLON.Vector3(0, 5, -10));
+    
+    console.log("Lamborghini configurado en posición:", carMesh.position);
+    
+    // Ajustar posición sobre el circuito
+    adjustCarPosition();
+    
+  }, null, (scene, message) => {
+    console.error("Error cargando lambo.glb:", message);
+    alert("Error: No se pudo cargar el modelo lambo.glb. Asegúrate de que el archivo esté en la misma carpeta.");
+  });
+}
+
+function adjustCarPosition() {
+  if (!carMesh || !circuitMesh) return;
+  
+  console.log("Ajustando posición del coche...");
+  
+  // Lanzar varios rayos para encontrar la superficie del circuito
+  const rayOrigins = [
+    carMesh.position.add(new BABYLON.Vector3(0, 10, 0)),
+    carMesh.position.add(new BABYLON.Vector3(2, 10, 0)),
+    carMesh.position.add(new BABYLON.Vector3(-2, 10, 0)),
+    carMesh.position.add(new BABYLON.Vector3(0, 10, 2)),
+    carMesh.position.add(new BABYLON.Vector3(0, 10, -2))
+  ];
+  
+  let totalHeight = 0;
+  let hits = 0;
+  
+  rayOrigins.forEach(origin => {
+    const ray = new BABYLON.Ray(origin, new BABYLON.Vector3(0, -1, 0), 20);
+    const hit = scene.pickWithRay(ray, (mesh) => mesh === circuitMesh);
+    
+    if (hit.hit && hit.pickedMesh === circuitMesh) {
+      totalHeight += hit.pickedPoint.y;
+      hits++;
+    }
+  });
+  
+  if (hits > 0) {
+    const averageHeight = totalHeight / hits;
+    carMesh.position.y = averageHeight + 0.3; // Pequeña altura sobre la pista
+    console.log("Coche posicionado sobre la pista a altura:", carMesh.position.y);
+  } else {
+    // Fallback: usar bounding box
+    const circuitBounding = circuitMesh.getBoundingInfo().boundingBox;
+    carMesh.position.y = circuitBounding.maximum.y + 0.5;
+    console.log("Coche posicionado usando bounding box a altura:", carMesh.position.y);
+  }
+  
+  debugInfo.textContent = `Posición: X:${carMesh.position.x.toFixed(2)} Y:${carMesh.position.y.toFixed(2)} Z:${carMesh.position.z.toFixed(2)}`;
+}
+
+function initCheckpoints() {
+  if (!circuitMesh) return;
+  
+  const boundingBox = circuitMesh.getBoundingInfo().boundingBox;
+  const centerX = (boundingBox.minimum.x + boundingBox.maximum.x) / 2;
+  const centerZ = (boundingBox.minimum.z + boundingBox.maximum.z) / 2;
+  const radius = Math.max(
+    boundingBox.maximum.x - boundingBox.minimum.x,
+    boundingBox.maximum.z - boundingBox.minimum.z
+  ) * 0.4;
+  
+  // Crear checkpoints alrededor del circuito
+  for (let i = 0; i < 8; i++) {
+    const angle = (i / 8) * Math.PI * 2;
+    const x = centerX + Math.cos(angle) * radius;
+    const z = centerZ + Math.sin(angle) * radius;
+    
+    // Encontrar la altura en este punto
+    const ray = new BABYLON.Ray(
+      new BABYLON.Vector3(x, boundingBox.maximum.y + 5, z),
+      new BABYLON.Vector3(0, -1, 0),
+      15
+    );
+    const hit = scene.pickWithRay(ray, (mesh) => mesh === circuitMesh);
+    const y = hit.hit ? hit.pickedPoint.y : boundingBox.maximum.y;
+    
+    checkpoints.push({
+      position: new BABYLON.Vector3(x, y, z),
+      radius: 8
+    });
+    
+    // Visualizar los checkpoints (solo para desarrollo)
+    const checkpointVisual = BABYLON.MeshBuilder.CreateCylinder("checkpoint" + i, {
+      diameter: 16,
+      height: 0.1
+    }, scene);
+    checkpointVisual.position = new BABYLON.Vector3(x, y + 0.05, z);
+    const checkpointMaterial = new BABYLON.StandardMaterial("checkpointMat" + i, scene);
+    checkpointMaterial.emissiveColor = new BABYLON.Color3(0, 0.5, 1);
+    checkpointMaterial.alpha = 0.3;
+    checkpointVisual.material = checkpointMaterial;
+  }
+  
+  console.log("Checkpoints creados:", checkpoints.length);
+}
+
+function checkCheckpoints() {
+  if (checkpoints.length === 0 || !carMesh) return;
+  
+  const currentCheck = checkpoints[currentCheckpoint];
+  const carPos = new BABYLON.Vector3(carMesh.position.x, 0, carMesh.position.z);
+  const checkpointPos = new BABYLON.Vector3(currentCheck.position.x, 0, currentCheck.position.z);
+  const distance = BABYLON.Vector3.Distance(carPos, checkpointPos);
+  
+  if (distance < currentCheck.radius) {
+    currentCheckpoint = (currentCheckpoint + 1) % checkpoints.length;
+    
+    if (currentCheckpoint === 0) {
+      currentLap++;
+      lapCounter.textContent = "Vuelta: " + currentLap + "/" + totalLaps;
+      showCheckpointMessage("¡Vuelta " + currentLap + " completada!");
+      
+      if (currentLap > totalLaps) {
+        showCheckpointMessage("¡Carrera terminada!");
+      }
+    } else {
+      showCheckpointMessage("Checkpoint " + currentCheckpoint);
+    }
+  }
+}
+
+// Controles de aceleración y freno
+document.getElementById("btnAccelerate").onclick = function() {
+  acelerando = true;
+};
+document.getElementById("btnAccelerate").addEventListener("touchstart", function() {
+  acelerando = true;
+});
+document.getElementById("btnAccelerate").addEventListener("touchend", function() {
+  acelerando = false;
+});
+
+document.getElementById("btnBrake").onclick = function() {
+  frenando = true;
+};
+document.getElementById("btnBrake").addEventListener("touchstart", function() {
+  frenando = true;
+});
+document.getElementById("btnBrake").addEventListener("touchend", function() {
+  frenando = false;
+});
+
+// Bucle principal del juego
+engine.runRenderLoop(()=>{
+  if (!carMesh) return;
+  
+  // Física del coche - TRIPLE DE VELOCIDAD
+  if (acelerando) {
+    velocidad = Math.min(velocidad + aceleracion, velocidadMaxima);
+  } else if (frenando) {
+    velocidad = Math.max(velocidad - frenada, -velocidadMaxima * 0.5);
+  } else {
+    // Fricción natural
+    if (velocidad > 0) {
+      velocidad = Math.max(velocidad - friccion, 0);
+    } else if (velocidad < 0) {
+      velocidad = Math.min(velocidad + friccion, 0);
+    }
+  }
+  
+  // Movimiento del coche
+  if (Math.abs(velocidad) > 0.01) {
+    // Dirección basada en el joystick
+    const rotationSpeed = 0.04 * (Math.abs(velocidad) / velocidadMaxima);
+    carMesh.rotation.y += joyX * rotationSpeed;
+    
+    // Movimiento
+    const direction = new BABYLON.Vector3(
+      Math.sin(carMesh.rotation.y),
+      0,
+      Math.cos(carMesh.rotation.y)
+    );
+    
+    carMesh.moveWithCollisions(direction.scale(velocidad));
+    
+    // Mantener el coche sobre el circuito
+    keepCarOnTrack();
+  }
+  
+  // Verificar checkpoints
+  checkCheckpoints();
+  
+  // Actualizar UI y debug
+  updateSpeedBar();
+  debugInfo.textContent = `Pos: X:${carMesh.position.x.toFixed(2)} Y:${carMesh.position.y.toFixed(2)} Z:${carMesh.position.z.toFixed(2)} | Vel: ${(velocidad * 100).toFixed(0)}`;
+  
+  scene.render();
+});
+
+function keepCarOnTrack() {
+  if (!carMesh || !circuitMesh) return;
+  
+  // Lanzar rayos en varias posiciones debajo del coche
+  const rayOffsets = [
+    new BABYLON.Vector3(0, 0, 0),
+    new BABYLON.Vector3(1, 0, 0),
+    new BABYLON.Vector3(-1, 0, 0),
+    new BABYLON.Vector3(0, 0, 1),
+    new BABYLON.Vector3(0, 0, -1)
+  ];
+  
+  let totalHeight = 0;
+  let hits = 0;
+  
+  rayOffsets.forEach(offset => {
+    const rayOrigin = carMesh.position.add(offset).add(new BABYLON.Vector3(0, 2, 0));
+    const ray = new BABYLON.Ray(rayOrigin, new BABYLON.Vector3(0, -1, 0), 5);
+    const hit = scene.pickWithRay(ray, (mesh) => mesh === circuitMesh);
+    
+    if (hit.hit && hit.pickedMesh === circuitMesh) {
+      totalHeight += hit.pickedPoint.y;
+      hits++;
+    }
+  });
+  
+  if (hits > 0) {
+    const targetHeight = totalHeight / hits + 0.3;
+    const currentHeight = carMesh.position.y;
+    
+    // Suavizar el ajuste de altura
+    if (Math.abs(targetHeight - currentHeight) > 0.1) {
+      carMesh.position.y = currentHeight + (targetHeight - currentHeight) * 0.2;
+    }
+  }
+}
+
+window.addEventListener("resize",()=>engine.resize());
+</script>
+</body>
+</html>
