@@ -166,7 +166,7 @@ scene.collisionsEnabled = true;
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5,1.5,0.5);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5,0.5,0.5);
 playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0); // MODIFICADO: de 0.9 a 2
 
 // CÁMARA - CON ALTURA MODIFICADA
@@ -191,11 +191,11 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=300;      // ajustar según quieras (m/s)
+const maxSpeed=350;      // ajustar según quieras (m/s)
 const maxReverseSpeed=50;
 const accel=50;         // m/s^2
 const airFriction=8;
-const brakeFriction=250;  // AUMENTADO: Frenado más fuerte
+const brakeFriction=150;  // AUMENTADO: Frenado más fuerte
 
 const btnF=document.getElementById("btnForward");
 const btnB=document.getElementById("btnBackward");
