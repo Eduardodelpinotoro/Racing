@@ -76,26 +76,15 @@ camera.attachControl(canvas,true);
 // LIGHT
 new BABYLON.HemisphericLight("h",new BABYLON.Vector3(0,1,0),scene);
 
-// --- CIELO DE NUBES SIN ESFERA ---
-// --- SKYBOX DE NUBES DE BABYLON ---
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:5000}, scene);
-const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMat", scene);
-
-skyboxMaterial.backFaceCulling = false;
-skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-
-// Cargar cubemap de nubes directamente desde Babylon assets
-skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/environments/clouds", scene);
-skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-
-skybox.material = skyboxMaterial;
 
 
-// Crear una caja grande para aplicar el material del cielo
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:10000}, scene);
-skybox.material = skyMaterial;
-skybox.infiniteDistance = true;    // siempre se mantiene como fondo
+  // --- CIELO SIMPLE DE NUBES ---
+const sky = new BABYLON.Layer(
+    "sky", 
+    "https://assets.babylonjs.com/environments/clouds/clouds.jpg", // imagen de nubes
+    scene
+);
+  
   
 // UI
 const debug=document.getElementById("debug");
