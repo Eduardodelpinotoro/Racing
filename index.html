@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Cronómetro Corregido</title>
+<title>SPA - Control por Vista (Touch Look) - Con Cielo Nublado y Reflejos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -136,6 +136,7 @@
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+<script src="https://cdn.babylonjs.com/materialsLibrary/babylonjs.materials.min.js"></script>
 
 <script>
 // SOLO MÓVIL
@@ -175,6 +176,33 @@ if (camera.inputs && camera.inputs.attached && camera.inputs.attached.mousewheel
 
 // Luces
 new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0,1,0), scene);
+
+// CREAR CIELO NUBLADO
+const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size: 10000}, scene);
+const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
+skyboxMaterial.backFaceCulling = false;
+skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
+skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+skyboxMaterial.disableLighting = true;
+skybox.material = skyboxMaterial;
+
+// AGREGAR REFLEJOS
+// Crear un plano de reflexión debajo del circuito
+const reflector = BABYLON.MeshBuilder.CreatePlane("reflector", {width: 10000, height: 10000}, scene);
+reflector.position.y = 0.1; // Justo debajo del nivel del suelo
+reflector.rotation.x = Math.PI / 2; // Rotar para que quede horizontal
+
+// Crear material reflectivo
+const reflectionMaterial = new BABYLON.StandardMaterial("reflection", scene);
+reflectionMaterial.reflectionTexture = new BABYLON.MirrorTexture("mirror", 1024, scene, true);
+reflectionMaterial.reflectionTexture.mirrorPlane = new BABYLON.Plane(0, -1, 0, 0);
+reflectionMaterial.reflectionTexture.level = 0.5; // Intensidad del reflejo
+reflectionMaterial.reflectionTexture.adaptiveBlurKernel = 32; // Suavizado
+reflectionMaterial.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.8); // Color azulado para el agua
+reflectionMaterial.alpha = 0.7; // Transparencia
+reflector.material = reflectionMaterial;
 
 // UI
 const debug = document.getElementById("debug");
@@ -314,7 +342,8 @@ const finishLine = {
   minX: 3750,
   maxX: 3800,
   z: 4025,
-  width: 10 // Aumentamos el margen de detección
+  width: 10, // Aumentamos el margen de detección
+  height: 340 // ALTURA CORREGIDA para la detección
 };
 
 function formatTime(milliseconds) {
@@ -339,53 +368,56 @@ function checkFinishLine() {
   // DEBUG: Mostrar información de posición cerca de la línea de meta
   const nearFinishLine = Math.abs(pos.z - finishLine.z) < 50;
   if (nearFinishLine) {
-    console.log(`Cerca de meta: X=${pos.x.toFixed(1)}, Z=${pos.z.toFixed(1)}`);
+    console.log(`Cerca de meta: X=${pos.x.toFixed(1)}, Z=${pos.z.toFixed(1)}, Y=${pos.y.toFixed(1)}`);
   }
   
   // Verificar si estamos cerca de la línea de meta en Z
   if (Math.abs(pos.z - finishLine.z) < finishLine.width) {
     // Verificar si estamos en el rango correcto de X
     if (pos.x >= finishLine.minX && pos.x <= finishLine.maxX) {
-      if (!hasCrossedFinishLine) {
-        hasCrossedFinishLine = true;
-        
-        if (!isRacing) {
-          // Comenzar carrera
-          isRacing = true;
-          raceStartTime = Date.now();
-          currentLapStartTime = raceStartTime;
-          lapCount = 1;
-          timerStatus.textContent = "VUELTA 1";
-          timerStatus.style.color = "#0f0";
-          console.log("¡CARRERA INICIADA!");
-        } else {
-          // Finalizar vuelta
-          const lapTime = Date.now() - currentLapStartTime;
-          lastLapTime = lapTime;
+      // VERIFICAR ALTURA CORREGIDA: Solo activar si estamos cerca de la altura correcta
+      if (Math.abs(pos.y - finishLine.height) < 20) {
+        if (!hasCrossedFinishLine) {
+          hasCrossedFinishLine = true;
           
-          // Actualizar mejor tiempo
-          if (bestLapTime === 0 || lapTime < bestLapTime) {
-            bestLapTime = lapTime;
+          if (!isRacing) {
+            // Comenzar carrera
+            isRacing = true;
+            raceStartTime = Date.now();
+            currentLapStartTime = raceStartTime;
+            lapCount = 1;
+            timerStatus.textContent = "VUELTA 1";
+            timerStatus.style.color = "#0f0";
+            console.log("¡CARRERA INICIADA!");
+          } else {
+            // Finalizar vuelta
+            const lapTime = Date.now() - currentLapStartTime;
+            lastLapTime = lapTime;
+            
+            // Actualizar mejor tiempo
+            if (bestLapTime === 0 || lapTime < bestLapTime) {
+              bestLapTime = lapTime;
+            }
+            
+            // Agregar vuelta a la lista
+            const lapElement = document.createElement("div");
+            lapElement.className = "lap-time";
+            if (lapTime === bestLapTime) {
+              lapElement.classList.add("best-lap");
+            }
+            lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
+            if (lapTime === bestLapTime) {
+              lapElement.textContent += " ★";
+            }
+            
+            lapTimes.insertBefore(lapElement, lapTimes.firstChild);
+            
+            // Actualizar contadores
+            lapCount++;
+            currentLapStartTime = Date.now();
+            timerStatus.textContent = `VUELTA ${lapCount}`;
+            console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
           }
-          
-          // Agregar vuelta a la lista
-          const lapElement = document.createElement("div");
-          lapElement.className = "lap-time";
-          if (lapTime === bestLapTime) {
-            lapElement.classList.add("best-lap");
-          }
-          lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
-          if (lapTime === bestLapTime) {
-            lapElement.textContent += " ★";
-          }
-          
-          lapTimes.insertBefore(lapElement, lapTimes.firstChild);
-          
-          // Actualizar contadores
-          lapCount++;
-          currentLapStartTime = Date.now();
-          timerStatus.textContent = `VUELTA ${lapCount}`;
-          console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
         }
       }
     }
@@ -403,7 +435,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     
     // DEBUG: Crear marcador visual de la línea de meta
     const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 50, height: 10, depth: 2}, scene);
-    finishLineMarker.position.set(3775, 340, 4025); // Posición de la línea de meta
+    finishLineMarker.position.set(3775, finishLine.height, 4025); // Posición de la línea de meta con altura corregida
     finishLineMarker.isVisible = true;
     
     const finishMaterial = new BABYLON.StandardMaterial("finishMat", scene);
@@ -463,7 +495,7 @@ engine.runRenderLoop(()=>{
   const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO EN META";
   const nearFinish = Math.abs(playerMesh.position.z - finishLine.z) < 50 ? "CERCA META" : "";
   
-  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(0)} km/h ${nearFinish}`;
+  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} Y${playerMesh.position.y.toFixed(0)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(0)} km/h ${nearFinish}`;
   
   scene.render();
 });
