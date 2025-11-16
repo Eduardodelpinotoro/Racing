@@ -64,6 +64,44 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 // CREAR CIELO NUBLADO CON HEATMAP
+// CREAR CIELO NUBLADO OPTIMIZADO
+const createCloudySky = () => {
+    // Crear esfera del cielo muy grande
+    const skybox = BABYLON.MeshBuilder.CreateSphere("skyBox", { diameter: 200000, segments: 64 }, scene);
+    
+    // Material del cielo
+    const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
+    skyMaterial.backFaceCulling = false;
+    skyMaterial.disableLighting = true;
+    
+    // Usar imagen HD de cielo nublado
+    const skyTexture = new BABYLON.Texture("https://images.unsplash.com/photo-1601297183305-6df142704ea2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80", scene);
+    
+    // Configuración óptima para skybox
+    skyTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyMaterial.reflectionTexture = skyTexture;
+    skyMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
+    
+    skybox.material = skyMaterial;
+    skybox.infiniteDistance = true;
+    skybox.rotation.y = Math.PI; // Rotar para mejor orientación
+    
+    return skybox;
+};
+
+// Crear el cielo después de cargar la escena
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
+    
+    // CREAR EL CIELO
+    createCloudySky();
+    
+    debug.textContent="Circuito cargado - Línea de meta activa - Cielo nublado HD";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
