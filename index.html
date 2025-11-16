@@ -64,6 +64,47 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
+  // CREAR CIELO NUBLADO CON createDefaultEnvironment
+const createCloudySky = () => {
+    // Usar el método por defecto de Babylon para skybox
+    const environment = scene.createDefaultEnvironment({
+        createSkybox: true,
+        skyboxSize: 100000,
+        skyboxTexture: "https://images.unsplash.com/photo-1601297183305-6df142704ea2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80",
+        createGround: false
+    });
+    
+    return environment;
+};
+
+// O si prefieres una opción más directa:
+const createCloudySkyAlt = () => {
+    // Crear skybox directamente con la textura
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 100000 }, scene);
+    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+    
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+    
+    return skybox;
+};
+
+// Crear el cielo después de cargar la escena
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
+    
+    // CREAR EL CIELO - Usar la primera opción
+    createCloudySky();
+    
+    debug.textContent="Circuito cargado - Línea de meta activa - Cielo nublado HD";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
