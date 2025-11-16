@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Joystick Mejorado</title>
+<title>SPA - Control por Vista (Touch Look) - Con Cronómetro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -61,6 +61,55 @@
     opacity: 0.5;
     pointer-events: none;
   }
+  
+  /* Panel de cronómetro */
+  #timerPanel {
+    position: absolute;
+    top: 70px;
+    right: 10px;
+    width: 200px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 2px solid #fff;
+    border-radius: 10px;
+    padding: 10px;
+    color: #fff;
+    font-family: monospace;
+    z-index: 10;
+  }
+  
+  #currentTimer {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 10px;
+    color: #0f0;
+  }
+  
+  #lapTimes {
+    font-size: 12px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  
+  .lap-time {
+    padding: 2px 0;
+    border-bottom: 1px solid #444;
+  }
+  
+  .lap-time:last-child {
+    border-bottom: none;
+  }
+  
+  .best-lap {
+    color: #ff0;
+    font-weight: bold;
+  }
+  
+  #timerStatus {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 5px;
+    color: #0ff;
+  }
 </style>
 </head>
 <body>
@@ -76,6 +125,13 @@
     <div id="joystickAxis"></div>
     <div id="joystickHandle"></div>
   </div>
+</div>
+
+<!-- Panel de cronómetro -->
+<div id="timerPanel">
+  <div id="currentTimer">00:00.000</div>
+  <div id="lapTimes"></div>
+  <div id="timerStatus">ESPERANDO</div>
 </div>
 
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
@@ -102,8 +158,8 @@ scene.collisionsEnabled = true;
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5,0.9,0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,0.9,0);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5,2,0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0);
 
 // CÁMARA
 const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,2,0), scene);
@@ -127,8 +183,8 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=200;      // ajustar según quieras (m/s)
-const maxReverseSpeed=120;
+const maxSpeed=250;      // ajustar según quieras (m/s)
+const maxReverseSpeed=180;
 const accel=50;         // m/s^2
 const airFriction=8;
 
@@ -238,10 +294,102 @@ function updateJoystickState() {
   }
 }
 
+// SISTEMA DE CRONÓMETRO
+const timerPanel = document.getElementById("timerPanel");
+const currentTimer = document.getElementById("currentTimer");
+const lapTimes = document.getElementById("lapTimes");
+const timerStatus = document.getElementById("timerStatus");
+
+let raceStartTime = 0;
+let currentLapStartTime = 0;
+let lastLapTime = 0;
+let bestLapTime = 0;
+let lapCount = 0;
+let isRacing = false;
+let hasCrossedFinishLine = false;
+
+// Línea de meta: X entre 3750-3800, Z=4025
+const finishLine = {
+  minX: 3750,
+  maxX: 3800,
+  z: 4025,
+  width: 5 // Margen de detección en Z
+};
+
+function formatTime(milliseconds) {
+  const minutes = Math.floor(milliseconds / 60000);
+  const seconds = Math.floor((milliseconds % 60000) / 1000);
+  const ms = Math.floor(milliseconds % 1000);
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+}
+
+function updateTimerDisplay() {
+  if (isRacing) {
+    const currentTime = Date.now() - currentLapStartTime;
+    currentTimer.textContent = formatTime(currentTime);
+  } else {
+    currentTimer.textContent = "00:00.000";
+  }
+}
+
+function checkFinishLine() {
+  const pos = playerMesh.position;
+  
+  // Verificar si estamos cerca de la línea de meta en Z
+  if (Math.abs(pos.z - finishLine.z) < finishLine.width) {
+    // Verificar si estamos en el rango correcto de X
+    if (pos.x >= finishLine.minX && pos.x <= finishLine.maxX) {
+      if (!hasCrossedFinishLine) {
+        hasCrossedFinishLine = true;
+        
+        if (!isRacing) {
+          // Comenzar carrera
+          isRacing = true;
+          raceStartTime = Date.now();
+          currentLapStartTime = raceStartTime;
+          lapCount = 1;
+          timerStatus.textContent = "VUELTA 1";
+          timerStatus.style.color = "#0f0";
+        } else {
+          // Finalizar vuelta
+          const lapTime = Date.now() - currentLapStartTime;
+          lastLapTime = lapTime;
+          
+          // Actualizar mejor tiempo
+          if (bestLapTime === 0 || lapTime < bestLapTime) {
+            bestLapTime = lapTime;
+          }
+          
+          // Agregar vuelta a la lista
+          const lapElement = document.createElement("div");
+          lapElement.className = "lap-time";
+          if (lapTime === bestLapTime) {
+            lapElement.classList.add("best-lap");
+          }
+          lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}`;
+          if (lapTime === bestLapTime) {
+            lapElement.textContent += " ★";
+          }
+          
+          lapTimes.insertBefore(lapElement, lapTimes.firstChild);
+          
+          // Actualizar contadores
+          lapCount++;
+          currentLapStartTime = Date.now();
+          timerStatus.textContent = `VUELTA ${lapCount}`;
+        }
+      }
+    }
+  } else {
+    // Ya no estamos cerca de la línea de meta
+    hasCrossedFinishLine = false;
+  }
+}
+
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(-3780,340,-3980);
+    playerMesh.position.set(-3780,360,-3980);
     debug.textContent = "Circuito cargado - Usa la vista para orientar y botones para avanzar";
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
 
@@ -283,12 +431,17 @@ engine.runRenderLoop(()=>{
     playerMesh.moveWithCollisions(forward.scale(currentSpeed * dt));
   }
 
+  // Verificar línea de meta y actualizar cronómetro
+  checkFinishLine();
+  updateTimerDisplay();
+
   // Mantener en suelo y render
   keepGround();
   
   // Información de debug
   const joystickStatus = Math.abs(currentSpeed) >= minSpeedForSteering ? "ACTIVO" : "INACTIVO";
-  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | Yaw: ${(camera.rotation.y*180/Math.PI).toFixed(1)}° | Vel: ${currentSpeed.toFixed(2)} m/s | Joystick: ${joystickRotation.toFixed(2)} (${joystickStatus})`;
+  const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO";
+  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(2)} m/s`;
   
   scene.render();
 });
