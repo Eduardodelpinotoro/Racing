@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SPA - Control por Vista (Touch Look) - Cronómetro Corregido</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<style>
+  html,body{margin:0;overflow:hidden;background:#000;height:100%}
+  #renderCanvas{width:100%;height:100%}
+  .button{position:absolute;bottom:30px;width:80px;height:80px;background:rgba(255,255,255,0.25);border-radius:50%;pointer-events:auto;}
+  #btnForward{right:40px}
+  #btnBackward{right:140px}
+  #speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
+  #speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
+  #debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+
+  #joystickContainer { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; pointer-events: auto; z-index: 10; }
+  #joystickBase { position: absolute; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.15); border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); }
+  #joystickHandle { position: absolute; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.05s; }
+  #joystickAxis { position: absolute; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); top: 50%; left: 0; transform: translateY(-50%); }
+  .joystick-disabled { opacity: 0.5; pointer-events: none; }
+
+  /* Panel de cronómetro más arriba y pequeño */
+  #timerPanel { position: absolute; top: 10px; right: 10px; width: 150px; background: rgba(0, 0, 0, 0.7); border: 2px solid #fff; border-radius: 10px; padding: 5px; color: #fff; font-family: monospace; z-index: 10; font-size: 12px;}
+  #currentTimer { font-size: 18px; text-align: center; margin-bottom: 5px; color: #0f0; }
+  #lapTimes { font-size: 10px; max-height: 100px; overflow-y: auto; }
+  .lap-time { padding: 1px 0; border-bottom: 1px solid #444; }
+  .lap-time:last-child { border-bottom: none; }
+  .best-lap { color: #ff0; font-weight: bold; }
+  #timerStatus { text-align: center; font-size: 12px; margin-top: 2px; color: #0ff; }
+  #bestLapDisplay { text-align: center; font-size: 12px; margin-top: 2px; color: #ff0; }
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<div id="speedBarContainer"><div id="speedBar"></div></div>
+<div id="debug">Cargando circuito...</div>
+<div class="button" id="btnForward" title="Acelerar"></div>
+<div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
+
+<div id="joystickContainer" class="joystick-disabled">
+  <div id="joystickBase">
+    <div id="joystickAxis"></div>
+    <div id="joystickHandle"></div>
+  </div>
+</div>
+
+<div id="timerPanel">
+  <div id="currentTimer">00:00.000</div>
+  <div id="lapTimes"></div>
+  <div id="timerStatus">ESPERANDO EN META</div>
+  <div id="bestLapDisplay">MEJOR VUELTA: --:--.---</div>
+</div>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+// Orientación y canvas
+if(screen.orientation && screen.orientation.lock){screen.orientation.lock("landscape").catch(()=>{});}
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas,true);
+const scene = new BABYLON.Scene(engine);
+scene.collisionsEnabled = true;
+
+// PLAYER
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
+playerMesh.isVisible=false;
+playerMesh.checkCollisions=true;
+playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
+playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
+
+// CAMERA
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,4,0), scene);
+camera.parent = playerMesh;
+camera.checkCollisions=false;
+camera.applyGravity=false;
+camera.attachControl(canvas,true);
+
+// LIGHT
+new BABYLON.HemisphericLight("h",new BABYLON.Vector3(0,1,0),scene);
+
+// SKYBOX DE NUBES
+const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:5000}, scene);
+const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMat", scene);
+skyboxMaterial.backFaceCulling = false;
+skyboxMaterial.disableLighting = true;
+skybox.material = skyboxMaterial;
+
+// Usamos textura de nubes disponible en BabylonJS CDN
+skyboxMaterial.diffuseTexture = new BABYLON.CubeTexture("https://playground.babylonjs.com/textures/skybox", scene);
+skyboxMaterial.diffuseTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+
+// UI
+const debug = document.getElementById("debug");
+const speedBar = document.getElementById("speedBar");
+
+// MOVIMIENTO
+let moveForward=false, moveBackward=false, currentSpeed=0;
+const maxSpeed=350, maxReverseSpeed=50, accel=50, airFriction=8, brakeFriction=150;
+
+document.getElementById("btnForward").addEventListener("touchstart",e=>{ e.preventDefault(); moveForward=true; });
+document.getElementById("btnForward").addEventListener("touchend",e=>{ e.preventDefault(); moveForward=false; });
+document.getElementById("btnBackward").addEventListener("touchstart",e=>{ e.preventDefault(); moveBackward=true; });
+document.getElementById("btnBackward").addEventListener("touchend",e=>{ e.preventDefault(); moveBackward=false; });
+
+// JOYSTICK
+const joystickContainer=document.getElementById("joystickContainer");
+const joystickHandle=document.getElementById("joystickHandle");
+let isJoystickActive=false, joystickRotation=0;
+const rotationSpeed=0.5, minSpeedForSteering=5;
+
+joystickContainer.addEventListener('touchstart', handleJoystickStart);
+joystickContainer.addEventListener('touchmove', handleJoystickMove);
+joystickContainer.addEventListener('touchend', handleJoystickEnd);
+
+function handleJoystickStart(e){ if(Math.abs(currentSpeed)<minSpeedForSteering) return; e.preventDefault(); isJoystickActive=true; updateJoystickPosition(e.touches[0]); }
+function handleJoystickMove(e){ if(Math.abs(currentSpeed)<minSpeedForSteering){ resetJoystick(); return; } if(!isJoystickActive) return; e.preventDefault(); updateJoystickPosition(e.touches[0]); }
+function handleJoystickEnd(e){ e.preventDefault(); isJoystickActive=false; resetJoystick(); }
+function updateJoystickPosition(touch){ 
+    const rect=joystickContainer.getBoundingClientRect();
+    const deltaX=touch.clientX-(rect.left+rect.width/2);
+    const maxDistance=rect.width/2-joystickHandle.offsetWidth/2;
+    const distance=Math.min(Math.abs(deltaX), maxDistance);
+    joystickHandle.style.transform=`translate(calc(-50% + ${Math.sign(deltaX)*distance}px), -50%)`;
+    joystickRotation=Math.max(-1,Math.min(1, deltaX/maxDistance));
+}
+function resetJoystick(){ joystickHandle.style.transform='translate(-50%,-50%)'; joystickRotation=0; }
+function updateJoystickState(){ 
+    if(Math.abs(currentSpeed)>=minSpeedForSteering) joystickContainer.classList.remove('joystick-disabled'); 
+    else { joystickContainer.classList.add('joystick-disabled'); if(isJoystickActive){ resetJoystick(); isJoystickActive=false; } }
+}
+
+// CRONÓMETRO
+const currentTimer=document.getElementById("currentTimer");
+const lapTimes=document.getElementById("lapTimes");
+const timerStatus=document.getElementById("timerStatus");
+const bestLapDisplay=document.getElementById("bestLapDisplay");
+let raceStartTime=0,currentLapStartTime=0,lastLapTime=0,bestLapTime=0,lapCount=0,isRacing=false,hasCrossedFinishLine=false,prevPosZ=0;
+
+// LÍNEA DE META
+const finishLine={minX:-3800,maxX:-3700,z:-4025,width:30,resetThresholdExtra:10};
+finishLine.centerX=(finishLine.minX+finishLine.maxX)/2;
+finishLine.resetThreshold=finishLine.width+finishLine.resetThresholdExtra;
+
+function formatTime(ms){const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000),msr=Math.floor(ms%1000); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${msr.toString().padStart(3,'0')}`;}
+function updateTimerDisplay(){ 
+    if(isRacing) currentTimer.textContent=formatTime(Date.now()-currentLapStartTime); 
+    else currentTimer.textContent="00:00.000"; 
+    bestLapDisplay.textContent=bestLapTime>0?`MEJOR VUELTA: ${formatTime(bestLapTime)}`:"MEJOR VUELTA: --:--.---";
+}
+function registerCross(pos){
+    if(!isRacing){isRacing=true; raceStartTime=Date.now(); currentLapStartTime=raceStartTime; lapCount=1; timerStatus.textContent="VUELTA 1"; timerStatus.style.color="#0f0"; return;}
+    const lapTime=Date.now()-currentLapStartTime; if(bestLapTime===0||lapTime<bestLapTime) bestLapTime=lapTime;
+    const lapElement=document.createElement("div"); lapElement.className="lap-time";
+    lapElement.textContent=`Vuelta ${lapCount}: ${formatTime(lapTime)}`+(lapTime===bestLapTime?" ★":"");
+    if(lapTime===bestLapTime) lapElement.classList.add("best-lap");
+    lapTimes.insertBefore(lapElement,lapTimes.firstChild);
+    lapCount++; currentLapStartTime=Date.now(); timerStatus.textContent=`VUELTA ${lapCount}`;
+}
+function checkFinishLine(){
+    const pos=playerMesh.position;
+    const insideX=(pos.x>=finishLine.minX && pos.x<=finishLine.maxX);
+    if(insideX){
+        if(!hasCrossedFinishLine && prevPosZ<finishLine.z && pos.z>=finishLine.z && Math.abs(pos.z-finishLine.z)<=finishLine.width){ hasCrossedFinishLine=true; registerCross(pos); }
+        else if(!hasCrossedFinishLine && prevPosZ>finishLine.z && pos.z<=finishLine.z && Math.abs(pos.z-finishLine.z)<=finishLine.width){ hasCrossedFinishLine=true; registerCross(pos); }
+    }
+    if(Math.abs(pos.z-finishLine.z)>finishLine.resetThreshold) hasCrossedFinishLine=false;
+    prevPosZ=pos.z;
+}
+
+// CARGAR CIRCUITO
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
+    debug.textContent="Circuito cargado - Línea de meta activa";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
+
+// Mantener en suelo
+function keepGround(){
+    const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0),50);
+    const hit=scene.pickWithRay(ray,m=>m!==playerMesh);
+    if(hit && hit.hit) playerMesh.position.y=hit.pickedPoint.y+2;
+}
+
+// FACTOR VELOCIDAD REALISTA PARA EL MARCADOR
+const maxRealKmH = 330; // Velocidad máxima GT3
+const speedFactor = maxRealKmH / maxSpeed;
+
+// LOOP principal
+engine.runRenderLoop(()=>{
+    const dt=engine.getDeltaTime()/1000;
+
+    // MOVIMIENTO
+    if(moveForward && !moveBackward) currentSpeed=Math.min(currentSpeed+accel*dt,maxSpeed);
+    else if(moveBackward && !moveForward) { if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-brakeFriction*dt,0); else currentSpeed=Math.max(currentSpeed-accel*dt,-maxReverseSpeed);}
+    else { if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-airFriction*dt,0); else if(currentSpeed<0) currentSpeed=Math.min(currentSpeed+airFriction*dt,0); }
+
+    updateJoystickState();
+    if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering)
+        camera.rotation.y += joystickRotation*rotationSpeed*dt;
+
+    // SpeedBar
+    speedBar.style.width = (Math.min(Math.abs(currentSpeed)/maxSpeed,1)*100)+"%";
+    speedBar.style.background = currentSpeed>=0?"#0f0":"#f00";
+
+    if(Math.abs(currentSpeed)>0.001){
+        const yaw=camera.rotation.y;
+        const forward=new BABYLON.Vector3(Math.sin(yaw),0,Math.cos(yaw));
+        playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt));
+    }
+
+    checkFinishLine();
+    updateTimerDisplay();
+    keepGround();
+
+    // DEBUG: mostrar velocidad realista
+    debug.textContent=`Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed*speedFactor).toFixed(0)} km/h`;
+    scene.render();
+});
+
+window.addEventListener('resize',()=>engine.resize());
+</script>
+</body>
+</html>
