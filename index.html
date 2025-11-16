@@ -97,7 +97,7 @@ function keepPlayerOnGround() {
 // MOVIMIENTO (acelerador / freno / teclado)
 let moveForward = false, moveBackward = false;
 let currentSpeed = 0; // unidades por segundo
-const maxSpeed = 200.0;            // m/s hacia adelante
+const maxSpeed = 400.0;            // m/s hacia adelante
 const maxReverseSpeed = 5.0;     // m/s hacia atrás
 const accel = 100.0;               // m/s^2 (aceleración)
 const decel = 10.0;              // m/s^2 (freno)
@@ -158,8 +158,8 @@ engine.runRenderLoop(() => {
 
   // ----- STRAFING HORIZONTAL (joystick) -----
   if (Math.abs(joyX) > 0.05) {
-    const strafeSpeed = -joyX * 3.0; // invertido (negativo para que joystick izquierda => izquierda)
-    const right = new BABYLON.Vector3(Math.cos(camera.rotation.y), 0, -Math.sin(camera.rotation.y));
+    const strafeSpeed = -joyX * 9.0; // invertido (negativo para que joystick izquierda => izquierda)
+    const right = new BABYLON.Vector3(Math.cos(camera.rotation.y), 0, +Math.sin(camera.rotation.y));
     // movemos directamente sin acumular velocidad (es inmediato)
     playerMesh.moveWithCollisions(right.scale(strafeSpeed * dt));
   }
