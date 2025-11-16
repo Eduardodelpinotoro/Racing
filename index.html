@@ -58,7 +58,7 @@ dirLight.intensity = 0.5;
 let moveForward = false;
 let moveBackward = false;
 let currentSpeed = 0;
-const maxSpeed = 0.2;
+const maxSpeed = 2;
 const acceleration = 0.01;
 const friction = 0.02;
 
@@ -193,6 +193,8 @@ function positionCameraOnTrack() {
     debug.textContent = `Posición: ${camera.position.x.toFixed(1)}, ${camera.position.y.toFixed(1)}, ${camera.position.z.toFixed(1)}`;
   } else {
     // Posición por defecto
+    camera.position.x = -2000;
+    camera.position.z = -150;
     camera.position.y = 10;
     console.log("Usando posición por defecto");
   }
