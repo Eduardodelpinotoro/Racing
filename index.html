@@ -64,58 +64,7 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
-// CREAR CIELO CON AJUSTES PARA VISIBILIDAD DE ÁRBOLES
-const createCloudySky = () => {
-    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 10000 }, scene); // Reducir tamaño
-    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
-    
-    const reflectionTexture = new BABYLON.CubeTexture(
-        "https://assets.babylonjs.com/textures/skybox/skybox", 
-        scene
-    );
-    
-    skyboxMaterial.reflectionTexture = reflectionTexture;
-    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    skyboxMaterial.disableLighting = true;
-    skybox.material = skyboxMaterial;
-    skybox.infiniteDistance = true;
-    
-    // AJUSTAR CONFIGURACIÓN DE LA CÁMARA PARA MEJOR VISIBILIDAD
-    camera.maxZ = 100000; // Aumentar distancia máxima de renderizado
-    camera.minZ = 0.1;    // Distancia mínima
-    
-    return skybox;
-};
 
-// Y en el loader, después de crear el cielo:
-BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
-    scene.meshes.forEach(m=>{ 
-        if(m!==playerMesh) {
-            m.checkCollisions = true;
-            // Asegurar que los materiales se rendericen correctamente
-            if(m.material) {
-                m.material.freeze(); // Optimizar materiales
-            }
-        }
-    });
-    
-    playerMesh.position.set(-3780,330,-3980); 
-    prevPosZ = playerMesh.position.z;
-    
-    // CREAR EL CIELO
-    createCloudySky();
-    
-    // CONFIGURACIÓN ADICIONAL PARA MEJOR RENDIMIENTO Y VISIBILIDAD
-    scene.fogMode = BABYLON.Scene.FOGMODE_NONE; // Asegurar que no hay niebla
-    
-    // Forzar actualización de la cámara
-    camera.getViewMatrix();
-    
-    debug.textContent = "Circuito cargado - Cielo activo - Árboles visibles";
-}, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
-  
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
