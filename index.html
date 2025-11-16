@@ -64,44 +64,38 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
-// CREAR CIELO NUBLADO FUNCIONAL
-const createCloudySky = () => {
-    // Crear esfera del cielo muy grande
-    const skybox = BABYLON.MeshBuilder.CreateSphere("skyBox", { diameter: 100000, segments: 64 }, scene);
+// CREAR CIELO CON TEXTURA CUBEMAP DE BABYLON
+const createBabylonSkybox = () => {
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 100000 }, scene);
+    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
     
-    // Material del cielo
-    const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
-    skyMaterial.backFaceCulling = false;
-    skyMaterial.disableLighting = true;
+    // Usar cubemap por defecto de Babylon (funciona seguro)
+    const reflectionTexture = new BABYLON.CubeTexture(
+        "https://assets.babylonjs.com/textures/skybox/skybox", 
+        scene
+    );
     
-    // Usar imagen HD de cielo nublado
-    const skyTexture = new BABYLON.Texture("https://images.unsplash.com/photo-1601297183305-6df142704ea2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80", scene);
-    
-    // Configuración correcta para skybox
-    skyTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-    
-    // Usar emissiveTexture en lugar de reflectionTexture
-    skyMaterial.emissiveTexture = skyTexture;
-    skyMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-    skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    skyMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
-    
-    skybox.material = skyMaterial;
+    skyboxMaterial.reflectionTexture = reflectionTexture;
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
     skybox.infiniteDistance = true;
     
     return skybox;
 };
 
-// Crear el cielo después de cargar la escena
+// Y en el loader:
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
     playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
     
-    // CREAR EL CIELO
-    createCloudySky();
+    // CREAR EL CIELO CON TEXTURA BABYLON
+    createBabylonSkybox();
     
-    debug.textContent="Circuito cargado - Línea de meta activa - Cielo nublado HD";
-}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });  
+    debug.textContent="Circuito cargado - Línea de meta activa - Cielo activo";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; }); 
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
