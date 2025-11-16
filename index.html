@@ -75,7 +75,7 @@ let moveBackward = false;
 let currentSpeed = 0;
 const maxSpeed = 10;
 const acceleration = 2;
-const friction = 0.03;
+const friction = 0;
 
 const speedBar = document.getElementById("speedBar");
 const debug = document.getElementById("debug");
@@ -124,7 +124,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
         mesh.physicsImpostor = new BABYLON.PhysicsImpostor(
           mesh, 
           BABYLON.PhysicsImpostor.MeshImpostor, 
-          { mass: 0, restitution: 0.1 }, 
+          { mass: 0, restitution: 0 }, 
           scene
         );
       }
@@ -142,7 +142,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
   playerMesh.physicsImpostor = new BABYLON.PhysicsImpostor(
     playerMesh,
     BABYLON.PhysicsImpostor.CapsuleImpostor,
-    { mass: 1, friction: 0.001, restitution: 0.001 },
+    { mass: 1, friction: 0, restitution: 0 },
     scene
   );
   
@@ -240,17 +240,20 @@ engine.runRenderLoop(()=>{
     camera.rotation.y -= joyX * 0.03;
     
     // Movimiento con joystick vertical
-    const moveSpeed = joyY * 0.15;
-    if (Math.abs(moveSpeed) > 0.01) {
-      const direction = new BABYLON.Vector3(
-        Math.sin(camera.rotation.y),
+    // Movimiento SOLO horizontal
+const lateralSpeed = -joyX * 0.15; // joyX controla izquierda/derecha
+
+if (Math.abs(lateralSpeed) > 0.01) {
+    const right = new BABYLON.Vector3(
+        Math.cos(camera.rotation.y),
         0,
-        Math.cos(camera.rotation.y)
-      );
-      
-      // Mover el MESH del jugador con colisiones
-      playerMesh.moveWithCollisions(direction.scale(moveSpeed));
-    }
+        -Math.sin(camera.rotation.y)
+    );
+
+    playerMesh.moveWithCollisions(right.scale(lateralSpeed));
+}
+
+    
   }
   
   // Mantener al jugador sobre el suelo
