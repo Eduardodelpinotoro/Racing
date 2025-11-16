@@ -77,7 +77,7 @@ camera.attachControl(canvas,true);
 new BABYLON.HemisphericLight("h",new BABYLON.Vector3(0,1,0),scene);
 
 // SKY MATERIAL (nubes tipo Babylon)
-const skyMesh=BABYLON.MeshBuilder.CreateSphere("sky", {diameter:15000, sideOrientation:BABYLON.Mesh.BACKSIDE}, scene);
+const skyMesh=BABYLON.MeshBuilder.CreateSphere("sky", {diameter:30000, sideOrientation:BABYLON.Mesh.BACKSIDE}, scene);
 const skyMat=new BABYLON.SkyMaterial("skyMat", scene);
 skyMat.turbidity=10;       // densidad de nubes
 skyMat.rayleigh=2;         // dispersión
