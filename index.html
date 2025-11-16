@@ -65,7 +65,7 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // Skybox
-    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:200000.0}, scene);
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox",  scene);
     const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
     skyboxMaterial.backFaceCulling = false;
     skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
