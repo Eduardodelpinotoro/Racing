@@ -398,7 +398,7 @@ function checkFinishLine() {
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(-3780,335,-3980);
+    playerMesh.position.set(-3780,330,-3980);
     debug.textContent = "Circuito cargado - Busca la línea de meta en X:3750-3800, Z:4025";
     
     // DEBUG: Crear marcador visual de la línea de meta
