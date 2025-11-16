@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Giroscopio (Solo Móvil)</title>
+<title>SPA - Control por Giroscopio PRO (GyroNorm)</title>
 <style>
   html,body{margin:0;overflow:hidden;background:#000}
   #renderCanvas{width:100%;height:100%}
@@ -12,6 +12,9 @@
   #speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
   #speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
   #debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+  #settingsBtn{position:absolute;top:10px;right:10px;font-size:32px;color:white;z-index:20;cursor:pointer;}
+  #settingsPanel{position:absolute;top:60px;right:10px;width:220px;padding:10px;background:rgba(0,0,0,0.85);color:white;border-radius:10px;display:none;z-index:20;}
+  #calibrateBtn{width:100%;padding:10px;font-size:16px;border-radius:8px;}
 </style>
 </head>
 <body>
@@ -20,34 +23,47 @@
 <div id="debug">Cargando circuito...</div>
 <div class="button" id="btnForward"></div>
 <div class="button" id="btnBackward"></div>
+<div id="settingsBtn">⚙️</div>
+<div id="settingsPanel">
+  <h3 style="margin:0 0 10px 0;">Calibración</h3>
+  <button id="calibrateBtn">Calibrar Giroscopio</button>
+</div>
 
+<script src="https://cdn.jsdelivr.net/npm/gyronorm/dist/gyronorm.complete.min.js"></script>
 <script src="https://cdn.babylonjs.com/babylon.js"></script>
 <script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
 
 <script>
-// *** SOLO MÓVIL: eliminar control PC completamente ***
+// *** SOLO MÓVIL ***
 if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-    alert("Esta aplicación solo funciona en dispositivos móviles con giroscopio.");
+    alert("Esta aplicación solo funciona en móviles.");
+}
+
+// *** BLOQUEAR A LANDSCAPE ***
+if (screen.orientation && screen.orientation.lock) {
+    screen.orientation.lock("landscape").catch(()=>{});
 }
 
 const canvas = document.getElementById("renderCanvas");
-const engine = new BABYLON.Engine(canvas, true);
+const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // PLAYER
-const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", { height: 1.8, radius: 0.3 }, scene);
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 0.9, 0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5,0.9,0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,0.9,0);
 
 // CÁMARA
-const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 2, 0), scene);
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,2,0), scene);
 camera.parent = playerMesh;
 camera.checkCollisions = false;
 camera.applyGravity = false;
-camera.attachControl(canvas, false);
+
+// Permitir solo movimiento horizontal con giroscopio (NO ratón)
+camera.inputs.clear();
 
 // LUZ
 new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0,1,0), scene);
@@ -56,126 +72,107 @@ new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0,1,0), scene);
 const debug = document.getElementById("debug");
 const speedBar = document.getElementById("speedBar");
 
-// ACELERADOR Y FRENO
-let moveForward = false, moveBackward = false;
-let currentSpeed = 0;
-const maxSpeed = 300;
-const maxReverseSpeed = 5;
-const accel = 80;
-const decel = 90;
-const airFriction = 8;
+// ACELERACIÓN
+let moveForward=false, moveBackward=false;
+let currentSpeed=0;
+const maxSpeed=300;
+const maxReverseSpeed=5;
+const accel=80;
+const decel=90;
+const airFriction=10;
 
-const btnF = document.getElementById("btnForward");
-const btnB = document.getElementById("btnBackward");
+// BOTONES
+const btnF=document.getElementById("btnForward");
+const btnB=document.getElementById("btnBackward");
+btnF.addEventListener("touchstart",()=>moveForward=true);
+btnF.addEventListener("touchend",()=>moveForward=false);
+btnB.addEventListener("touchstart",()=>moveBackward=true);
+btnB.addEventListener("touchend",()=>moveBackward=false);
 
-btnF.addEventListener("touchstart", ()=> moveForward = true);
-btnF.addEventListener("touchend", ()=> moveForward = false);
-btnB.addEventListener("touchstart", ()=> moveBackward = true);
-btnB.addEventListener("touchend", ()=> moveBackward = false);
-
-// *** CONTROL POR GIROSCOPIO ***
-let gyroX = 0;
-let gyroY = 0;
-let gyroZ = 0;
-let tilt = 0; // inclinación
-
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientation", (e) => {
-      gyroX = e.beta;   // inclinación adelante-atrás
-      gyroY = e.gamma;  // izquierda-derecha
-      gyroZ = e.alpha;  // rotación
-      tilt = gyroY;     // usar gamma para girar o mover
-  });
-} else {
-  alert("Tu móvil no soporta giroscopio.");
-}
-
-// Cargar circuito
-BABYLON.SceneLoader.Append("", "spa.glb", scene, (s) => {
-    s.meshes.forEach(m => { if (m !== playerMesh) m.checkCollisions = true; });
-    playerMesh.position.set(-3780, 330, -3980);
-    debug.textContent = "Circuito cargado - Giroscopio listo";
-});
-
-// Mantener pegado al suelo
-function keepGround() {
-  const ray = new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0), 50);
-  const hit = scene.pickWithRay(ray, m=>m!==playerMesh);
-  if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 1.8;
-}
-
-// LOOP
-engine.runRenderLoop(() => {
-  const dt = engine.getDeltaTime() / 1000;
-
-  // VELOCIDAD
-  if (moveForward && !moveBackward) currentSpeed = Math.min(currentSpeed + accel*dt, maxSpeed);
-  else if (moveBackward && !moveForward) currentSpeed = Math.max(currentSpeed - accel*dt, -maxReverseSpeed);
-  else {
-      if (currentSpeed > 0) currentSpeed = Math.max(currentSpeed - airFriction*dt, 0);
-      if (currentSpeed < 0) currentSpeed = Math.min(currentSpeed + airFriction*dt, 0);
-  }
-
-  // barra
-  speedBar.style.width = (Math.abs(currentSpeed)/maxSpeed*100) + "%";
-  speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
-
-  // MOVER HACIA ADELANTE
-  if (Math.abs(currentSpeed) > 0.001) {
-      const f = new BABYLON.Vector3(Math.sin(camera.rotation.y), 0, Math.cos(camera.rotation.y));
-      playerMesh.moveWithCollisions(f.scale(currentSpeed * dt));
-  }
-
-  // *** MOVER LATERAL POR INCLINACIÓN (gyro) ***
-  if (Math.abs(tilt) > 2) {
-      const side = new BABYLON.Vector3(Math.cos(camera.rotation.y), 0, -Math.sin(camera.rotation.y));
-      const sideSpeed = (tilt / 40) * 40; // sensibilidad
-      playerMesh.moveWithCollisions(side.scale(sideSpeed * dt));
-  }
-
-  keepGround();
-  debug.textContent = `Tilt: ${tilt.toFixed(1)} | Vel: ${currentSpeed.toFixed(1)}`;
-  scene.render();
-});
-
-window.addEventListener("resize", ()=>engine.resize());
-</script>
-<!-- Botón de ajustes -->
-<div id="settingsBtn" style="position:absolute;top:10px;right:10px;font-size:32px;color:white;z-index:20;">⚙️</div>
-
-<!-- Panel de ajustes -->
-<div id="settingsPanel" style="position:absolute;top:60px;right:10px;width:220px;padding:10px;background:rgba(0,0,0,0.8);color:white;border-radius:10px;display:none;z-index:20;">
-  <h3 style="margin:0 0 10px 0;">Calibración</h3>
-  <button id="calibrateBtn" style="width:100%;padding:10px;font-size:16px;border-radius:8px;">Calibrar Giroscopio</button>
-</div>
-
-<script>
-// --- CONTROL DE PANTALLA ---
-screen.orientation.lock = screen.orientation.lock || screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation;
-if (screen.orientation && screen.orientation.lock) {
-    screen.orientation.lock("landscape").catch(()=>{});
-}
-
-// --- PANEL DE AJUSTES ---
-const settingsBtn = document.getElementById("settingsBtn");
-const settingsPanel = document.getElementById("settingsPanel");
-settingsBtn.onclick = ()=>{
-    settingsPanel.style.display = settingsPanel.style.display === "none" ? "block" : "none";
+// PANEL DE AJUSTES
+const settingsBtn=document.getElementById("settingsBtn");
+const settingsPanel=document.getElementById("settingsPanel");
+settingsBtn.onclick=()=>{
+    settingsPanel.style.display = settingsPanel.style.display=="none" ? "block" : "none";
 };
 
-// --- CALIBRACIÓN DEL GIROSCOPIO ---
-let calibrationOffset = 0;
-document.getElementById("calibrateBtn").onclick = ()=>{
+// GIROSCOPIO PRO (GYRONORM)
+let tilt=0;
+let calibrationOffset=0;
+
+const gn=new GyroNorm();
+
+gn.init({
+    frequency:30,
+    gravityNormalized:true,
+    orientationBase:GyroNorm.GAME,
+    decimalCount:3,
+    screenAdjusted:true
+}).then(()=>{
+    gn.start(data=>{
+        tilt = data.do.gamma; // izquierda/derecha REAL
+    });
+}).catch(()=>{
+    alert("No se puede acceder al giroscopio.");
+});
+
+// BOTÓN CALIBRAR
+calibrateBtn.onclick=()=>{
     calibrationOffset = tilt;
     alert("Giroscopio calibrado");
 };
 
-// Ajuste aplicado dentro del loop principal del juego
-// Reemplazar: sideSpeed = (tilt / 40) * 40;
-// Por la versión calibrada:
-// sideSpeed = ((tilt - calibrationOffset) / 40) * 40;
+// CARGAR CIRCUITO
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980);
+    debug.textContent="Listo - Giroscopio activo";
+});
 
+// Suelo
+function keepGround(){
+  const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)),new BABYLON.Vector3(0,-1,0),50);
+  const hit=scene.pickWithRay(ray,m=>m!==playerMesh);
+  if(hit&&hit.hit) playerMesh.position.y = hit.pickedPoint.y + 1.8;
+}
+
+// LOOP
+engine.runRenderLoop(()=>{
+  const dt=engine.getDeltaTime()/1000;
+
+  // VELOCIDAD
+  if(moveForward&&!moveBackward) currentSpeed=Math.min(currentSpeed+accel*dt,maxSpeed);
+  else if(moveBackward&&!moveForward) currentSpeed=Math.max(currentSpeed-accel*dt,-maxReverseSpeed);
+  else {
+    if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-airFriction*dt,0);
+    else if(currentSpeed<0) currentSpeed=Math.min(currentSpeed+airFriction*dt,0);
+  }
+
+  speedBar.style.width=(Math.abs(currentSpeed)/maxSpeed*100)+"%";
+  speedBar.style.background=currentSpeed>=0?"#0f0":"#f00";
+
+  // AVANCE
+  if(Math.abs(currentSpeed)>0.1){
+      const f=new BABYLON.Vector3(Math.sin(camera.rotation.y),0,Math.cos(camera.rotation.y));
+      playerMesh.moveWithCollisions(f.scale(currentSpeed*dt));
+  }
+
+  // LATERAL CON GYRONORM
+  const correctedTilt = tilt - calibrationOffset;
+  if(Math.abs(correctedTilt) > 1){
+      const side=new BABYLON.Vector3(Math.cos(camera.rotation.y),0,-Math.sin(camera.rotation.y));
+      const sideSpeed = (correctedTilt / 45) * 60;
+      playerMesh.moveWithCollisions(side.scale(sideSpeed * dt));
+  }
+
+  keepGround();
+
+  debug.textContent=`Tilt: ${tilt.toFixed(1)} | Offset: ${calibrationOffset.toFixed(1)} | Vel: ${currentSpeed.toFixed(1)}`;
+
+  scene.render();
+});
+
+window.addEventListener("resize",()=>engine.resize());
 </script>
-
 </body>
 </html>
