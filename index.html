@@ -38,7 +38,7 @@ scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
 
 // Crear un mesh invisible para el jugador con colisiones
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {
-  height: 1.8,
+  height: 2.5,
   radius: 0.3
 }, scene);
 playerMesh.isVisible = false; // Hacerlo invisible
@@ -73,9 +73,9 @@ dirLight.intensity = 0.5;
 let moveForward = false;
 let moveBackward = false;
 let currentSpeed = 0;
-const maxSpeed = 2;
+const maxSpeed = 6;
 const acceleration = 2;
-const friction = 0;
+const friction = 0.03;
 
 const speedBar = document.getElementById("speedBar");
 const debug = document.getElementById("debug");
