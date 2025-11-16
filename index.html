@@ -62,12 +62,23 @@ const engine=new BABYLON.Engine(canvas,true);
 const scene=new BABYLON.Scene(engine);
 scene.collisionsEnabled=true;
 
-// --- CIELO DE NUBES ---
-const sky = new BABYLON.Layer(
-    "sky", 
-    "https://assets.babylonjs.com/environments/clouds/clouds.jpg", // imagen de nubes
-    scene
-);
+// --- CIELO DE NUBES PROCEDURAL ---
+import { CloudProceduralTexture } from 'https://cdn.babylonjs.com/proceduralTexturesLibrary/babylon.cloudProceduralTexture.min.js';
+
+const cloudTexture = new BABYLON.CloudProceduralTexture("cloudTex", 512, scene);
+cloudTexture.skyColor = new BABYLON.Color4(0.6, 0.8, 1, 1);      // color del cielo
+cloudTexture.cloudColor = new BABYLON.Color4(1, 1, 1, 1);        // color de las nubes
+cloudTexture.amplitude = 1.0;
+cloudTexture.numOctaves = 4;
+
+const skyMat = new BABYLON.StandardMaterial("skyMat", scene);
+skyMat.emissiveTexture = cloudTexture;
+skyMat.backFaceCulling = false;
+
+const skyBox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 10000 }, scene);
+skyBox.material = skyMat;
+skyBox.infiniteDistance = true;
+  
   
 
 // PLAYER
