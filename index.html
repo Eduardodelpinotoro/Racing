@@ -64,39 +64,6 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
-  // CREAR CIELO NUBLADO CON createDefaultEnvironment
-// CREAR CIELO CON TEXTURA CUBEMAP DE BABYLON
-const createBabylonSkybox = () => {
-    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 100000 }, scene);
-    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
-    
-    // Usar cubemap por defecto de Babylon (funciona seguro)
-    const reflectionTexture = new BABYLON.CubeTexture(
-        "https://assets.babylonjs.com/textures/skybox/skybox", 
-        scene
-    );
-    
-    skyboxMaterial.reflectionTexture = reflectionTexture;
-    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    skyboxMaterial.disableLighting = true;
-    skybox.material = skyboxMaterial;
-    skybox.infiniteDistance = true;
-    
-    return skybox;
-};
-
-// Y en el loader:
-BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
-    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
-    
-    // CREAR EL CIELO CON TEXTURA BABYLON
-    createBabylonSkybox();
-    
-    debug.textContent="Circuito cargado - Línea de meta activa - Cielo activo";
-}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
