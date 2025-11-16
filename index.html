@@ -65,7 +65,33 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // Skybox
+// CREAR CIELO FUNCIONAL
+const createSkybox = () => {
+    const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000 }, scene);
+    const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+    
+    skyboxMaterial.backFaceCulling = false;
+    skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
+    skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+    skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    skyboxMaterial.disableLighting = true;
+    skybox.material = skyboxMaterial;
+    skybox.infiniteDistance = true;
+    
+    return skybox;
+};
 
+// Crear el cielo después de cargar la escena
+BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+    scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
+    playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
+    
+    // CREAR EL CIELO
+    createSkybox();
+    
+    debug.textContent="Circuito cargado - Línea de meta activa - Cielo activo";
+}, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
