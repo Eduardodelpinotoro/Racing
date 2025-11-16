@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Control por Vista (Touch Look) - Con Cronómetro</title>
+<title>SPA - Control por Vista (Touch Look) - Con Cronómetro Corregido</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <style>
   html,body{margin:0;overflow:hidden;background:#000;height:100%}
@@ -154,15 +154,15 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
-// PLAYER
+// PLAYER - CON ALTURA MODIFICADA
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5,2,0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5,0.9,0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0); // MODIFICADO: de 0.9 a 2
 
-// CÁMARA
-const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,2,0), scene);
+// CÁMARA - CON ALTURA MODIFICADA
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,335,0), scene); // MODIFICADO: altura 335
 camera.parent = playerMesh;
 camera.checkCollisions = false;
 camera.applyGravity = false;
@@ -183,8 +183,8 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=250;      // ajustar según quieras (m/s)
-const maxReverseSpeed=180;
+const maxSpeed=200;      // ajustar según quieras (m/s)
+const maxReverseSpeed=120;
 const accel=50;         // m/s^2
 const airFriction=8;
 
@@ -294,7 +294,7 @@ function updateJoystickState() {
   }
 }
 
-// SISTEMA DE CRONÓMETRO
+// SISTEMA DE CRONÓMETRO MEJORADO
 const timerPanel = document.getElementById("timerPanel");
 const currentTimer = document.getElementById("currentTimer");
 const lapTimes = document.getElementById("lapTimes");
@@ -308,12 +308,13 @@ let lapCount = 0;
 let isRacing = false;
 let hasCrossedFinishLine = false;
 
-// Línea de meta: X entre 3750-3800, Z=4025
+// Línea de meta CORREGIDA - usando las coordenadas originales del circuito
+// Las coordenadas del circuito no cambian aunque modifiquemos la altura del jugador
 const finishLine = {
   minX: 3750,
   maxX: 3800,
   z: 4025,
-  width: 5 // Margen de detección en Z
+  width: 10 // Aumentamos el margen de detección
 };
 
 function formatTime(milliseconds) {
@@ -335,6 +336,12 @@ function updateTimerDisplay() {
 function checkFinishLine() {
   const pos = playerMesh.position;
   
+  // DEBUG: Mostrar información de posición cerca de la línea de meta
+  const nearFinishLine = Math.abs(pos.z - finishLine.z) < 50;
+  if (nearFinishLine) {
+    console.log(`Cerca de meta: X=${pos.x.toFixed(1)}, Z=${pos.z.toFixed(1)}`);
+  }
+  
   // Verificar si estamos cerca de la línea de meta en Z
   if (Math.abs(pos.z - finishLine.z) < finishLine.width) {
     // Verificar si estamos en el rango correcto de X
@@ -350,6 +357,7 @@ function checkFinishLine() {
           lapCount = 1;
           timerStatus.textContent = "VUELTA 1";
           timerStatus.style.color = "#0f0";
+          console.log("¡CARRERA INICIADA!");
         } else {
           // Finalizar vuelta
           const lapTime = Date.now() - currentLapStartTime;
@@ -377,6 +385,7 @@ function checkFinishLine() {
           lapCount++;
           currentLapStartTime = Date.now();
           timerStatus.textContent = `VUELTA ${lapCount}`;
+          console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)}`);
         }
       }
     }
@@ -389,15 +398,26 @@ function checkFinishLine() {
 // Cargar circuito
 BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(-3780,335,-3980);
-    debug.textContent = "Circuito cargado - Usa la vista para orientar y botones para avanzar";
+    playerMesh.position.set(-3780,340,-3980);
+    debug.textContent = "Circuito cargado - Busca la línea de meta en X:3750-3800, Z:4025";
+    
+    // DEBUG: Crear marcador visual de la línea de meta
+    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: 50, height: 10, depth: 2}, scene);
+    finishLineMarker.position.set(3775, 340, 4025); // Posición de la línea de meta
+    finishLineMarker.isVisible = true;
+    
+    const finishMaterial = new BABYLON.StandardMaterial("finishMat", scene);
+    finishMaterial.emissiveColor = new BABYLON.Color3(1, 0, 0); // Rojo brillante
+    finishMaterial.alpha = 0.5; // Semi-transparente
+    finishLineMarker.material = finishMaterial;
+    
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
 
 // Mantener en suelo
 function keepGround(){
   const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0), 50);
   const hit=scene.pickWithRay(ray, m=>m!==playerMesh);
-  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 1.8;
+  if(hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; // Ajustado a la nueva altura
 }
 
 // LOOP principal (usamos solo yaw de la cámara - rotación y)
@@ -438,10 +458,12 @@ engine.runRenderLoop(()=>{
   // Mantener en suelo y render
   keepGround();
   
-  // Información de debug
+  // Información de debug MEJORADA
   const joystickStatus = Math.abs(currentSpeed) >= minSpeedForSteering ? "ACTIVO" : "INACTIVO";
-  const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO";
-  debug.textContent = `Pos: ${playerMesh.position.x.toFixed(1)}, ${playerMesh.position.y.toFixed(1)}, ${playerMesh.position.z.toFixed(1)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(2)} m/s`;
+  const raceStatus = isRacing ? `CARRERA - Vuelta ${lapCount}` : "ESPERANDO EN META";
+  const nearFinish = Math.abs(playerMesh.position.z - finishLine.z) < 50 ? "CERCA META" : "";
+  
+  debug.textContent = `Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | ${raceStatus} | Vel: ${currentSpeed.toFixed(0)} km/h ${nearFinish}`;
   
   scene.render();
 });
