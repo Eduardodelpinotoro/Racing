@@ -82,7 +82,7 @@ camera.attachControl(canvas,true);
 new BABYLON.HemisphericLight("h",new BABYLON.Vector3(0,1,0),scene);
 
 // SKYBOX ESFÉRICO
-const sky = BABYLON.MeshBuilder.CreateSphere("sky",{diameter:5000, segments:32},scene);
+const sky = BABYLON.MeshBuilder.CreateSphere("sky",{diameter:500000, segments:32},scene);
 sky.infiniteDistance = true;
 const skyMat = new BABYLON.StandardMaterial("skyMat",scene);
 skyMat.backFaceCulling = false;
