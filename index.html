@@ -294,9 +294,11 @@ const finishLine = {
   maxX: -3700,
   z: -4025,         // misma Z que la posición inicial del jugador / marcador
   width: 30,        // margen de detección (en Z)
-  resetDistance: 100, // distancia en Z para permitir reset del cruce
-  centerX: -4025    // centro visual para el marcador
+  // resetThreshold: valor que se usará para "liberar" el cruce después de salir del área
+  resetThresholdExtra: 10
 };
+finishLine.centerX = (finishLine.minX + finishLine.maxX) / 2;
+finishLine.resetThreshold = finishLine.width + finishLine.resetThresholdExtra; // p.ej. 30 + 10 = 40
 
 function formatTime(milliseconds) {
   const minutes = Math.floor(milliseconds / 60000);
@@ -337,15 +339,17 @@ function registerCross(pos) {
   if (bestLapTime === 0 || lapTime < bestLapTime) bestLapTime = lapTime;
   const lapElement = document.createElement("div");
   lapElement.className = "lap-time";
-  if (lapTime === bestLapTime) lapElement.classList.add("best-lap");
+  // mostrar la vuelta que acabas de completar (lapCount corresponde a la vuelta que estabas corriendo)
   lapElement.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}` + (lapTime === bestLapTime ? " ★" : "");
+  if (lapTime === bestLapTime) lapElement.classList.add("best-lap");
   lapTimes.insertBefore(lapElement, lapTimes.firstChild);
+  console.log(`Vuelta ${lapCount} completada: ${formatTime(lapTime)} en posición:`, pos.x.toFixed(1), pos.z.toFixed(1));
   lapCount++;
   currentLapStartTime = Date.now();
   timerStatus.textContent = `VUELTA ${lapCount}`;
-  console.log(`Vuelta ${lapCount-1} completada: ${formatTime(lapTime)} en posición:`, pos.x.toFixed(1), pos.z.toFixed(1));
 }
 
+// La lógica de detección ahora permite liberar el cruce cuando sales un poco de la zona de detección
 function checkFinishLine() {
   const pos = playerMesh.position;
   // Chequear X dentro del rango
@@ -363,8 +367,12 @@ function checkFinishLine() {
       registerCross(pos);
     }
   }
-  // Si nos alejamos suficientemente de la línea (en Z), permitir que se detecte un nuevo cruce
-  if (Math.abs(pos.z - finishLine.z) > finishLine.resetDistance) {
+  // Si nos alejamos ligeramente de la línea (en Z), permitir que se detecte un nuevo cruce
+  // Usamos resetThreshold (p. ej. width + 10) para no requerir desplazamientos enormes.
+  if (Math.abs(pos.z - finishLine.z) > finishLine.resetThreshold) {
+    if (hasCrossedFinishLine) {
+      console.log("Reset finish-line (saliste lo suficiente en Z). Pos Z:", pos.z.toFixed(1));
+    }
     hasCrossedFinishLine = false;
   }
   prevPosZ = pos.z;
@@ -379,8 +387,8 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     
     debug.textContent = "Circuito cargado - Línea de meta activa cerca de la posición inicial";
     
-    // MARCADOR visual de la línea de meta
-    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: (finishLine.maxX - finishLine.minX), height: 10, depth: 2}, scene);
+    // MARCADOR visual de la línea de meta (centro calculado)
+    const finishLineMarker = BABYLON.MeshBuilder.CreateBox("finishLine", {width: (finishLine.maxX - finishLine.minX), height: 10, depth: finishLine.width*2}, scene);
     finishLineMarker.position.set(finishLine.centerX, playerMesh.position.y + 10, finishLine.z);
     finishLineMarker.isVisible = true;
     finishLineMarker.rotation.y = 0;
@@ -389,6 +397,8 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     finishMaterial.emissiveColor = new BABYLON.Color3(0, 1, 0);
     finishMaterial.alpha = 0.6;
     finishLineMarker.material = finishMaterial;
+    
+    console.log("Finish line:", finishLine);
     
 }, null, (s,msg)=>{ console.error(msg); debug.textContent = 'Error cargando spa.glb'; });
 
@@ -445,5 +455,6 @@ engine.runRenderLoop(()=>{
 window.addEventListener('resize', ()=>engine.resize());
 </script>
 </body>
-  </html>
+</html>
+
     
