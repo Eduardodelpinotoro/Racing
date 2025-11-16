@@ -166,7 +166,7 @@ scene.collisionsEnabled = true;
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5,2,0.5);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,2,0); // MODIFICADO: de 0.9 a 2
 
 // CÁMARA - CON ALTURA MODIFICADA
@@ -321,10 +321,10 @@ let finishLineCrossDirection = 0; // 0 = no cruzado, 1 = dirección positiva, -1
 
 // LÍNEA DE META CORREGIDA - Coordenadas ajustadas según la posición inicial
 const finishLine = {
-  minX: -3820,  // Ajustado para estar cerca de la posición inicial
-  maxX: -3780,  // Ajustado para estar cerca de la posición inicial  
-  z: -3980,     // Misma Z que la posición inicial
-  width: 15,    // Margen de detección aumentado
+  minX: -3700,  // Ajustado para estar cerca de la posición inicial
+  maxX: -3800,  // Ajustado para estar cerca de la posición inicial  
+  z: -4025,     // Misma Z que la posición inicial
+  width: 100,    // Margen de detección aumentado
   direction: 1  // Dirección positiva para detectar cruce
 };
 
