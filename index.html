@@ -38,7 +38,7 @@ scene.gravity = new BABYLON.Vector3(0, -9.81, 0);
 
 // Crear un mesh invisible para el jugador con colisiones
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {
-  height: 2.5,
+  height: 1.8,
   radius: 0.3
 }, scene);
 playerMesh.isVisible = false; // Hacerlo invisible
@@ -75,7 +75,7 @@ let moveBackward = false;
 let currentSpeed = 0;
 const maxSpeed = 10;
 const acceleration = 4;
-const friction = -3;
+const friction = 0.03;
 
 const speedBar = document.getElementById("speedBar");
 const debug = document.getElementById("debug");
@@ -134,7 +134,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
   // Posición por defecto en línea de meta
   playerMesh.position.x = -3780;
   playerMesh.position.z = -3980;
-  playerMesh.position.y = 335;
+  playerMesh.position.y = 330;
   
   console.log("Jugador posicionado en línea de meta:", playerMesh.position.toString());
   
@@ -142,7 +142,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
   playerMesh.physicsImpostor = new BABYLON.PhysicsImpostor(
     playerMesh,
     BABYLON.PhysicsImpostor.CapsuleImpostor,
-    { mass: 1, friction: 0.01, restitution: 0.1 },
+    { mass: 1, friction: 0.001, restitution: 0.001 },
     scene
   );
   
