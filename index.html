@@ -50,7 +50,7 @@ playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.9, 0);
 const camera = new BABYLON.FreeCamera("fpCamera", new BABYLON.Vector3(0, 0, 0), scene);
 camera.parent = playerMesh;
 camera.rotation = new BABYLON.Vector3(0, 0, 0);
-camera.position = new BABYLON.Vector3(0, 1.5, 0); // A la altura de los ojos
+camera.position = new BABYLON.Vector3(0, 2, 0); // A la altura de los ojos
 
 // Configurar controles de la cámara
 camera.attachControl(canvas, true);
@@ -73,9 +73,9 @@ dirLight.intensity = 0.5;
 let moveForward = false;
 let moveBackward = false;
 let currentSpeed = 0;
-const maxSpeed = 6;
-const acceleration = 2;
-const friction = 0.03;
+const maxSpeed = 10;
+const acceleration = 4;
+const friction = -3;
 
 const speedBar = document.getElementById("speedBar");
 const debug = document.getElementById("debug");
@@ -134,7 +134,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
   // Posición por defecto en línea de meta
   playerMesh.position.x = -3780;
   playerMesh.position.z = -3980;
-  playerMesh.position.y = 330;
+  playerMesh.position.y = 335;
   
   console.log("Jugador posicionado en línea de meta:", playerMesh.position.toString());
   
@@ -142,7 +142,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, (scene) => {
   playerMesh.physicsImpostor = new BABYLON.PhysicsImpostor(
     playerMesh,
     BABYLON.PhysicsImpostor.CapsuleImpostor,
-    { mass: 1, friction: 0.1, restitution: 0.1 },
+    { mass: 1, friction: 0.01, restitution: 0.1 },
     scene
   );
   
