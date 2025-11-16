@@ -88,9 +88,7 @@ const skyMat = new BABYLON.StandardMaterial("skyMat",scene);
 skyMat.backFaceCulling = false;
 skyMat.disableLighting = true;
 sky.material = skyMat;
-// Mitad inferior verde oscuro, mitad superior azul/nubes
-skyMat.emissiveColor = new BABYLON.Color3(0.2,0.4,0.2); // verde inferior
-skyMat.diffuseColor = new BABYLON.Color3(0.5,0.7,1);    // cielo superior
+    // cielo superior
 
 // UI
 const debug = document.getElementById("debug");
