@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPA Model - Babylon.js</title>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            outline: none;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px 30px;
+            border-radius: 10px;
+            font-size: 18px;
+            z-index: 1000;
+            text-align: center;
+        }
+        
+        #error {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff6b6b;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            z-index: 1000;
+            text-align: center;
+            display: none;
+            max-width: 80%;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: white;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .control-item {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="renderCanvas"></canvas>
+    
+    <div id="loading">
+        <div>🔄 Cargando modelo SPA...</div>
+        <div style="font-size: 14px; margin-top: 10px; opacity: 0.8;" id="progress">Inicializando...</div>
+    </div>
+    
+    <div id="error"></div>
+    
+    <div id="controls">
+        <div class="control-item">🖱️ Rotar: Click + arrastrar</div>
+        <div class="control-item">🔍 Zoom: Rueda del ratón</div>
+        <div class="control-item">📤 Pan: Click derecho + arrastrar</div>
+    </div>
+
+    <script>
+        // Elementos de la UI
+        const canvas = document.getElementById("renderCanvas");
+        const loadingElement = document.getElementById("loading");
+        const errorElement = document.getElementById("error");
+        const controlsElement = document.getElementById("controls");
+        const progressElement = document.getElementById("progress");
+
+        // Configuración
+        const MODEL_PATH = "./spa.glb"; // Ruta relativa desde la raíz
+
+        // Crear motor Babylon.js
+        const engine = new BABYLON.Engine(canvas, true, {
+            preserveDrawingBuffer: true,
+            stencil: true
+        });
+
+        // Variable global para la escena
+        let scene;
+
+        // Crear escena
+        const createScene = function () {
+            const scene = new BABYLON.Scene(engine);
+            scene.clearColor = new BABYLON.Color4(0.1, 0.1, 0.15, 1.0);
+
+            // Cámara
+            const camera = new BABYLON.ArcRotateCamera(
+                "camera", 
+                -Math.PI / 2, 
+                Math.PI / 2.5, 
+                10, 
+                BABYLON.Vector3.Zero(), 
+                scene
+            );
+            camera.attachControls(canvas, true);
+            camera.lowerRadiusLimit = 1;
+            camera.upperRadiusLimit = 100;
+            camera.wheelPrecision = 50;
+            camera.panningSensibility = 1000;
+
+            // Luces
+            const hemisphericLight = new BABYLON.HemisphericLight(
+                "hemiLight", 
+                new BABYLON.Vector3(0, 1, 0), 
+                scene
+            );
+            hemisphericLight.intensity = 0.8;
+
+            const directionalLight = new BABYLON.DirectionalLight(
+                "dirLight", 
+                new BABYLON.Vector3(0, -1, -0.5), 
+                scene
+            );
+            directionalLight.intensity = 0.6;
+            directionalLight.position = new BABYLON.Vector3(0, 10, 0);
+
+            // Environment
+            scene.environmentTexture = BABYLON.CubeTexture.CreateFromPrefilteredData(
+                "https://assets.babylonjs.com/environments/environmentSpecular.env", 
+                scene
+            );
+
+            return scene;
+        };
+
+        // Cargar modelo
+        const loadModel = async function () {
+            try {
+                progressElement.textContent = "Descargando modelo...";
+                
+                console.log("Intentando cargar modelo desde:", MODEL_PATH);
+                
+                // Usar ImportMeshAsync para mejor control
+                const result = await BABYLON.SceneLoader.ImportMeshAsync(
+                    "", // Cargar todas las mallas
+                    "", // Ruta vacía porque el archivo está en la misma ubicación
+                    "spa.glb", // Nombre del archivo
+                    scene,
+                    function (event) {
+                        // Callback de progreso
+                        if (event.lengthComputable) {
+                            const percent = (event.loaded / event.total * 100).toFixed(2);
+                            progressElement.textContent = `Descargando modelo... ${percent}%`;
+                        }
+                    }
+                );
+
+                console.log("✅ Modelo cargado exitosamente:", result);
+                
+                // Procesar modelo cargado
+                processLoadedModel(result.meshes, result);
+
+                // Ocultar loading y mostrar controles
+                loadingElement.style.display = "none";
+                controlsElement.style.display = "block";
+
+            } catch (error) {
+                console.error("❌ Error cargando el modelo:", error);
+                showError(`Error cargando el modelo: ${error.message}`);
+                
+                // Intentar cargar desde diferentes rutas
+                setTimeout(() => tryAlternativePaths(), 2000);
+            }
+        };
+
+        // Intentar rutas alternativas
+        const tryAlternativePaths = async function () {
+            const alternativePaths = [
+                "spa.glb",
+                "/spa.glb",
+                "./public/spa.glb",
+                "https://raw.githubusercontent.com/tu-usuario/tu-repo/main/spa.glb" // Si está en GitHub
+            ];
+
+            for (let path of alternativePaths) {
+                try {
+                    progressElement.textContent = `Intentando: ${path}`;
+                    console.log(`Intentando cargar desde: ${path}`);
+                    
+                    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "", path, scene);
+                    
+                    console.log("✅ Modelo cargado desde ruta alternativa:", path);
+                    processLoadedModel(result.meshes, result);
+                    loadingElement.style.display = "none";
+                    controlsElement.style.display = "block";
+                    return;
+                    
+                } catch (err) {
+                    console.log(`❌ Falló la ruta: ${path}`, err);
+                }
+            }
+            
+            // Si todas las rutas fallan, crear fallback
+            showError("No se pudo cargar el modelo. Mostrando vista alternativa...");
+            setTimeout(() => {
+                createFallbackModel();
+                loadingElement.style.display = "none";
+                controlsElement.style.display = "block";
+            }, 3000);
+        };
+
+        // Procesar modelo cargado
+        const processLoadedModel = function (meshes, result) {
+            if (!meshes || meshes.length === 0) {
+                console.warn("⚠️ No se encontraron mallas en el modelo");
+                return;
+            }
+
+            console.log(`📦 Mallas cargadas: ${meshes.length}`);
+
+            // Encontrar malla raíz
+            let rootMesh = meshes[0];
+            for (let mesh of meshes) {
+                if (!mesh.parent) {
+                    rootMesh = mesh;
+                    break;
+                }
+            }
+
+            // Calcular bounding box
+            const boundingInfo = calculateTotalBoundingInfo(meshes);
+            
+            // Ajustar cámara
+            const camera = scene.activeCamera;
+            if (camera && camera instanceof BABYLON.ArcRotateCamera) {
+                camera.setTarget(boundingInfo.boundingBox.centerWorld);
+                const radius = Math.max(boundingInfo.boundingSphere.radius * 2, 5);
+                camera.radius = radius;
+                camera.lowerRadiusLimit = radius * 0.1;
+                camera.upperRadiusLimit = radius * 10;
+                
+                console.log("📷 Cámara ajustada - Radio:", radius);
+            }
+
+            // Configurar animaciones si existen
+            if (result.animationGroups && result.animationGroups.length > 0) {
+                console.log("🎬 Animaciones encontradas:", result.animationGroups.length);
+                result.animationGroups[0].start(true);
+            }
+        };
+
+        // Calcular bounding box
+        const calculateTotalBoundingInfo = function (meshes) {
+            let min = new BABYLON.Vector3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+            let max = new BABYLON.Vector3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+
+            meshes.forEach(mesh => {
+                if (mesh.getBoundingInfo) {
+                    const boundingBox = mesh.getBoundingInfo().boundingBox;
+                    BABYLON.Vector3.Minimize(min, boundingBox.minimumWorld, min);
+                    BABYLON.Vector3.Maximize(max, boundingBox.maximumWorld, max);
+                }
+            });
+
+            const center = BABYLON.Vector3.Center(min, max);
+            const size = BABYLON.Vector3.Distance(min, max);
+
+            return {
+                boundingBox: new BABYLON.BoundingBox(min, max),
+                boundingSphere: new BABYLON.BoundingSphere(center, size / 2)
+            };
+        };
+
+        // Mostrar error
+        const showError = function (message) {
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            console.error(message);
+        };
+
+        // Modelo de fallback
+        const createFallbackModel = function () {
+            console.log("🔄 Creando modelo de fallback...");
+            
+            // Crear algunas formas básicas
+            const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
+            sphere.position.y = 1;
+            
+            const sphereMaterial = new BABYLON.StandardMaterial("sphereMat", scene);
+            sphereMaterial.diffuseColor = new BABYLON.Color3(0.8, 0.2, 0.2);
+            sphere.material = sphereMaterial;
+            
+            const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 10, height: 10 }, scene);
+            const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
+            groundMaterial.diffuseColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+            ground.material = groundMaterial;
+        };
+
+        // Inicializar escena y cargar modelo
+        const init = async function () {
+            try {
+                scene = createScene();
+                
+                // Esperar a que la escena esté lista
+                await scene.whenReadyAsync();
+                
+                // Cargar modelo
+                await loadModel();
+                
+            } catch (error) {
+                console.error("❌ Error inicializando:", error);
+                showError(`Error inicializando: ${error.message}`);
+            }
+        };
+
+        // Iniciar la aplicación
+        init();
+
+        // Render loop
+        engine.runRenderLoop(function () {
+            if (scene) {
+                scene.render();
+            }
+        });
+
+        // Redimensionar
+        window.addEventListener("resize", function () {
+            engine.resize();
+        });
+
+        // Manejar errores de WebGL
+        engine.onContextLostObservable.add(() => {
+            showError("WebGL context lost. Please refresh the page.");
+        });
+    </script>
+</body>
+</html>
