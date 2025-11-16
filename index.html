@@ -97,9 +97,9 @@ function keepPlayerOnGround() {
 // MOVIMIENTO (acelerador / freno / teclado)
 let moveForward = false, moveBackward = false;
 let currentSpeed = 0; // unidades por segundo
-const maxSpeed = 6.0;            // m/s hacia adelante
-const maxReverseSpeed = 3.0;     // m/s hacia atrás
-const accel = 8.0;               // m/s^2 (aceleración)
+const maxSpeed = 20.0;            // m/s hacia adelante
+const maxReverseSpeed = 5.0;     // m/s hacia atrás
+const accel = 20.0;               // m/s^2 (aceleración)
 const decel = 10.0;              // m/s^2 (freno)
 const airFriction = 6.0;         // desaceleración pasiva cuando no se pulsa nada
 
