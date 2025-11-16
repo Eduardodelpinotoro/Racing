@@ -127,9 +127,9 @@ const speedBar = document.getElementById("speedBar");
 // MOVIMIENTO: botones táctiles (adelante/atrás)
 let moveForward=false, moveBackward=false;
 let currentSpeed=0;
-const maxSpeed=400;      // ajustar según quieras (m/s)
+const maxSpeed=300;      // ajustar según quieras (m/s)
 const maxReverseSpeed=20;
-const accel=100;         // m/s^2
+const accel=50;         // m/s^2
 const airFriction=8;
 
 const btnF=document.getElementById("btnForward");
@@ -146,7 +146,7 @@ const joystickHandle = document.getElementById("joystickHandle");
 
 let isJoystickActive = false;
 let joystickRotation = 0; // -1 a 1 (izquierda a derecha)
-const rotationSpeed = 0.4; // REDUCIDO: Velocidad de rotación (radianes/segundo)
+const rotationSpeed = 0.1; // REDUCIDO: Velocidad de rotación (radianes/segundo)
 const minSpeedForSteering = 5; // Velocidad mínima para poder girar (m/s)
 
 // Configurar eventos del joystick
