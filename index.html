@@ -301,7 +301,12 @@ camera.parent=playerMesh;
 camera.attachControl(canvas,true);
 
 // =========================
-// MOVIMIENTO
+// =========================
+// MOVIMIENTO CORREGIDO
+const carPivot = new BABYLON.TransformNode("carPivotPivot", scene);
+carPivot.parent = playerMesh;
+playerMesh.rotationQuaternion = null; // usar Euler
+
 let moveForward=false, moveBackward=false;
 let currentSpeed=0, maxReverse=50, airFriction=8;
 document.getElementById("btnForward").addEventListener("touchstart",()=>moveForward=true);
@@ -309,6 +314,54 @@ document.getElementById("btnForward").addEventListener("touchend",()=>moveForwar
 document.getElementById("btnBackward").addEventListener("touchstart",()=>moveBackward=true);
 document.getElementById("btnBackward").addEventListener("touchend",()=>moveBackward=false);
 
+// JOYSTICK
+let joystickRotation=0;
+const minSpeedForSteering=5;
+function updateJoystickState(){
+    if(Math.abs(currentSpeed)>=minSpeedForSteering) joystickContainer.classList.remove('joystick-disabled');
+    else { joystickContainer.classList.add('joystick-disabled'); joystickRotation=0; }
+}
+
+// Loop principal
+engine.runRenderLoop(()=>{
+    const dt=engine.getDeltaTime()/1000;
+
+    // Aceleración / freno
+    if(moveForward && !moveBackward) currentSpeed=Math.min(currentSpeed+accel*dt,maxSpeed);
+    else if(moveBackward && !moveForward){
+        if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-brakeFriction*dt,0);
+        else currentSpeed=Math.max(currentSpeed-accel*dt,-maxReverse);
+    } else {
+        if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-airFriction*dt,0);
+        else if(currentSpeed<0) currentSpeed=Math.min(currentSpeed+airFriction*dt,0);
+    }
+
+    updateJoystickState();
+
+    // Rotar coche según joystick
+    if(Math.abs(currentSpeed)>=minSpeedForSteering){
+        playerMesh.rotation.y += joystickRotation * rotationSpeed * dt;
+    }
+
+    // Mover coche hacia adelante según su orientación
+    const forward=new BABYLON.Vector3(Math.sin(playerMesh.rotation.y),0,Math.cos(playerMesh.rotation.y));
+    playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt));
+
+    // Cámara sigue al coche
+    camera.position.x = playerMesh.position.x;
+    camera.position.z = playerMesh.position.z + 6; // distancia detrás
+    camera.position.y = playerMesh.position.y + 3; // altura
+    camera.setTarget(playerMesh.position);
+
+    // Cronómetro y speed bar
+    checkFinishLine();
+    updateTimerDisplay();
+    speedBar.style.width=(Math.min(Math.abs(currentSpeed)/maxSpeed,1)*100)+"%";
+    speedBar.style.background=currentSpeed>=0?"#0f0":"#f00";
+
+    scene.render();
+});
+    
 // =========================
 // JOYSTICK
 const joystickContainer=document.getElementById("joystickContainer");
