@@ -125,12 +125,18 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <label>Niebla: <span id="fogLabel">0.00</span></label>
     <input type="range" id="fogRange" min="0" max="0.04" step="0.01" value="0">
 
+    <label>Intensidad de Luz: <span id="lightLabel">0.8</span></label>
+    <input type="range" id="lightRange" min="0" max="2" step="0.01" value="0.8">
+
     <label>Música</label>
     <button id="musicBtn">On</button>
 
     <label>Número de Vueltas</label>
     <input type="number" id="lapsNumber" min="1" max="99" value="3">
+
+    <button id="gotoStartBtn">Ir a Meta</button>
 </div>
+    
 
 <audio id="motorAudio" src="motor.mp3" loop></audio>
 
@@ -155,6 +161,32 @@ const settingsBtn=document.getElementById("settingsBtn");
 const settingsPanel=document.getElementById("settingsPanel");
 settingsBtn.addEventListener('click', ()=>{ settingsPanel.style.display = settingsPanel.style.display==='none'?'block':'none'; });
 
+
+// =========================
+// Intensidad de luz
+// =========================
+const lightRange=document.getElementById("lightRange"), lightLabel=document.getElementById("lightLabel");
+lightRange.addEventListener('input', ()=>{
+    dirLight.intensity=parseFloat(lightRange.value);
+    lightLabel.textContent=dirLight.intensity.toFixed(2);
+});
+
+// =========================
+// Ir a Meta (inicio)
+// =========================
+const gotoStartBtn=document.getElementById("gotoStartBtn");
+gotoStartBtn.addEventListener('click', ()=>{
+    playerMesh.position.set(-3780,330,-3980); // posición inicial
+    currentSpeed=0;
+    lapCount=0;
+    isRacing=false;
+    hasCrossedFinishLine=false;
+    currentLapStartTime=0;
+    timerStatus.textContent="ESPERANDO EN META";
+    lapTimes.innerHTML="";
+});
+    
+    
 // Velocidad/Aceleración/Freno
 const maxSpeedRange=document.getElementById("maxSpeedRange"), accelRange=document.getElementById("accelRange"), brakeRange=document.getElementById("brakeRange");
 const maxSpeedLabel=document.getElementById("maxSpeedLabel"), accelLabel=document.getElementById("accelLabel"), brakeLabel=document.getElementById("brakeLabel");
