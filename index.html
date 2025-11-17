@@ -294,7 +294,7 @@ BABYLON.SceneLoader.ImportMesh(
     carPivot.parent = playerMesh;
 
     // asegurar que no se repitan escalados: aplicar una única escala al pivot
-    carPivot.scaling = new BABYLON.Vector3(3, 3, 3); // ajusta si es necesario
+    carPivot.scaling = new BABYLON.Vector3(1, 1, 1); // ajusta si es necesario
 
     // conectar todas las mallas importadas al pivot
     meshes.forEach(m => {
@@ -304,12 +304,12 @@ BABYLON.SceneLoader.ImportMesh(
         m.position = m.position || BABYLON.Vector3.Zero(); // no modificar si ya tiene transform
         m.rotationQuaternion = null; // permitirá rotación por Euler si lo necesitas
         // fijar la escala local a 1 para evitar compuestos indeseados
-        m.scaling = new BABYLON.Vector3(0.1,0.1,0.1);
+        m.scaling = new BABYLON.Vector3(1,1,1);
       }
     });
 
     // ajustar la posición del pivot relativo al player (ejemplo)
-    carPivot.position = new BABYLON.Vector3(0, 1.6, 0);
+    carPivot.position = new BABYLON.Vector3(0, -1.6, 0);
 
     // opcional: si el modelo trae demasiados polígonos, puedes ocultarlo hasta comprobar
     // carPivot.isVisible = true;
