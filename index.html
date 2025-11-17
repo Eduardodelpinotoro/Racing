@@ -280,13 +280,28 @@ playerMesh.isVisible=false;
 playerMesh.checkCollisions=true;
 playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
-// 🚗 Cargar lambo.glb y unirlo al player
-BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes)=>{
-    const car = meshes[0];
+// 🚗 Cargar Lambo desde GitHub y unirlo al player SIN QUE CREZCA
+BABYLON.SceneLoader.ImportMesh("", "https://tu-url.github.io/ruta/", "lambo.glb", scene, (meshes) => {
+
+    // nodo pivot limpio para evitar crecimiento infinito
+    const car = new BABYLON.TransformNode("carPivot", scene);
+
+    // el pivot sigue al player
     car.parent = playerMesh;
+
+    // unir mallas del coche al pivot
+    meshes.forEach(m => {
+        m.parent = car;
+        m.scaling = new BABYLON.Vector3(1, 1, 1); // evita escalado infinito
+    });
+
+    // ajustar altura exacta del coche respecto al player
     car.position = new BABYLON.Vector3(0, -2, 0);
-    car.scaling = new BABYLON.Vector3(50, 50, 50);
+
+    // escala global estable (sin bugs)
+    car.scaling = new BABYLON.Vector3(3, 3, 3);
 });
+    
     
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,4,0), scene);
