@@ -61,20 +61,25 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 }
 
 /* Panel de configuración */
-#settingsPanel{
-    position:absolute;
-    top:70px;
-    right:10px;
-    width:240px;
-    background:rgba(0,0,0,0.85);
-    border:2px solid #fff;
-    border-radius:10px;
-    padding:10px;
-    color:#fff;
-    font-family:monospace;
-    display:none;
-    z-index:101;
+#settingsPanel {
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 260px;
+
+    background: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 12px;
+    color: white;
+    display: none;
+    z-index: 999;
+
+    backdrop-filter: blur(5px);
+    transition: 0.3s ease;
 }
+
+
 #settingsPanel label{display:block;margin:5px 0 2px;}
 #settingsPanel input[type=range]{width:100%;}
 #settingsPanel select, #settingsPanel input[type=number]{width:100%;margin-bottom:5px;}
