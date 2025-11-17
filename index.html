@@ -63,9 +63,13 @@ const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
-  // ESTA LÍNEA ES LA QUE CREA EL CIELO AZUL - FUNCIONA SEGURO
-scene.clearColor = new BABYLON.Color4(0.2, 0.6, 1.0, 1.0);
+  // Cielo diurno azul gradiente
+scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1.0, 1.0);
 
+var hemisphericLight = new BABYLON.HemisphericLight("HemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+hemisphericLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1.0);  // Azul claro
+hemisphericLight.groundColor = new BABYLON.Color3(0.1, 0.2, 0.5);  // Azul oscuro
+hemisphericLight.intensity = 1.0;
   
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
