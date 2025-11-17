@@ -280,7 +280,14 @@ playerMesh.isVisible=false;
 playerMesh.checkCollisions=true;
 playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
-
+// 🚗 Cargar lambo.glb y unirlo al player
+BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes)=>{
+    const car = meshes[0];
+    car.parent = playerMesh;
+    car.position = new BABYLON.Vector3(0, -2, 0);
+    car.scaling = new BABYLON.Vector3(1, 1, 1);
+});
+    
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,4,0), scene);
 camera.parent=playerMesh;
