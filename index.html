@@ -63,18 +63,9 @@ const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
-// SONIDO DEL MOTOR
-const engineSound = new BABYLON.Sound(
-    "engineSound",
-    "motor.mp3",  // tu archivo
-    scene,
-    null,
-    {
-        loop: true,
-        autoplay: true,
-        volume: 0.6   // volumen medio
-    }
-);
+  // ESTA LÍNEA ES LA QUE CREA EL CIELO AZUL - FUNCIONA SEGURO
+scene.clearColor = new BABYLON.Color4(0.2, 0.6, 1.0, 1.0);
+
   
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
