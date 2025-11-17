@@ -66,6 +66,35 @@ document.addEventListener('DOMContentLoaded',()=>{
     document.documentElement.requestFullscreen?.().catch(()=>{});
     if(screen.orientation && screen.orientation.lock){screen.orientation.lock("landscape").catch(()=>{});}
 });
+
+  let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // Evita que el navegador lo muestre automáticamente
+    deferredPrompt = e;
+
+    // Mostrar un botón personalizado
+    const installBtn = document.createElement('button');
+    installBtn.textContent = "Instalar Juego";
+    installBtn.style.position = "absolute";
+    installBtn.style.top = "50px";
+    installBtn.style.left = "50%";
+    installBtn.style.transform = "translateX(-50%)";
+    installBtn.style.padding = "10px 20px";
+    installBtn.style.fontSize = "18px";
+    installBtn.style.zIndex = "100";
+    document.body.appendChild(installBtn);
+
+    installBtn.addEventListener('click', async () => {
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt(); // Mostrar prompt de instalación
+        const { outcome } = await deferredPrompt.userChoice;
+        if(outcome === 'accepted') console.log('Usuario aceptó instalar');
+        else console.log('Usuario rechazó instalar');
+        deferredPrompt = null;
+    });
+});
+  
 // Bloquear orientación
 if(screen.orientation && screen.orientation.lock){screen.orientation.lock("landscape").catch(()=>{});}
 
