@@ -194,6 +194,12 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
         camera.position.set(0,3,0);
         debug.textContent="Lambo cargado, listo para correr!";
         engine.runRenderLoop(gameLoop);
+      meshes.forEach(m => {
+    m.parent = playerMesh;
+    m.checkCollisions = true;
+    m.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // Escala 10 veces más pequeña
+});
+      
     });
 }, null, (scene,msg)=>{ debug.textContent='Error cargando spa.glb'; });
 
