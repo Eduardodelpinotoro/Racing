@@ -231,7 +231,7 @@ BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, function(meshes) {
     lambo.rotation = new BABYLON.Vector3(0, Math.PI, 0);
 
     // IMPORTANTÍSIMO → hacer que el coche siga al player
-    lambo.parent = player;
+    lambo.parent = playerMesh;
 
     // Moverlo a la posición exacta sobre el player
     lambo.position = new BABYLON.Vector3(0, -1, 0);
