@@ -219,7 +219,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
 BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes)=>{
     meshes.forEach(m=>{
         m.parent=playerMesh;
-        m.scaling=new BABYLON.Vector3(0.1,0.1,0.1);
+        m.scaling=new BABYLON.Vector3(0.05,0.05,0.05);
         m.position=BABYLON.Vector3.Zero();
     });
 });
