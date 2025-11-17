@@ -215,12 +215,30 @@ scene.ambientColor=new BABYLON.Color3(0.4,0.5,0.7);
 scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;
 scene.fogColor=new BABYLON.Color3(0.5,0.5,0.5);
 
-// PLAYER
-const playerMesh=BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
-playerMesh.isVisible=false;
-playerMesh.checkCollisions=true;
-playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
-playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
+// PLAYER: Cargar Lambo
+let playerMesh; // Declaramos la variable globalmente
+
+BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes) => {
+    // Normalmente tu modelo viene como un array de meshes
+    playerMesh = new BABYLON.TransformNode("playerRoot", scene); // Nodo padre para mover todo el coche
+
+    meshes.forEach(m => {
+        m.parent = playerMesh;  // Asignamos el mesh al nodo padre
+        m.checkCollisions = true; 
+    });
+
+    // Ajuste de colisiones
+    playerMesh.checkCollisions = true;
+    playerMesh.ellipsoid = new BABYLON.Vector3(1, 1, 2); // Ajusta según el tamaño de tu coche
+    playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+
+    // Posición inicial
+    playerMesh.position.set(-3780, 330, -3980);
+    prevPosZ = playerMesh.position.z;
+
+    debug.textContent = "Coche cargado - Línea de meta activa";
+});
+    
 
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
