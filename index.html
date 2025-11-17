@@ -64,8 +64,6 @@ const engine = new BABYLON.Engine(canvas,true);
 const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
-// CIELO GRADIENTE - SOLUCIÓN SIMPLE Y EFECTIVA
-scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1.0, 1.0); // Azul base
 
 // Crear gradiente con luz hemisférica mejorada
 var hemisphericLight = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
