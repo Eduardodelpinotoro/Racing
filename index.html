@@ -294,7 +294,7 @@ BABYLON.SceneLoader.ImportMesh(
     carPivot.parent = playerMesh;
 
     // asegurar que no se repitan escalados: aplicar una única escala al pivot
-    carPivot.scaling = new BABYLON.Vector3(1, 1, 1); // ajusta si es necesario
+    carPivot.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // ajusta si es necesario
 
     // conectar todas las mallas importadas al pivot
     meshes.forEach(m => {
