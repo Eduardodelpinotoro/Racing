@@ -281,27 +281,47 @@ playerMesh.checkCollisions=true;
 playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 // 🚗 Cargar Lambo desde GitHub y unirlo al player SIN QUE CREZCA
-BABYLON.SceneLoader.ImportMesh("", "https://cors.isomorphic-git.org/https://raw.githubusercontent.com/Eduardodelpinotoro/Racing/main/lambo.glb
-", "lambo.glb", scene, (meshes) => {
+// 🚗 Cargar Lambo vía jsDelivr y unirlo al player (estable)
+BABYLON.SceneLoader.ImportMesh(
+  "", 
+  "https://cdn.jsdelivr.net/gh/Eduardodelpinotoro/Racing/",
+  "lambo.glb",
+  scene,
+  function(meshes, particleSystems, skeletons, animationGroups) {
 
-    // nodo pivot limpio para evitar crecimiento infinito
-    const car = new BABYLON.TransformNode("carPivot", scene);
+    // crear pivot para evitar problemas de escala/transformaciones repetidas
+    const carPivot = new BABYLON.TransformNode("carPivot", scene);
+    carPivot.parent = playerMesh;
 
-    // el pivot sigue al player
-    car.parent = playerMesh;
+    // asegurar que no se repitan escalados: aplicar una única escala al pivot
+    carPivot.scaling = new BABYLON.Vector3(3, 3, 3); // ajusta si es necesario
 
-    // unir mallas del coche al pivot
+    // conectar todas las mallas importadas al pivot
     meshes.forEach(m => {
-        m.parent = car;
-        m.scaling = new BABYLON.Vector3(1, 1, 1); // evita escalado infinito
+      // si hay cámaras/lights en el glb, ignorarlas
+      if (m instanceof BABYLON.Mesh) {
+        m.parent = carPivot;
+        m.position = m.position || BABYLON.Vector3.Zero(); // no modificar si ya tiene transform
+        m.rotationQuaternion = null; // permitirá rotación por Euler si lo necesitas
+        // fijar la escala local a 1 para evitar compuestos indeseados
+        m.scaling = new BABYLON.Vector3(1,1,1);
+      }
     });
 
-    // ajustar altura exacta del coche respecto al player
-    car.position = new BABYLON.Vector3(0, -2, 0);
+    // ajustar la posición del pivot relativo al player (ejemplo)
+    carPivot.position = new BABYLON.Vector3(0, -1.6, 0);
 
-    // escala global estable (sin bugs)
-    car.scaling = new BABYLON.Vector3(3, 3, 3);
-});
+    // opcional: si el modelo trae demasiados polígonos, puedes ocultarlo hasta comprobar
+    // carPivot.isVisible = true;
+
+    console.log("Lambo cargado:", meshes.length, "meshes, skeletons:", skeletons.length);
+  },
+  null,
+  function(err){
+    console.error("Error cargando lambo.glb desde jsDelivr:", err);
+  }
+);
+    
     
     
 // CAMERA
