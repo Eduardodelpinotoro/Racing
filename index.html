@@ -281,7 +281,7 @@ playerMesh.checkCollisions=true;
 playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 // 🚗 Cargar Lambo desde GitHub y unirlo al player SIN QUE CREZCA
-BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/Eduardodelpinotoro/Racing/main/", "lambo.glb", scene, (meshes) => {
+BABYLON.SceneLoader.ImportMesh("", "https://raw.githubusercontent.com/Eduardodelpinotoro/Racing/main/lambo.glb", "lambo.glb", scene, (meshes) => {
 
     // nodo pivot limpio para evitar crecimiento infinito
     const car = new BABYLON.TransformNode("carPivot", scene);
