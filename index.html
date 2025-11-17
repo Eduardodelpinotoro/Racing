@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SPA - Control por Vista (Touch Look) - Lamborghini</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+html,body{margin:0;overflow:hidden;height:100%;background:#000}
+#renderCanvas{width:100%;height:100%}
+.button{position:absolute;bottom:30px;width:80px;height:80px;background:rgba(255,255,255,0.25);border-radius:50%;pointer-events:auto;}
+#btnForward{right:40px}
+#btnBackward{right:140px}
+#speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
+#speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
+#debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+#joystickContainer { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; pointer-events: auto; z-index: 10; }
+#joystickBase { position: absolute; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.15); border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); }
+#joystickHandle { position: absolute; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.05s; }
+#joystickAxis { position: absolute; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); top: 50%; left: 0; transform: translateY(-50%); }
+.joystick-disabled { opacity: 0.5; pointer-events: none; }
+#timerPanel { position: absolute; top: 10px; right: 10px; width: 150px; background: rgba(0,0,0,0.7); border: 2px solid #fff; border-radius: 10px; padding: 5px; color: #fff; font-family: monospace; z-index: 10; font-size: 12px;}
+#currentTimer { font-size: 18px; text-align: center; margin-bottom: 5px; color: #0f0; }
+#lapTimes { font-size: 10px; max-height: 100px; overflow-y: auto; }
+.lap-time { padding: 1px 0; border-bottom: 1px solid #444; }
+.lap-time:last-child { border-bottom: none; }
+.best-lap { color: #ff0; font-weight: bold; }
+#timerStatus { text-align: center; font-size: 12px; margin-top: 2px; color: #0ff; }
+#bestLapDisplay { text-align: center; font-size: 12px; margin-top: 2px; color: #ff0; }
+
+/* Botón pantalla completa */
+#fullscreenBtn{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    padding:15px 25px;
+    font-size:20px;
+    background:rgba(0,0,0,0.7);
+    color:#0f0;
+    border:2px solid #0f0;
+    border-radius:10px;
+    z-index:100;
+}
+
+/* Botón configuración */
+#settingsBtn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:50px;
+    height:50px;
+    background:rgba(255,255,255,0.25);
+    border-radius:50%;
+    font-size:28px;
+    text-align:center;
+    line-height:50px;
+    cursor:pointer;
+    z-index:100;
+}
+
+/* Panel de configuración */
+#settingsPanel{
+    position:absolute;
+    top:70px;
+    right:10px;
+    width:240px;
+    background:rgba(0,0,0,0.85);
+    border:2px solid #fff;
+    border-radius:10px;
+    padding:10px;
+    color:#fff;
+    font-family:monospace;
+    display:none;
+    z-index:101;
+}
+#settingsPanel label{display:block;margin:5px 0 2px;}
+#settingsPanel input[type=range]{width:100%;}
+#settingsPanel select, #settingsPanel input[type=number]{width:100%;margin-bottom:5px;}
+#settingsPanel button{width:100%;padding:5px;margin-top:5px;}
+
+/* Indicador de carga */
+#loadingScreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    color: #fff;
+    font-family: monospace;
+    font-size: 18px;
+}
+
+#loadingProgress {
+    width: 80%;
+    height: 20px;
+    background: #333;
+    margin-top: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#loadingBar {
+    height: 100%;
+    width: 0%;
+    background: #0f0;
+    transition: width 0.3s;
+}
+</style>
+</head>
+<body>
+<div id="loadingScreen">
+    <div>Cargando juego...</div>
+    <div id="loadingProgress">
+        <div id="loadingBar"></div>
+    </div>
+</div>
+
+<canvas id="renderCanvas"></canvas>
+<div id="speedBarContainer"><div id="speedBar"></div></div>
+<div id="debug">Cargando circuito...</div>
+<div class="button" id="btnForward" title="Acelerar"></div>
+<div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
+
+<div id="joystickContainer" class="joystick-disabled">
+  <div id="joystickBase">
+    <div id="joystickAxis"></div>
+    <div id="joystickHandle"></div>
+  </div>
+</div>
+
+<div id="timerPanel">
+  <div id="currentTimer">00:00.000</div>
+  <div id="lapTimes"></div>
+  <div id="timerStatus">ESPERANDO EN META</div>
+  <div id="bestLapDisplay">MEJOR VUELTA: --:--.---</div>
+</div>
+
+<!-- Botones -->
+<button id="fullscreenBtn">Pantalla Completa</button>
+<div id="settingsBtn">⚙️</div>
+<div id="settingsPanel">
+    <label>Velocidad Máx: <span id="maxSpeedLabel">330</span></label>
+    <input type="range" id="maxSpeedRange" min="50" max="500" value="330">
+    
+    <label>Aceleración: <span id="accelLabel">50</span></label>
+    <input type="range" id="accelRange" min="10" max="200" value="50">
+
+    <label>Freno: <span id="brakeLabel">150</span></label>
+    <input type="range" id="brakeRange" min="20" max="300" value="150">
+
+    <label>Clima</label>
+    <select id="weatherSelect">
+        <option value="sunny">Soleado</option>
+        <option value="gray">Cielo Gris</option>
+        <option value="sunset">Atardecer Azul</option>
+    </select>
+
+    <label>Niebla: <span id="fogLabel">0.000</span></label>
+    <input type="range" id="fogRange" min="0" max="0.009" step="0.001" value="0">
+
+    <label>Música</label>
+    <button id="musicBtn">On</button>
+
+    <label>Número de Vueltas</label>
+    <input type="number" id="lapsNumber" min="1" max="99" value="3">
+</div>
+
+<audio id="motorAudio" src="motor.mp3" loop></audio>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+// =========================
+// Fullscreen
+// =========================
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+fullscreenBtn.addEventListener('click', () => {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+    fullscreenBtn.style.display = 'none';
+});
+
+// =========================
+// Configuración
+// =========================
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+settingsBtn.addEventListener('click', () => { settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none'; });
+
+// Velocidad/Aceleración/Freno
+const maxSpeedRange = document.getElementById("maxSpeedRange"), accelRange = document.getElementById("accelRange"), brakeRange = document.getElementById("brakeRange");
+const maxSpeedLabel = document.getElementById("maxSpeedLabel"), accelLabel = document.getElementById("accelLabel"), brakeLabel = document.getElementById("brakeLabel");
+
+let maxSpeed = 330, accel = 50, brakeFriction = 150;
+maxSpeedRange.addEventListener('input', () => { maxSpeed = parseInt(maxSpeedRange.value); maxSpeedLabel.textContent = maxSpeed; });
+accelRange.addEventListener('input', () => { accel = parseInt(accelRange.value); accelLabel.textContent = accel; });
+brakeRange.addEventListener('input', () => { brakeFriction = parseInt(brakeRange.value); brakeLabel.textContent = brakeFriction; });
+
+// Clima y niebla
+const weatherSelect = document.getElementById("weatherSelect");
+const fogRange = document.getElementById("fogRange"), fogLabel = document.getElementById("fogLabel");
+let fogDensity = 0;
+fogRange.addEventListener('input', () => {
+    // redondear a 5 posiciones
+    const steps = [0, 0.01, 0.02, 0.03, 0.04];
+    let closest = steps.reduce((prev, curr) => Math.abs(curr - fogRange.value) < Math.abs(prev - fogRange.value) ? curr : prev);
+    fogDensity = closest;
+    fogLabel.textContent = fogDensity.toFixed(2);
+});
+
+// Música
+const musicBtn = document.getElementById("musicBtn"), motorAudio = document.getElementById("motorAudio");
+let musicOn = true;
+musicBtn.addEventListener('click', () => {
+    musicOn = !musicOn;
+    if (musicOn) motorAudio.play();
+    else motorAudio.pause();
+    musicBtn.textContent = musicOn ? "On" : "Off";
+});
+
+// Número de vueltas
+const lapsNumberInput = document.getElementById("lapsNumber");
+let totalLaps = parseInt(lapsNumberInput.value);
+lapsNumberInput.addEventListener('input', () => { totalLaps = parseInt(lapsNumberInput.value); });
+
+// =========================
+// BabylonJS Juego
+// =========================
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
+const scene = new BABYLON.Scene(engine);
+scene.collisionsEnabled = true;
+
+// Indicador de carga
+const loadingScreen = document.getElementById("loadingScreen");
+const loadingBar = document.getElementById("loadingBar");
+
+// CIELO
+scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
+const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
+hemiLight.intensity = 1.2;
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
+dirLight.intensity = 0.8;
+dirLight.specular = new BABYLON.Color3(0.1, 0.1, 0.1);
+scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
+
+// Niebla
+scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+
+// Variables para el coche
+let carMesh = null;
+let carBody = null;
+let wheelMeshes = [];
+let wheelColliders = [];
+
+// PLAYER (coche Lamborghini)
+function createCar() {
+    // Crear un cuerpo de coche básico como placeholder
+    carBody = BABYLON.MeshBuilder.CreateBox("carBody", { width: 2, height: 0.5, depth: 4.5 }, scene);
+    carBody.isVisible = false; // Ocultar el placeholder
+    carBody.checkCollisions = true;
+    carBody.ellipsoid = new BABYLON.Vector3(1, 0.5, 2.25);
+    carBody.ellipsoidOffset = new BABYLON.Vector3(0, 0.5, 0);
+    
+    // Crear ruedas como colliders
+    const wheelPositions = [
+        new BABYLON.Vector3(0.8, 0, 1.5),  // Delantera derecha
+        new BABYLON.Vector3(-0.8, 0, 1.5), // Delantera izquierda
+        new BABYLON.Vector3(0.8, 0, -1.5), // Trasera derecha
+        new BABYLON.Vector3(-0.8, 0, -1.5) // Trasera izquierda
+    ];
+    
+    for (let i = 0; i < 4; i++) {
+        const wheelCollider = BABYLON.MeshBuilder.CreateCylinder("wheelCollider" + i, { diameter: 0.6, height: 0.3 }, scene);
+        wheelCollider.parent = carBody;
+        wheelCollider.position = wheelPositions[i];
+        wheelCollider.rotation.x = Math.PI / 2;
+        wheelCollider.isVisible = false;
+        wheelCollider.checkCollisions = true;
+        wheelColliders.push(wheelCollider);
+    }
+    
+    return carBody;
+}
+
+// Cargar modelo Lamborghini
+function loadLamboModel() {
+    BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, (meshes) => {
+        // Buscar el mesh principal del coche
+        carMesh = meshes[0];
+        
+        // Ajustar posición y escala
+        carMesh.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5);
+        carMesh.parent = carBody;
+        carMesh.position = new BABYLON.Vector3(0, -0.5, 0);
+        
+        // Hacer que el coche siga las colisiones
+        carMesh.checkCollisions = true;
+        
+        // Actualizar indicador de carga
+        loadingBar.style.width = "100%";
+        setTimeout(() => {
+            loadingScreen.style.display = "none";
+            debug.textContent = "Lamborghini cargado - ¡Listo para correr!";
+        }, 500);
+    }, (progress) => {
+        // Actualizar barra de progreso
+        if (progress.lengthComputable) {
+            const percent = (progress.loaded / progress.total) * 100;
+            loadingBar.style.width = percent + "%";
+        }
+    }, (scene, message) => {
+        console.error("Error cargando lambo.glb:", message);
+        debug.textContent = "Error cargando Lamborghini. Usando placeholder.";
+        // Si falla la carga, crear un coche simple
+        createSimpleCar();
+        loadingScreen.style.display = "none";
+    });
+}
+
+// Crear coche simple si falla la carga del modelo
+function createSimpleCar() {
+    // Cuerpo del coche
+    const carBody = BABYLON.MeshBuilder.CreateBox("carBody", { width: 2, height: 0.8, depth: 4.5 }, scene);
+    carBody.position.y = 0.4;
+    
+    // Material para el coche
+    const carMaterial = new BABYLON.StandardMaterial("carMaterial", scene);
+    carMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // Rojo
+    carBody.material = carMaterial;
+    
+    // Cabina
+    const cabin = BABYLON.MeshBuilder.CreateBox("cabin", { width: 1.5, height: 0.8, depth: 1.5 }, scene);
+    cabin.parent = carBody;
+    cabin.position.y = 0.8;
+    cabin.position.z = -0.5;
+    
+    const cabinMaterial = new BABYLON.StandardMaterial("cabinMaterial", scene);
+    cabinMaterial.diffuseColor = new BABYLON.Color3(0.2, 0.2, 0.2); // Gris oscuro
+    cabin.material = cabinMaterial;
+    
+    // Ruedas
+    const wheelPositions = [
+        new BABYLON.Vector3(0.8, -0.4, 1.5),  // Delantera derecha
+        new BABYLON.Vector3(-0.8, -0.4, 1.5), // Delantera izquierda
+        new BABYLON.Vector3(0.8, -0.4, -1.5), // Trasera derecha
+        new BABYLON.Vector3(-0.8, -0.4, -1.5) // Trasera izquierda
+    ];
+    
+    for (let i = 0; i < 4; i++) {
+        const wheel = BABYLON.MeshBuilder.CreateCylinder("wheel" + i, { diameter: 0.8, height: 0.4 }, scene);
+        wheel.parent = carBody;
+        wheel.position = wheelPositions[i];
+        wheel.rotation.x = Math.PI / 2;
+        
+        const wheelMaterial = new BABYLON.StandardMaterial("wheelMaterial", scene);
+        wheelMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.1, 0.1); // Negro
+        wheel.material = wheelMaterial;
+        
+        wheelMeshes.push(wheel);
+    }
+    
+    carMesh = carBody;
+    carMesh.checkCollisions = true;
+    carMesh.ellipsoid = new BABYLON.Vector3(1, 0.5, 2.25);
+    carMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.5, 0);
+}
+
+// CAMERA
+const camera = new BABYLON.FollowCamera("cam", new BABYLON.Vector3(0, 3, -10), scene);
+camera.parent = carBody;
+camera.heightOffset = 2;
+camera.radius = 8;
+camera.rotationOffset = 0;
+camera.cameraAcceleration = 0.05;
+camera.maxCameraSpeed = 10;
+camera.attachControl(canvas, true);
+
+// UI
+const debug = document.getElementById("debug");
+const speedBar = document.getElementById("speedBar");
+
+// MOVIMIENTO
+let moveForward = false, moveBackward = false, currentSpeed = 0;
+let maxReverse = 50, airFriction = 8, wheelFriction = 0.98;
+document.getElementById("btnForward").addEventListener("touchstart", () => moveForward = true);
+document.getElementById("btnForward").addEventListener("touchend", () => moveForward = false);
+document.getElementById("btnBackward").addEventListener("touchstart", () => moveBackward = true);
+document.getElementById("btnBackward").addEventListener("touchend", () => moveBackward = false);
+
+// JOYSTICK
+const joystickContainer = document.getElementById("joystickContainer");
+const joystickHandle = document.getElementById("joystickHandle");
+let isJoystickActive = false, joystickRotation = 0;
+const rotationSpeed = 0.5, minSpeedForSteering = 5;
+joystickContainer.addEventListener('touchstart', e => { if (Math.abs(currentSpeed) < minSpeedForSteering) return; e.preventDefault(); isJoystickActive = true; updateJoystick(e.touches[0]); });
+joystickContainer.addEventListener('touchmove', e => { if (Math.abs(currentSpeed) < minSpeedForSteering) { resetJoystick(); return; } if (!isJoystickActive) return; e.preventDefault(); updateJoystick(e.touches[0]); });
+joystickContainer.addEventListener('touchend', e => { e.preventDefault(); isJoystickActive = false; resetJoystick(); });
+function updateJoystick(touch) { 
+    const rect = joystickContainer.getBoundingClientRect(); 
+    const dx = touch.clientX - (rect.left + rect.width / 2); 
+    const maxDist = rect.width / 2 - joystickHandle.offsetWidth / 2; 
+    const dist = Math.min(Math.abs(dx), maxDist); 
+    joystickHandle.style.transform = `translate(calc(-50% + ${Math.sign(dx) * dist}px), -50%)`; 
+    joystickRotation = Math.max(-1, Math.min(1, dx / maxDist)); 
+}
+function resetJoystick() { 
+    joystickHandle.style.transform = 'translate(-50%, -50%)'; 
+    joystickRotation = 0; 
+}
+function updateJoystickState() { 
+    if (Math.abs(currentSpeed) >= minSpeedForSteering) 
+        joystickContainer.classList.remove('joystick-disabled'); 
+    else { 
+        joystickContainer.classList.add('joystick-disabled'); 
+        if (isJoystickActive) { 
+            resetJoystick(); 
+            isJoystickActive = false; 
+        }
+    }
+}
+
+// CRONÓMETRO
+const currentTimer = document.getElementById("currentTimer");
+const lapTimes = document.getElementById("lapTimes");
+const timerStatus = document.getElementById("timerStatus");
+const bestLapDisplay = document.getElementById("bestLapDisplay");
+let raceStartTime = 0, currentLapStartTime = 0, bestLapTime = 0, lapCount = 0, isRacing = false, hasCrossedFinishLine = false, prevPosZ = 0;
+const finishLine = { minX: -3800, maxX: -3700, z: -4025, width: 30, resetThresholdExtra: 10 };
+finishLine.centerX = (finishLine.minX + finishLine.maxX) / 2;
+finishLine.resetThreshold = finishLine.width + finishLine.resetThresholdExtra;
+function formatTime(ms) { 
+    const m = Math.floor(ms / 60000), 
+          s = Math.floor((ms % 60000) / 1000), 
+          msr = Math.floor(ms % 1000); 
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${msr.toString().padStart(3, '0')}`; 
+}
+function updateTimerDisplay() { 
+    currentTimer.textContent = isRacing ? formatTime(Date.now() - currentLapStartTime) : "00:00.000"; 
+    bestLapDisplay.textContent = bestLapTime > 0 ? `MEJOR VUELTA: ${formatTime(bestLapTime)}` : "MEJOR VUELTA: --:--.---"; 
+}
+function registerCross() { 
+    if (!isRacing) {
+        isRacing = true; 
+        raceStartTime = Date.now(); 
+        currentLapStartTime = raceStartTime; 
+        lapCount = 1; 
+        timerStatus.textContent = "VUELTA 1"; 
+        timerStatus.style.color = "#0f0"; 
+        return; 
+    } 
+    
+    const lapTime = Date.now() - currentLapStartTime; 
+    if (bestLapTime === 0 || lapTime < bestLapTime) bestLapTime = lapTime; 
+    
+    const lapEl = document.createElement("div"); 
+    lapEl.className = "lap-time"; 
+    lapEl.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}` + (lapTime === bestLapTime ? " ★" : ""); 
+    if (lapTime === bestLapTime) lapEl.classList.add("best-lap"); 
+    lapTimes.insertBefore(lapEl, lapTimes.firstChild); 
+    
+    lapCount++; 
+    currentLapStartTime = Date.now(); 
+    
+    if (lapCount > totalLaps) { 
+        timerStatus.textContent = "CARRERA COMPLETADA"; 
+        timerStatus.style.color = "#ff0";
+        isRacing = false; 
+    } else { 
+        timerStatus.textContent = `VUELTA ${lapCount}`; 
+    }
+}
+function checkFinishLine() { 
+    const pos = carBody.position; 
+    const insideX = (pos.x >= finishLine.minX && pos.x <= finishLine.maxX); 
+    
+    if (insideX) { 
+        if (!hasCrossedFinishLine && prevPosZ < finishLine.z && pos.z >= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
+            hasCrossedFinishLine = true; 
+            registerCross(); 
+        } else if (!hasCrossedFinishLine && prevPosZ > finishLine.z && pos.z <= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
+            hasCrossedFinishLine = true; 
+            registerCross(); 
+        } 
+    } 
+    
+    if (Math.abs(pos.z - finishLine.z) > finishLine.resetThreshold) hasCrossedFinishLine = false; 
+    prevPosZ = pos.z; 
+}
+
+// CARGAR CIRCUITO
+BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
+    scene.meshes.forEach(m => { 
+        if (m !== carBody && m !== carMesh) m.checkCollisions = true; 
+    });
+    
+    // Crear el coche después de cargar el circuito
+    createCar();
+    
+    // Cargar el modelo Lamborghini
+    loadLamboModel();
+    
+    // Posicionar el coche en la línea de salida
+    carBody.position.set(-3780, 330, -3980); 
+    prevPosZ = carBody.position.z;
+    
+    debug.textContent = "Circuito cargado - Cargando Lamborghini...";
+}, null, (s, msg) => { 
+    console.error(msg); 
+    debug.textContent = 'Error cargando spa.glb'; 
+    // Crear coche aunque falle el circuito
+    createCar();
+    loadLamboModel();
+});
+
+// FÍSICA DEL COCHE MEJORADA
+function updateCarPhysics(dt) {
+    // Aceleración
+    if (moveForward && !moveBackward) {
+        currentSpeed = Math.min(currentSpeed + accel * dt, maxSpeed);
+    } 
+    // Freno/marcha atrás
+    else if (moveBackward && !moveForward) { 
+        if (currentSpeed > 0) {
+            // Frenando
+            currentSpeed = Math.max(currentSpeed - brakeFriction * dt, 0);
+        } else {
+            // Marcha atrás
+            currentSpeed = Math.max(currentSpeed - accel * dt, -maxReverse);
+        }
+    } 
+    // Fricción cuando no se acelera
+    else { 
+        if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - airFriction * dt, 0);
+        } else if (currentSpeed < 0) {
+            currentSpeed = Math.min(currentSpeed + airFriction * dt, 0);
+        }
+    }
+    
+    // Aplicar fricción de las ruedas
+    currentSpeed *= wheelFriction;
+    
+    // Dirección
+    updateJoystickState();
+    if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
+        // Rotación más suave basada en la velocidad
+        const turnFactor = Math.min(Math.abs(currentSpeed) / maxSpeed, 1);
+        carBody.rotation.y += joystickRotation * rotationSpeed * dt * turnFactor;
+    }
+    
+    // Movimiento
+    if (Math.abs(currentSpeed) > 0.001) { 
+        const forward = new BABYLON.Vector3(
+            Math.sin(carBody.rotation.y),
+            0,
+            Math.cos(carBody.rotation.y)
+        );
+        carBody.moveWithCollisions(forward.scale(currentSpeed * dt));
+    }
+    
+    // Actualizar UI
+    speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
+    speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
+}
+
+// MANTENER EL COCHE EN EL SUELO
+function keepCarOnGround() {
+    const ray = new BABYLON.Ray(
+        carBody.position.add(new BABYLON.Vector3(0, 10, 0)), 
+        new BABYLON.Vector3(0, -1, 0), 
+        50
+    );
+    const hit = scene.pickWithRay(ray, m => m !== carBody && m !== carMesh);
+    if (hit && hit.hit) {
+        // Ajustar altura del coche
+        carBody.position.y = hit.pickedPoint.y + 0.5;
+        
+        // Aplicar algo de fricción adicional cuando está en el suelo
+        wheelFriction = 0.98;
+    } else {
+        // El coche está en el aire - menos fricción
+        wheelFriction = 0.995;
+    }
+}
+
+const maxRealKmH = 305;
+const speedFactor = maxRealKmH / maxSpeed;
+
+// BUCLE PRINCIPAL
+engine.runRenderLoop(() => {
+    const dt = engine.getDeltaTime() / 1000;
+    
+    // Clima
+    switch (weatherSelect.value) {
+        case 'sunny': 
+            scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1); 
+            break;
+        case 'gray': 
+            scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 1); 
+            break;
+        case 'sunset': 
+            scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.2, 1); 
+            break;
+    }
+    scene.fogDensity = fogDensity;
+    
+    // Física del coche
+    updateCarPhysics(dt);
+    
+    // Verificar línea de meta y actualizar cronómetro
+    checkFinishLine(); 
+    updateTimerDisplay(); 
+    
+    // Mantener el coche en el suelo
+    keepCarOnGround();
+    
+    // Actualizar información de depuración
+    debug.textContent = `Pos: X${carBody.position.x.toFixed(0)} Z${carBody.position.z.toFixed(0)} | Vel: ${(currentSpeed * speedFactor).toFixed(0)} km/h`;
+    
+    // Renderizar la escena
+    scene.render();
+});
+
+window.addEventListener('resize', () => engine.resize());
+</script>
+</body>
+</html>
