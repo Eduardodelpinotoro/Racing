@@ -260,11 +260,11 @@ let raceStartTime=0,currentLapStartTime=0,bestLapTime=0,lapCount=0,isRacing=fals
 
 // LÍNEA DE META CORREGIDA - X en 280, Z entre 300 y 350
 const finishLine = {
-    x: 280,// Posición fija en el eje X
+    x: 283,// Posición fija en el eje X
     minZ: 300,        // Límite inferior en Z
     maxZ: 350,        // Límite superior en Z
-    width: 50,         // Margen de detección en X
-    resetThreshold: 15 // Distancia para resetear el flag de cruce
+    width: 500,         // Margen de detección en X
+    resetThreshold: 50 // Distancia para resetear el flag de cruce
 };
 
 function formatTime(ms){
