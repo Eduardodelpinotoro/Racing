@@ -188,7 +188,7 @@ playerMesh.ellipsoidOffset = new BABYLON.Vector3(0,1,0);
 playerMesh.applyGravity = true;
 
 // Cámara fija
-const camera = new BABYLON.UniversalCamera("cam", playerMesh.position.add(new BABYLON.Vector3(0,2,0)), scene);
+const camera = new BABYLON.UniversalCamera("cam", playerMesh.position.add(new BABYLON.Vector3(4,10,0)), scene);
 camera.rotationQuaternion = null;
 camera.attachControl(canvas,true);
 
@@ -289,7 +289,7 @@ document.getElementById("lapsNumber").addEventListener('input', ()=>{ totalLaps=
 BABYLON.SceneLoader.ImportMesh("", "https://cdn.jsdelivr.net/gh/Eduardodelpinotoro/Racing/", "lambo.glb", scene,
     function (meshes) {
         const carMesh = new BABYLON.TransformNode("carMesh", scene);
-        meshes.forEach(m => { if(m instanceof BABYLON.Mesh){ m.parent=carMesh; m.rotationQuaternion=null; m.scaling=new BABYLON.Vector3(0.2,0.2,0.2); }});
+        meshes.forEach(m => { if(m instanceof BABYLON.Mesh){ m.parent=carMesh; m.rotationQuaternion=null; m.scaling=new BABYLON.Vector3(0.02,0.02,0.02); }});
         carMesh.position.copyFrom(playerMesh.position);
         carMesh.rotation.copyFrom(playerMesh.rotation);
         scene.onBeforeRenderObservable.add(()=>{
