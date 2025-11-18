@@ -347,7 +347,7 @@ engine.runRenderLoop(()=>{
     else if(moveBackward && !moveForward){ if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-brakeFriction*dt,0); else currentSpeed=Math.max(currentSpeed-accel*dt,-maxReverse); }
     else{ if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-airFriction*dt,0); else if(currentSpeed<0) currentSpeed=Math.min(currentSpeed+airFriction*dt,0); }
     updateJoystickState();
-    if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering) {
+   // if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering) {
     // Solo rotar el vehículo, no la cámara
     playerMesh.rotation.y += joystickRotation * rotationSpeed * dt;
     }
