@@ -224,11 +224,15 @@ playerMesh.ellipsoidOffset=new BABYLON.Vector3(0, 0.3, 0);
 // VARIABLE PARA EL LAMBO
 let lamboMesh = null;
 
-// CAMERA
-const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
-camera.parent=playerMesh;
-camera.attachControl(canvas,true);
-    // FIJAR MEJOR LA CÁMARA
+// CAMERA - USAR UNIVERSALCAMERA EN LUGAR DE FREECAMERA
+const camera = new BABYLON.UniversalCamera("cam", new BABYLON.Vector3(0, 2, 0), scene);
+camera.parent = playerMesh;
+camera.attachControl(canvas, true);
+camera.inputs.clear();
+camera.inputs.addMouse();
+camera.inputs.addTouch();
+
+// CONFIGURAR MEJOR LA POSICIÓN RELATIVA DE LA CÁMARA
 camera.position = new BABYLON.Vector3(0, 2, 0);
 
 // UI
