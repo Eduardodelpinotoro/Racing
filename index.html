@@ -271,7 +271,8 @@ playerMesh.applyGravity=true;
 // =========================
 // =========================
 // =========================
-// CARGAR LAMBO
+// =========================
+// CARGAR LAMBO (solo visual)
 BABYLON.SceneLoader.ImportMesh(
   "", 
   "https://cdn.jsdelivr.net/gh/Eduardodelpinotoro/Racing/",
@@ -288,22 +289,27 @@ BABYLON.SceneLoader.ImportMesh(
       }
     });
 
-    // Ajuste visual solo, no afecta playerMesh
-    carMesh.position = playerMesh.position.clone();
-    carMesh.rotation = playerMesh.rotation.clone();
+    // Posición inicial idéntica al playerMesh
+    carMesh.position.copyFrom(playerMesh.position);
+    carMesh.rotation.copyFrom(playerMesh.rotation);
 
-    // En cada frame, sincronizamos posición y rotación
+    // Sincroniza cada frame posición y rotación del playerMesh
     scene.onBeforeRenderObservable.add(()=>{
         carMesh.position.copyFrom(playerMesh.position);
         carMesh.rotation.copyFrom(playerMesh.rotation);
     });
 
-    console.log("Lambo cargado correctamente");
+    // Asegura que la cámara quede dentro del coche
+    camera.parent = carMesh;
+    camera.position.set(0,2,0);
+    camera.rotation.set(0,0,0);
+
+    console.log("Lambo cargado y cámara pegada correctamente");
   },
   null,
   function(err){ console.error("Error cargando lambo.glb:", err); }
 );
-
+    
 // =========================
 // CAMARA FIJA EN EL COCHE
 camera.parent = playerMesh;  // queda fija dentro del coche
