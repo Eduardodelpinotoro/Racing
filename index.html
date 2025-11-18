@@ -283,7 +283,22 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
     playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
     debug.textContent="Circuito cargado - Línea de meta activa";
 }, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
+// CARGAR COCHE LAMBO Y HACERLO HIJO DE LA CÁMARA
+BABYLON.SceneLoader.Append("", "lambo.glb", scene, function (meshes) {
+    // Suponiendo que lambo.glb tiene un único mesh principal
+    const lambo = scene.meshes.find(m => m.name !== playerMesh.name && m.name !== "ground"); // excluir playerMesh y suelo
 
+    if (lambo) {
+        lambo.parent = camera; // ahora sigue la cámara
+        lambo.position = new BABYLON.Vector3(0, -1, 2); // posición relativa a la cámara
+        lambo.rotation = new BABYLON.Vector3(0, Math.PI, 0); // girar si es necesario
+        lambo.scaling = new BABYLON.Vector3(0.5, 0.5, 0.5); // ajustar tamaño
+        console.log("Coche lambo cargado y unido a la cámara");
+    }
+}, null, function (scene, message) {
+    console.error("Error cargando lambo.glb:", message);
+});
+                                                                                                                                                                                                                                                                                                                             
 function keepGround(){ const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0),50); const hit=scene.pickWithRay(ray,m=>m!==playerMesh); if(hit && hit.hit) playerMesh.position.y=hit.pickedPoint.y+2; }
 
 const maxRealKmH=305;
