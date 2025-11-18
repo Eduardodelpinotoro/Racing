@@ -223,7 +223,7 @@ playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 
 // CAMERA
-const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
+const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,5,0), scene);
 camera.parent=playerMesh;
 camera.attachControl(canvas,true);
 
@@ -278,7 +278,7 @@ function registerCross(){
 function checkFinishLine(){ const pos=playerMesh.position; const insideX=(pos.x>=finishLine.minX && pos.x<=finishLine.maxX); if(insideX){ if(!hasCrossedFinishLine && prevPosZ<finishLine.z && pos.z>=finishLine.z && Math.abs(pos.z-finishLine.z)<=finishLine.width){ hasCrossedFinishLine=true; registerCross(); } else if(!hasCrossedFinishLine && prevPosZ>finishLine.z && pos.z<=finishLine.z && Math.abs(pos.z-finishLine.z)<=finishLine.width){ hasCrossedFinishLine=true; registerCross(); } } if(Math.abs(pos.z-finishLine.z)>finishLine.resetThreshold) hasCrossedFinishLine=false; prevPosZ=pos.z; }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
+BABYLON.SceneLoader.Append("", "jerez.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
     playerMesh.position.set(-3780,330,-3980); prevPosZ=playerMesh.position.z;
     debug.textContent="Circuito cargado - Línea de meta activa";
