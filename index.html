@@ -270,39 +270,47 @@ playerMesh.applyGravity=true;
 
 // =========================
 // =========================
+// =========================
 // CARGAR LAMBO
 BABYLON.SceneLoader.ImportMesh(
   "", 
   "https://cdn.jsdelivr.net/gh/Eduardodelpinotoro/Racing/",
   "lambo.glb",
   scene,
-  function(meshes, particleSystems, skeletons, animationGroups) {
-    // TransformNode para que el playerMesh siga colisiones
-    const carPivot = new BABYLON.TransformNode("carPivot", scene);
-    carPivot.parent = playerMesh;        // pivot sigue al playerMesh
-    carPivot.position.set(0,0,0);        // sin mover el pivot, importante
+  function(meshes) {
+    const carMesh = new BABYLON.TransformNode("carMesh", scene);
 
     meshes.forEach(m => {
       if(m instanceof BABYLON.Mesh) {
-        m.parent = carPivot;
-        m.position.y -= 1.6;             // ajusta solo el Lambo visual
+        m.parent = carMesh;
         m.rotationQuaternion = null;
         m.scaling = new BABYLON.Vector3(1,1,1);
       }
     });
 
-    console.log("Lambo cargado:", meshes.length, "meshes, skeletons:", skeletons.length);
+    // Ajuste visual solo, no afecta playerMesh
+    carMesh.position = playerMesh.position.clone();
+    carMesh.rotation = playerMesh.rotation.clone();
+
+    // En cada frame, sincronizamos posición y rotación
+    scene.onBeforeRenderObservable.add(()=>{
+        carMesh.position.copyFrom(playerMesh.position);
+        carMesh.rotation.copyFrom(playerMesh.rotation);
+    });
+
+    console.log("Lambo cargado correctamente");
   },
   null,
   function(err){ console.error("Error cargando lambo.glb:", err); }
 );
-    
 
 // =========================
-// CAMERA
-const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(5,6,0), scene);
-camera.parent=playerMesh;
+// CAMARA FIJA EN EL COCHE
+camera.parent = playerMesh;  // queda fija dentro del coche
+camera.position.set(0,2,0);  // ajusta altura de la cámara dentro del coche
+camera.rotation.set(0,0,0);  // sin rotación extra
 camera.attachControl(canvas,true);
+
 
 // =========================
 // MOVIMIENTO
