@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Carreras - Selección de Circuitos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0a0a0a">
+<style>
+/* Tus estilos CSS anteriores se mantienen igual */
+html,body{margin:0;overflow:hidden;height:100%;background:#000}
+#renderCanvas{width:100%;height:100%}
+.button{position:absolute;bottom:30px;width:80px;height:80px;background:rgba(255,255,255,0.25);border-radius:50%;pointer-events:auto;}
+#btnForward{right:40px}
+#btnBackward{right:140px}
+#speedBarContainer{position:absolute;top:10px;left:10px;width:200px;height:20px;background:#444;border:1px solid #fff}
+#speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
+#debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+#joystickContainer { position: absolute; bottom: 30px; left: 30px; width: 120px; height: 120px; pointer-events: auto; z-index: 10; }
+#joystickBase { position: absolute; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.15); border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); }
+#joystickHandle { position: absolute; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.05s; }
+#joystickAxis { position: absolute; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); top: 50%; left: 0; transform: translateY(-50%); }
+.joystick-disabled { opacity: 0.5; pointer-events: none; }
+#timerPanel { position: absolute; top: 10px; right: 10px; width: 150px; background: rgba(0,0,0,0.7); border: 2px solid #fff; border-radius: 10px; padding: 5px; color: #fff; font-family: monospace; z-index: 10; font-size: 12px;}
+#currentTimer { font-size: 18px; text-align: center; margin-bottom: 5px; color: #0f0; }
+#lapTimes { font-size: 10px; max-height: 100px; overflow-y: auto; }
+.lap-time { padding: 1px 0; border-bottom: 1px solid #444; }
+.lap-time:last-child { border-bottom: none; }
+.best-lap { color: #ff0; font-weight: bold; }
+#timerStatus { text-align: center; font-size: 12px; margin-top: 2px; color: #0ff; }
+#bestLapDisplay { text-align: center; font-size: 12px; margin-top: 2px; color: #ff0; }
+
+/* Botón pantalla completa */
+#fullscreenBtn{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    padding:15px 25px;
+    font-size:20px;
+    background:rgba(0,0,0,0.7);
+    color:#0f0;
+    border:2px solid #0f0;
+    border-radius:10px;
+    z-index:100;
+}
+
+/* Botón configuración */
+#settingsBtn{
+    position:absolute;
+    top:10px;
+    right:10px;
+    width:50px;
+    height:50px;
+    background:rgba(255,255,255,0.25);
+    border-radius:50%;
+    font-size:28px;
+    text-align:center;
+    line-height:50px;
+    cursor:pointer;
+    z-index:100;
+}
+
+/* Panel de configuración */
+#settingsPanel{
+    position:absolute;
+    top:70px;
+    right:10px;
+    width:240px;
+    background:rgba(0,0,0,0.85);
+    border:2px solid #fff;
+    border-radius:10px;
+    padding:10px;
+    color:#fff;
+    font-family:monospace;
+    display:none;
+    z-index:101;
+}
+#settingsPanel label{display:block;margin:5px 0 2px;}
+#settingsPanel input[type=range]{width:100%;}
+#settingsPanel select, #settingsPanel input[type=number]{width:100%;margin-bottom:5px;}
+#settingsPanel button{width:100%;padding:5px;margin-top:5px;}
+
+/* Pantalla de selección de circuitos */
+#trackSelectionScreen{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:1000;
+    color:#fff;
+    font-family:monospace;
+}
+
+#trackSelectionScreen h1{
+    font-size:2.5rem;
+    margin-bottom:2rem;
+    text-align:center;
+    color:#0f0;
+    text-shadow:0 0 10px #0f0;
+}
+
+.track-option{
+    width:80%;
+    max-width:400px;
+    margin:1rem 0;
+    padding:1.5rem;
+    background:rgba(255,255,255,0.1);
+    border:2px solid #0f0;
+    border-radius:15px;
+    text-align:center;
+    cursor:pointer;
+    transition:all 0.3s ease;
+    position:relative;
+    overflow:hidden;
+}
+
+.track-option:hover{
+    background:rgba(255,255,255,0.2);
+    transform:translateY(-5px);
+    box-shadow:0 0 20px rgba(0,255,0,0.5);
+}
+
+.track-option h2{
+    font-size:1.8rem;
+    margin-bottom:0.5rem;
+    color:#0f0;
+}
+
+.track-option p{
+    font-size:1rem;
+    color:#ccc;
+    margin:0;
+}
+
+.track-info{
+    display:flex;
+    justify-content:space-between;
+    margin-top:1rem;
+    font-size:0.9rem;
+}
+
+.track-stat{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.track-stat span:first-child{
+    color:#0ff;
+    font-weight:bold;
+}
+
+.track-stat span:last-child{
+    color:#fff;
+    margin-top:0.2rem;
+}
+
+/* Indicador de carga */
+#loadingIndicator{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,0.8);
+    display:none;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    z-index:1001;
+    color:#fff;
+    font-family:monospace;
+}
+
+.spinner{
+    width:50px;
+    height:50px;
+    border:5px solid rgba(255,255,255,0.3);
+    border-radius:50%;
+    border-top-color:#0f0;
+    animation:spin 1s linear infinite;
+    margin-bottom:1rem;
+}
+
+@keyframes spin{
+    100%{transform:rotate(360deg);}
+}
+
+/* Botón volver */
+#backButton{
+    position:absolute;
+    top:20px;
+    left:20px;
+    padding:10px 20px;
+    background:rgba(255,255,255,0.1);
+    color:#fff;
+    border:1px solid #fff;
+    border-radius:5px;
+    cursor:pointer;
+    z-index:102;
+    display:none;
+}
+</style>
+</head>
+<body>
+<!-- Pantalla de selección de circuitos -->
+<div id="trackSelectionScreen">
+    <h1>SELECCIÓN DE CIRCUITOS</h1>
+    
+    <div class="track-option" data-track="spa">
+        <h2>CIRCUITO DE SPA</h2>
+        <p>Bélgica - 7.004 km</p>
+        <div class="track-info">
+            <div class="track-stat">
+                <span>CURVAS</span>
+                <span>19</span>
+            </div>
+            <div class="track-stat">
+                <span>RÉCORD</span>
+                <span>1:41.252</span>
+            </div>
+            <div class="track-stat">
+                <span>DIFICULTAD</span>
+                <span>★★★★★</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="track-option" data-track="jerez">
+        <h2>CIRCUITO DE JEREZ</h2>
+        <p>España - 4.428 km</p>
+        <div class="track-info">
+            <div class="track-stat">
+                <span>CURVAS</span>
+                <span>13</span>
+            </div>
+            <div class="track-stat">
+                <span>RÉCORD</span>
+                <span>1:36.183</span>
+            </div>
+            <div class="track-stat">
+                <span>DIFICULTAD</span>
+                <span>★★★☆☆</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Indicador de carga -->
+<div id="loadingIndicator">
+    <div class="spinner"></div>
+    <p id="loadingText">Cargando circuito...</p>
+</div>
+
+<!-- Botón volver -->
+<button id="backButton" onclick="location.reload()">Volver a Selección</button>
+
+<!-- Elementos del juego (inicialmente ocultos) -->
+<div id="gameContainer" style="display:none;">
+    <canvas id="renderCanvas"></canvas>
+    <div id="speedBarContainer"><div id="speedBar"></div></div>
+    <div id="debug">Cargando circuito...</div>
+    <div class="button" id="btnForward" title="Acelerar"></div>
+    <div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
+
+    <div id="joystickContainer" class="joystick-disabled">
+      <div id="joystickBase">
+        <div id="joystickAxis"></div>
+        <div id="joystickHandle"></div>
+      </div>
+    </div>
+
+    <div id="timerPanel">
+      <div id="currentTimer">00:00.000</div>
+      <div id="lapTimes"></div>
+      <div id="timerStatus">ESPERANDO EN META</div>
+      <div id="bestLapDisplay">MEJOR VUELTA: --:--.---</div>
+    </div>
+
+    <!-- Botones -->
+    <button id="fullscreenBtn">Pantalla Completa</button>
+    <div id="settingsBtn">⚙️</div>
+    <div id="settingsPanel">
+        <label>Velocidad Máx: <span id="maxSpeedLabel">330</span></label>
+        <input type="range" id="maxSpeedRange" min="50" max="500" value="330">
+        
+        <label>Aceleración: <span id="accelLabel">50</span></label>
+        <input type="range" id="accelRange" min="10" max="200" value="50">
+
+        <label>Freno: <span id="brakeLabel">150</span></label>
+        <input type="range" id="brakeRange" min="20" max="300" value="150">
+
+        <label>Clima</label>
+        <select id="weatherSelect">
+            <option value="sunny">Soleado</option>
+            <option value="gray">Cielo Gris</option>
+            <option value="sunset">Atardecer Azul</option>
+        </select>
+
+        <label>Niebla: <span id="fogLabel">0.000</span></label>
+        <input type="range" id="fogRange" min="0" max="0.009" step="0.001" value="0">
+
+        <label>Música</label>
+        <button id="musicBtn">On</button>
+
+        <label>Número de Vueltas</label>
+        <input type="number" id="lapsNumber" min="1" max="99" value="3">
+    </div>
+
+    <audio id="motorAudio" loop></audio>
+</div>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+// =========================
+// URLs CORRECTAS para los circuitos
+// =========================
+const TRACK_URLS = {
+    spa: "https://raw.githubusercontent.com/Eduardodelpinotoro/Racing/main/spa.glb",
+    jerez: "https://raw.githubusercontent.com/Eduardodelpinotoro/Racing/main/jerez.glb"
+};
+
+// =========================
+// Variables globales
+// =========================
+let currentTrack = "";
+let scene, engine, playerMesh, camera;
+
+// =========================
+// Selección de circuito
+// =========================
+const trackSelectionScreen = document.getElementById("trackSelectionScreen");
+const loadingIndicator = document.getElementById("loadingIndicator");
+const loadingText = document.getElementById("loadingText");
+const gameContainer = document.getElementById("gameContainer");
+const backButton = document.getElementById("backButton");
+
+// Eventos de selección de circuito
+document.querySelectorAll('.track-option').forEach(option => {
+    option.addEventListener('click', function() {
+        currentTrack = this.getAttribute('data-track');
+        startGame(currentTrack);
+    });
+});
+
+function startGame(track) {
+    trackSelectionScreen.style.display = 'none';
+    loadingIndicator.style.display = 'flex';
+    loadingText.textContent = `Cargando ${track.toUpperCase()}...`;
+    
+    setTimeout(() => {
+        initializeGame(track);
+    }, 500);
+}
+
+// =========================
+// Inicialización del juego
+// =========================
+function initializeGame(track) {
+    const canvas = document.getElementById("renderCanvas");
+    
+    // Crear motor BabylonJS
+    engine = new BABYLON.Engine(canvas, true, {
+        preserveDrawingBuffer: true,
+        stencil: true
+    });
+    scene = new BABYLON.Scene(engine);
+    
+    // Configurar escena básica
+    setupScene();
+    
+    // Cargar el circuito
+    loadTrack(track);
+    
+    // Iniciar bucle de renderizado
+    engine.runRenderLoop(() => {
+        if (scene && scene.activeCamera) {
+            scene.render();
+        }
+    });
+
+    window.addEventListener('resize', () => {
+        engine.resize();
+    });
+}
+
+// =========================
+// Configuración de la escena
+// =========================
+function setupScene() {
+    scene.collisionsEnabled = true;
+    
+    // Luz ambiental
+    const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+    hemiLight.intensity = 0.8;
+    
+    // Luz direccional
+    const dirLight = new BABYLON.DirectionalLight("dir", new BABYLON.Vector3(-1, -2, -1), scene);
+    dirLight.intensity = 0.5;
+    
+    // Cámara
+    camera = new BABYLON.FreeCamera("camera", new BABYLON.Vector3(0, 5, -10), scene);
+    camera.setTarget(BABYLON.Vector3.Zero());
+    camera.attachControl(canvas, true);
+    
+    // Jugador (inicialmente invisible)
+    playerMesh = BABYLON.MeshBuilder.CreateSphere("player", {diameter: 1}, scene);
+    playerMesh.isVisible = false;
+    
+    // Mostrar juego y ocultar loading
+    loadingIndicator.style.display = 'none';
+    gameContainer.style.display = 'block';
+    backButton.style.display = 'block';
+    
+    // Inicializar controles
+    initializeControls();
+}
+
+// =========================
+// Carga de circuitos - VERSIÓN MEJORADA
+// =========================
+function loadTrack(track) {
+    const debug = document.getElementById("debug");
+    debug.textContent = `Cargando ${track.toUpperCase()}...`;
+    
+    let trackFile, startPosition, finishLine;
+    
+    if (track === "spa") {
+        trackFile = TRACK_URLS.spa;
+        startPosition = new BABYLON.Vector3(-3780, 330, -3980);
+        finishLine = {
+            minX: -3800,
+            maxX: -3700,
+            z: -4025,
+            width: 30
+        };
+    } else if (track === "jerez") {
+        trackFile = TRACK_URLS.jerez;
+        startPosition = new BABYLON.Vector3(280, 74, -340);
+        finishLine = {
+            minX: 260,
+            maxX: 300,
+            z: -325,
+            width: 20
+        };
+    }
+    
+    // Configurar línea de meta
+    window.finishLine = finishLine;
+    
+    console.log(`Cargando circuito: ${trackFile}`);
+    
+    // Cargar el modelo GLB con manejo mejorado de errores
+    BABYLON.SceneLoader.Load("", trackFile, scene, 
+        (newScene) => {
+            console.log("Circuito cargado exitosamente");
+            debug.textContent = `${track.toUpperCase()} cargado correctamente`;
+            
+            // Configurar colisiones para todos los meshes
+            newScene.meshes.forEach(mesh => {
+                if (mesh !== playerMesh) {
+                    mesh.checkCollisions = true;
+                }
+            });
+            
+            // Posicionar jugador
+            playerMesh.position.copyFrom(startPosition);
+            playerMesh.checkCollisions = true;
+            
+            // Posicionar cámara sobre el jugador
+            camera.parent = playerMesh;
+            camera.position = new BABYLON.Vector3(0, 3, -5);
+            
+            // Inicializar cronómetro
+            initializeTimer();
+            
+        }, 
+        (progress) => {
+            // Mostrar progreso de carga
+            const percent = (progress.loaded / progress.total * 100).toFixed(1);
+            debug.textContent = `Cargando ${track.toUpperCase()}... ${percent}%`;
+        },
+        (scene, message) => {
+            console.error("Error loading track:", message);
+            debug.textContent = `Error cargando ${track}: ${message}`;
+            
+            // Crear un circuito de prueba si falla la carga
+            createTestTrack();
+        }
+    );
+}
+
+// Circuito de prueba si falla la carga
+function createTestTrack() {
+    const debug = document.getElementById("debug");
+    debug.textContent = "Creando circuito de prueba...";
+    
+    // Crear un suelo simple
+    const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 100, height: 100}, scene);
+    ground.checkCollisions = true;
+    
+    // Crear algunos obstáculos
+    for (let i = 0; i < 10; i++) {
+        const box = BABYLON.MeshBuilder.CreateBox("box" + i, {size: 2}, scene);
+        box.position.x = Math.random() * 80 - 40;
+        box.position.z = Math.random() * 80 - 40;
+        box.position.y = 1;
+        box.checkCollisions = true;
+    }
+    
+    // Posicionar jugador
+    playerMesh.position.set(0, 2, 0);
+    playerMesh.isVisible = true;
+    
+    // Configurar línea de meta simple
+    window.finishLine = {
+        minX: -5,
+        maxX: 5,
+        z: 0,
+        width: 10
+    };
+}
+
+// =========================
+// Controles
+// =========================
+function initializeControls() {
+    let moveForward = false, moveBackward = false, currentSpeed = 0;
+    const maxReverse = 50, airFriction = 8;
+    
+    // Botones táctiles
+    document.getElementById("btnForward").addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        moveForward = true;
+    });
+    document.getElementById("btnForward").addEventListener("touchend", (e) => {
+        e.preventDefault();
+        moveForward = false;
+    });
+    document.getElementById("btnBackward").addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        moveBackward = true;
+    });
+    document.getElementById("btnBackward").addEventListener("touchend", (e) => {
+        e.preventDefault();
+        moveBackward = false;
+    });
+    
+    // Joystick
+    const joystickContainer = document.getElementById("joystickContainer");
+    const joystickHandle = document.getElementById("joystickHandle");
+    let isJoystickActive = false, joystickRotation = 0;
+    const rotationSpeed = 0.5, minSpeedForSteering = 5;
+    
+    joystickContainer.addEventListener('touchstart', e => { 
+        if (Math.abs(currentSpeed) < minSpeedForSteering) return; 
+        e.preventDefault(); 
+        isJoystickActive = true; 
+        updateJoystick(e.touches[0]); 
+    });
+    
+    joystickContainer.addEventListener('touchmove', e => { 
+        if (Math.abs(currentSpeed) < minSpeedForSteering) { 
+            resetJoystick(); 
+            return; 
+        } 
+        if (!isJoystickActive) return; 
+        e.preventDefault(); 
+        updateJoystick(e.touches[0]); 
+    });
+    
+    joystickContainer.addEventListener('touchend', e => { 
+        e.preventDefault(); 
+        isJoystickActive = false; 
+        resetJoystick(); 
+    });
+    
+    function updateJoystick(touch) { 
+        const rect = joystickContainer.getBoundingClientRect(); 
+        const dx = touch.clientX - (rect.left + rect.width / 2); 
+        const maxDist = rect.width / 2 - joystickHandle.offsetWidth / 2; 
+        const dist = Math.min(Math.abs(dx), maxDist); 
+        joystickHandle.style.transform = `translate(calc(-50% + ${Math.sign(dx) * dist}px), -50%)`; 
+        joystickRotation = Math.max(-1, Math.min(1, dx / maxDist)); 
+    }
+    
+    function resetJoystick() { 
+        joystickHandle.style.transform = 'translate(-50%, -50%)'; 
+        joystickRotation = 0; 
+    }
+    
+    function updateJoystickState() { 
+        if (Math.abs(currentSpeed) >= minSpeedForSteering) {
+            joystickContainer.classList.remove('joystick-disabled'); 
+        } else { 
+            joystickContainer.classList.add('joystick-disabled'); 
+            if (isJoystickActive) { 
+                resetJoystick(); 
+                isJoystickActive = false; 
+            }
+        }
+    }
+    
+    // Bucle de actualización de controles
+    scene.registerBeforeRender(() => {
+        const dt = engine.getDeltaTime() / 1000;
+        
+        // Movimiento
+        if (moveForward && !moveBackward) {
+            currentSpeed = Math.min(currentSpeed + accel * dt, maxSpeed);
+        } else if (moveBackward && !moveForward) { 
+            if (currentSpeed > 0) {
+                currentSpeed = Math.max(currentSpeed - brakeFriction * dt, 0); 
+            } else {
+                currentSpeed = Math.max(currentSpeed - accel * dt, -maxReverse); 
+            }
+        } else { 
+            if (currentSpeed > 0) {
+                currentSpeed = Math.max(currentSpeed - airFriction * dt, 0); 
+            } else if (currentSpeed < 0) {
+                currentSpeed = Math.min(currentSpeed + airFriction * dt, 0); 
+            }
+        }
+        
+        // Joystick
+        updateJoystickState();
+        if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
+            camera.rotation.y += joystickRotation * rotationSpeed * dt;
+        }
+        
+        // Barra de velocidad
+        const speedBar = document.getElementById("speedBar");
+        speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
+        speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
+        
+        // Movimiento del jugador
+        if (Math.abs(currentSpeed) > 0.001) { 
+            const yaw = camera.rotation.y; 
+            const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); 
+            playerMesh.moveWithCollisions(forward.scale(currentSpeed * dt)); 
+        }
+        
+        // Verificar línea de meta
+        if (window.checkFinishLine) window.checkFinishLine();
+        if (window.updateTimerDisplay) window.updateTimerDisplay();
+        
+        // Debug
+        const debug = document.getElementById("debug");
+        const finishLine = window.finishLine;
+        let debugStatus = "ALEJADO DE META";
+        
+        if (finishLine) {
+            const insideX = (playerMesh.position.x >= finishLine.minX && playerMesh.position.x <= finishLine.maxX);
+            const nearFinishZ = Math.abs(playerMesh.position.z - finishLine.z) <= finishLine.width;
+            debugStatus = insideX && nearFinishZ ? "CERCA DE META" : "ALEJADO DE META";
+        }
+        
+        debug.textContent = `Circuito: ${currentTrack.toUpperCase()} | Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed * speedFactor).toFixed(0)} km/h | ${debugStatus}`;
+    });
+}
+
+// =========================
+// Cronómetro
+// =========================
+function initializeTimer() {
+    const currentTimer = document.getElementById("currentTimer");
+    const lapTimes = document.getElementById("lapTimes");
+    const timerStatus = document.getElementById("timerStatus");
+    const bestLapDisplay = document.getElementById("bestLapDisplay");
+    
+    let raceStartTime = 0, currentLapStartTime = 0, bestLapTime = 0, lapCount = 0, isRacing = false, hasCrossedFinishLine = false, prevPosZ = 0;
+    
+    function formatTime(ms) {
+        const m = Math.floor(ms / 60000),
+              s = Math.floor((ms % 60000) / 1000),
+              msr = Math.floor(ms % 1000); 
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${msr.toString().padStart(3, '0')}`;
+    }
+
+    function updateTimerDisplay() { 
+        currentTimer.textContent = isRacing ? formatTime(Date.now() - currentLapStartTime) : "00:00.000"; 
+        bestLapDisplay.textContent = bestLapTime > 0 ? `MEJOR VUELTA: ${formatTime(bestLapTime)}` : "MEJOR VUELTA: --:--.---"; 
+    }
+
+    function registerCross() { 
+        if (!isRacing) {
+            isRacing = true; 
+            raceStartTime = Date.now(); 
+            currentLapStartTime = raceStartTime; 
+            lapCount = 1; 
+            timerStatus.textContent = "VUELTA 1"; 
+            timerStatus.style.color = "#0f0"; 
+            return; 
+        } 
+        
+        const lapTime = Date.now() - currentLapStartTime; 
+        
+        if (lapTime > 2000) {
+            if (bestLapTime === 0 || lapTime < bestLapTime) bestLapTime = lapTime; 
+            
+            const lapEl = document.createElement("div"); 
+            lapEl.className = "lap-time"; 
+            lapEl.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}` + (lapTime === bestLapTime ? " ★" : ""); 
+            if (lapTime === bestLapTime) lapEl.classList.add("best-lap"); 
+            lapTimes.insertBefore(lapEl, lapTimes.firstChild); 
+            
+            lapCount++; 
+            currentLapStartTime = Date.now(); 
+            
+            if (lapCount > totalLaps) { 
+                timerStatus.textContent = "CARRERA COMPLETADA"; 
+                isRacing = false; 
+            } else { 
+                timerStatus.textContent = `VUELTA ${lapCount}`; 
+            }
+        }
+    }
+
+    function checkFinishLine() { 
+        const pos = playerMesh.position; 
+        const finishLine = window.finishLine;
+        
+        if (!finishLine) return;
+        
+        const insideX = (pos.x >= finishLine.minX && pos.x <= finishLine.maxX);
+        
+        if (insideX) { 
+            const nearFinishZ = Math.abs(pos.z - finishLine.z) <= finishLine.width;
+            
+            if (nearFinishZ && !hasCrossedFinishLine) {
+                hasCrossedFinishLine = true;
+                registerCross();
+            }
+        } 
+        
+        if (Math.abs(pos.z - finishLine.z) > finishLine.width * 2) {
+            hasCrossedFinishLine = false;
+        }
+        
+        prevPosZ = pos.z; 
+    }
+    
+    window.checkFinishLine = checkFinishLine;
+    window.updateTimerDisplay = updateTimerDisplay;
+}
+
+// =========================
+// Configuración global
+// =========================
+// Fullscreen
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+fullscreenBtn.addEventListener('click', () => {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+    fullscreenBtn.style.display = 'none';
+});
+
+// Configuración
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+settingsBtn.addEventListener('click', () => { 
+    settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none'; 
+});
+
+// Velocidad/Aceleración/Freno
+const maxSpeedRange = document.getElementById("maxSpeedRange"), 
+      accelRange = document.getElementById("accelRange"), 
+      brakeRange = document.getElementById("brakeRange");
+const maxSpeedLabel = document.getElementById("maxSpeedLabel"), 
+      accelLabel = document.getElementById("accelLabel"), 
+      brakeLabel = document.getElementById("brakeLabel");
+
+let maxSpeed = 330, accel = 50, brakeFriction = 150;
+maxSpeedRange.addEventListener('input', () => { 
+    maxSpeed = parseInt(maxSpeedRange.value); 
+    maxSpeedLabel.textContent = maxSpeed; 
+});
+accelRange.addEventListener('input', () => { 
+    accel = parseInt(accelRange.value); 
+    accelLabel.textContent = accel; 
+});
+brakeRange.addEventListener('input', () => { 
+    brakeFriction = parseInt(brakeRange.value); 
+    brakeLabel.textContent = brakeFriction; 
+});
+
+// Clima y niebla
+const weatherSelect = document.getElementById("weatherSelect");
+const fogRange = document.getElementById("fogRange"), fogLabel = document.getElementById("fogLabel");
+let fogDensity = 0;
+fogRange.addEventListener('input', () => {
+    const steps = [0, 0.01, 0.02, 0.03, 0.04];
+    let closest = steps.reduce((prev, curr) => Math.abs(curr - fogRange.value) < Math.abs(prev - fogRange.value) ? curr : prev);
+    fogDensity = closest;
+    fogLabel.textContent = fogDensity.toFixed(2);
+    
+    if (scene) {
+        scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+        scene.fogDensity = fogDensity;
+        scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+    }
+});
+
+// Música
+const musicBtn = document.getElementById("musicBtn"), motorAudio = document.getElementById("motorAudio");
+let musicOn = true;
+musicBtn.addEventListener('click', () => {
+    musicOn = !musicOn;
+    if (musicOn) {
+        motorAudio.play().catch(e => console.log("Audio error:", e));
+    } else {
+        motorAudio.pause();
+    }
+    musicBtn.textContent = musicOn ? "On" : "Off";
+});
+
+// Número de vueltas
+const lapsNumberInput = document.getElementById("lapsNumber");
+let totalLaps = parseInt(lapsNumberInput.value);
+lapsNumberInput.addEventListener('input', () => { 
+    totalLaps = parseInt(lapsNumberInput.value); 
+});
+
+// Factor de velocidad
+const maxRealKmH = 305;
+const speedFactor = maxRealKmH / maxSpeed;
+
+// Configuración inicial del clima
+weatherSelect.addEventListener('change', () => {
+    if (!scene) return;
+    
+    switch(weatherSelect.value){
+        case 'sunny': 
+            scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1); 
+            break;
+        case 'gray': 
+            scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 1); 
+            break;
+        case 'sunset': 
+            scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.2, 1); 
+            break;
+    }
+});
+</script>
+</body>
+</html>
