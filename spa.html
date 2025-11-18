@@ -325,8 +325,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
 
 function keepGround(){ const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0),50); const hit=scene.pickWithRay(ray,m=>m!==playerMesh); if(hit && hit.hit) playerMesh.position.y=hit.pickedPoint.y+2; }
 
-const maxRealKmH=305;
-const speedFactor=maxRealKmH/maxSpeed;
+
 
 engine.runRenderLoop(()=>{
     // Clima
