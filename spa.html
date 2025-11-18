@@ -324,7 +324,8 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
 }, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 
 function keepGround(){ const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0),50); const hit=scene.pickWithRay(ray,m=>m!==playerMesh); if(hit && hit.hit) playerMesh.position.y=hit.pickedPoint.y+2; }
-
+const maxRealKmH=330;
+const speedFactor=maxRealKmH/maxSpeed;
 
 
 engine.runRenderLoop(()=>{
