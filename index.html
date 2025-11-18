@@ -257,7 +257,7 @@ const lapTimes=document.getElementById("lapTimes");
 const timerStatus=document.getElementById("timerStatus");
 const bestLapDisplay=document.getElementById("bestLapDisplay");
 let raceStartTime=0,currentLapStartTime=0,bestLapTime=0,lapCount=0,isRacing=false,hasCrossedFinishLine=false,prevPosZ=0;
-const finishLine={minX:300,maxX:-370,z:-280,width:30,resetThresholdExtra:10};
+const finishLine={minZ:300,maxZ:-370,x:-280,width:30,resetThresholdExtra:10};
 finishLine.centerX=(finishLine.minX+finishLine.maxX)/2;
 finishLine.resetThreshold=finishLine.width+finishLine.resetThresholdExtra;
 function formatTime(ms){const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000),msr=Math.floor(ms%1000); return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}.${msr.toString().padStart(3,'0')}`;}
