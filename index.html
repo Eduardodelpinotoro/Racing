@@ -216,36 +216,40 @@ scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;
 scene.fogColor=new BABYLON.Color3(0.5,0.5,0.5);
 
 // PLAYER
-const playerMesh=BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
-playerMesh.isVisible=false;
-playerMesh.checkCollisions=true;
-playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
-playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
-// Cargar el Lamborghini y hacerlo hijo del player
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height:1.8, radius:0.3}, scene);
+playerMesh.isVisible = false;
+playerMesh.checkCollisions = true;
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+
+// ------------------------
+// LAMBORGHINI
+// ------------------------
 BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, function(meshes) {
 
-    // Crear un nodo contenedor para el coche
+    // Nodo padre para controlar el coche
     const lamboParent = new BABYLON.TransformNode("lamboParent", scene);
 
-    // Hacer que TODOS los meshes del GLB vayan dentro del contenedor
     meshes.forEach(m => {
         m.parent = lamboParent;
+        m.checkCollisions = false;     // IMPORTANTE → Para que NO flote
     });
 
-    // Escala correcta del modelo
-    lamboParent.scaling = new BABYLON.Vector3(0.02, 0.02, 0.02);
+    // Tamaño REAL perfecto (el coche es enorme por defecto)
+    lamboParent.scaling = new BABYLON.Vector3(0.004, 0.004, 0.004);
 
-    // Rotación para que mire hacia adelante
+    // Rotación correcta
     lamboParent.rotation = new BABYLON.Vector3(0, Math.PI, 0);
 
-    // El coche sigue al jugador
+    // Lo hacemos hijo del player
     lamboParent.parent = playerMesh;
 
-    // Ajuste de altura
-    lamboParent.position = new BABYLON.Vector3(0, -1, 0);
+    // Posición exacta del coche respecto al player
+    lamboParent.position = new BABYLON.Vector3(0, -1.0, 0);
 
-    console.log("Lamborghini cargado y vinculado al player.");
+    console.log("Lamborghini cargado correctamente.");
 });
+                               
     
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
