@@ -215,12 +215,11 @@ scene.fogMode=BABYLON.Scene.FOGMODE_EXP2;
 scene.fogColor=new BABYLON.Color3(0.5,0.5,0.5);
 
 // PLAYER - CREAR UN CUBO INVISIBLE COMO COLLIDER
-const playerMesh=BABYLON.MeshBuilder.CreateBox("player",{width: 1.8, height: 0.6, depth: 4.2},scene);
+const playerMesh=BABYLON.MeshBuilder.CreateBox("player",{width: 2.5, height: 0.8, depth: 5},scene);
 playerMesh.isVisible=false;
 playerMesh.checkCollisions=true;
-playerMesh.ellipsoid=new BABYLON.Vector3(0.9, 0.3, 2.1);
-playerMesh.ellipsoidOffset=new BABYLON.Vector3(0, 0.3, 0);
-
+playerMesh.ellipsoid=new BABYLON.Vector3(1.25, 0.4, 2.5);
+playerMesh.ellipsoidOffset=new BABYLON.Vector3(0, 0.4, 0);
 // VARIABLE PARA EL LAMBO
 let lamboMesh = null;
 
@@ -290,15 +289,24 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, ()=>{
         lamboMesh = meshes[0];
         lamboMesh.parent = playerMesh;
         lamboMesh.position.y = -0.3; // Ajustar altura
-        lamboMesh.scaling.scaleInPlace(0.8); // Ajustar tamaño
+        lamboMesh.scaling.scaleInPlace(2); // Ajustar tamaño
         
         debug.textContent="¡Lamborghini cargado! - Línea de meta activa";
     });
     
 }, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 
-function keepGround(){ const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,10,0)), new BABYLON.Vector3(0,-1,0),50); const hit=scene.pickWithRay(ray,m=>m!==playerMesh && m!==lamboMesh); if(hit && hit.hit) playerMesh.position.y=hit.pickedPoint.y+2; }
-
+function keepGround(){ 
+    const ray=new BABYLON.Ray(playerMesh.position.add(new BABYLON.Vector3(0,5,0)), new BABYLON.Vector3(0,-1,0),20); 
+    const hit=scene.pickWithRay(ray,m=>m!==playerMesh && m!==lamboMesh); 
+    if(hit && hit.hit) {
+        // Mantener el coche a una altura fija sobre el suelo
+        playerMesh.position.y = hit.pickedPoint.y + 0.8;
+    } else {
+        // Si no hay suelo debajo, aplicar gravedad suave
+        playerMesh.position.y -= 0.1;
+    }
+}
 const maxRealKmH=305;
 const speedFactor=maxRealKmH/maxSpeed;
 
