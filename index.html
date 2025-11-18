@@ -269,6 +269,7 @@ playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 playerMesh.applyGravity=true;
 
 // =========================
+// =========================
 // CARGAR LAMBO
 BABYLON.SceneLoader.ImportMesh(
   "", 
@@ -276,23 +277,26 @@ BABYLON.SceneLoader.ImportMesh(
   "lambo.glb",
   scene,
   function(meshes, particleSystems, skeletons, animationGroups) {
+    // TransformNode para que el playerMesh siga colisiones
     const carPivot = new BABYLON.TransformNode("carPivot", scene);
-    carPivot.parent = playerMesh;
-    carPivot.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1);
+    carPivot.parent = playerMesh;        // pivot sigue al playerMesh
+    carPivot.position.set(0,0,0);        // sin mover el pivot, importante
+
     meshes.forEach(m => {
       if(m instanceof BABYLON.Mesh) {
         m.parent = carPivot;
-        m.position = m.position || BABYLON.Vector3.Zero();
+        m.position.y -= 1.6;             // ajusta solo el Lambo visual
         m.rotationQuaternion = null;
         m.scaling = new BABYLON.Vector3(1,1,1);
       }
     });
-    carPivot.position = new BABYLON.Vector3(0, -1.6, 0);
+
     console.log("Lambo cargado:", meshes.length, "meshes, skeletons:", skeletons.length);
   },
   null,
   function(err){ console.error("Error cargando lambo.glb:", err); }
 );
+    
 
 // =========================
 // CAMERA
