@@ -350,7 +350,7 @@ engine.runRenderLoop(()=>{
     if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering) camera.rotation.y += joystickRotation*rotationSpeed*dt;
     speedBar.style.width=(Math.min(Math.abs(currentSpeed)/maxSpeed,1)*100)+"%";
     speedBar.style.background=currentSpeed>=0?"#0f0":"#f00";
-    if(Math.abs(currentSpeed)>0.001){ const yaw=camera.rotation.y; const forward=new BABYLON.Vector3(Math.sin(yaw),0,Math.cos(yaw)); playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt)); }
+    if(Math.abs(currentSpeed)>0.001){ const yaw=playerMesh.rotation.y; const forward=new BABYLON.Vector3(Math.sin(yaw),0,Math.cos(yaw)); playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt)); }
     checkFinishLine(); updateTimerDisplay(); keepGround();
     debug.textContent=`Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed*speedFactor).toFixed(0)} km/h`;
     scene.render();
