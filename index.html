@@ -380,10 +380,18 @@ engine.runRenderLoop(()=>{
     speedBar.style.background=currentSpeed>=0?"#0f0":"#f00";
 
     if(Math.abs(currentSpeed)>0.001){
-        const yaw=camera.rotation.y;
-        const forward=new BABYLON.Vector3(Math.sin(yaw),0,Math.cos(yaw));
-        playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt));
+    // Usa la rotación del playerMesh, no la cámara
+    const yaw = playerMesh.rotation.y; 
+    const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+
+    playerMesh.moveWithCollisions(forward.scale(currentSpeed * dt));
+
+    // Giro con joystick sobre el playerMesh
+    if(isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering){
+        playerMesh.rotation.y += joystickRotation * rotationSpeed * dt;
     }
+            }
+    
 
     checkFinishLine();
     updateTimerDisplay();
