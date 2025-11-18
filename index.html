@@ -280,7 +280,7 @@ function checkFinishLine(){ const pos=playerMesh.position; const insideX=(pos.x>
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "jerez.glb", scene, ()=>{
     scene.meshes.forEach(m=>{ if(m!==playerMesh) m.checkCollisions=true; });
-    playerMesh.position.set(239,60,-326); prevPosZ=playerMesh.position.z;
+    playerMesh.position.set(239,70,-326); prevPosZ=playerMesh.position.z;
     debug.textContent="Circuito cargado - Línea de meta activa";
 }, null, (s,msg)=>{ console.error(msg); debug.textContent='Error cargando spa.glb'; });
 
