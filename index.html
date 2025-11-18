@@ -285,7 +285,7 @@ BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, function (meshes) {
     playerMesh.scaling.scaleInPlace(0.8);
     
     // Crear cámara
-    camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 0, 0), scene);
+    camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, 3, 0), scene);
     camera.parent = playerMesh;
     camera.attachControl(canvas, true);
     
