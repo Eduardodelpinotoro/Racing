@@ -264,8 +264,8 @@ playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
 camera.parent=playerMesh;
-camera.attachControl(canvas,false);
-
+//camera.attachControl(canvas,false);
+camera.detachControl(canvas);
 // UI
 const debug=document.getElementById("debug");
 const speedBar=document.getElementById("speedBar");
