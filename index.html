@@ -319,7 +319,9 @@ engine.runRenderLoop(()=>{
     else if(moveBackward && !moveForward){ if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-brakeFriction*dt,0); else currentSpeed=Math.max(currentSpeed-accel*dt,-maxReverse); }
     else{ if(currentSpeed>0) currentSpeed=Math.max(currentSpeed-airFriction*dt,0); else if(currentSpeed<0) currentSpeed=Math.min(currentSpeed+airFriction*dt,0); }
     updateJoystickState();
-    if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering) camera.rotation.y += joystickRotation*rotationSpeed*dt;
+    if(isJoystickActive && Math.abs(joystickRotation)>0.1 && Math.abs(currentSpeed)>=minSpeedForSteering) {
+    playerMesh.rotation.y += joystickRotation*rotationSpeed*dt;
+}
     speedBar.style.width=(Math.min(Math.abs(currentSpeed)/maxSpeed,1)*100)+"%";
     speedBar.style.background=currentSpeed>=0?"#0f0":"#f00";
     if(Math.abs(currentSpeed)>0.001){ const yaw=camera.rotation.y; const forward=new BABYLON.Vector3(Math.sin(yaw),0,Math.cos(yaw)); playerMesh.moveWithCollisions(forward.scale(currentSpeed*dt)); }
