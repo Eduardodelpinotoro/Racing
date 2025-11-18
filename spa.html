@@ -265,6 +265,8 @@ playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
 camera.parent=playerMesh;
 camera.attachControl(canvas,true);
+camera.inputs.attached.mouse.detachControl(); // Desactiva rotación con mouse
+camera.inputs.attached.touch.detachControl(); // Desactiva rotación con touch
 
 // UI
 const debug=document.getElementById("debug");
