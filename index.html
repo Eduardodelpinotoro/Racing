@@ -185,8 +185,9 @@ scene.fogColor=new BABYLON.Color3(0.5,0.5,0.5);
 const playerMesh=BABYLON.MeshBuilder.CreateCapsule("player",{height:1.8,radius:0.3},scene);
 playerMesh.isVisible=false;
 playerMesh.checkCollisions=true;
-playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
-playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 1, 0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+    
 playerMesh.applyGravity=true;
 
 // =========================
