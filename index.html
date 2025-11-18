@@ -221,7 +221,32 @@ playerMesh.isVisible=false;
 playerMesh.checkCollisions=true;
 playerMesh.ellipsoid=new BABYLON.Vector3(0.5,3,0.5);
 playerMesh.ellipsoidOffset=new BABYLON.Vector3(0,2,0);
+// Cargar el Lamborghini y hacerlo hijo del player
+BABYLON.SceneLoader.ImportMesh("", "", "lambo.glb", scene, function(meshes) {
 
+    // Crear un nodo contenedor para el coche
+    const lamboParent = new BABYLON.TransformNode("lamboParent", scene);
+
+    // Hacer que TODOS los meshes del GLB vayan dentro del contenedor
+    meshes.forEach(m => {
+        m.parent = lamboParent;
+    });
+
+    // Escala correcta del modelo
+    lamboParent.scaling = new BABYLON.Vector3(0.02, 0.02, 0.02);
+
+    // Rotación para que mire hacia adelante
+    lamboParent.rotation = new BABYLON.Vector3(0, Math.PI, 0);
+
+    // El coche sigue al jugador
+    lamboParent.parent = playerMesh;
+
+    // Ajuste de altura
+    lamboParent.position = new BABYLON.Vector3(0, -1, 0);
+
+    console.log("Lamborghini cargado y vinculado al player.");
+});
+    
 // CAMERA
 const camera=new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,3,0), scene);
 camera.parent=playerMesh;
