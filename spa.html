@@ -307,6 +307,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     -moz-user-select: none;
     -ms-user-select: none;
     touch-action: manipulation;
+    pointer-events: auto;
 }
 
 .gear-btn:active {
@@ -315,12 +316,14 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 }
 
 #gearDown {
+    pointer-events: auto;
     position: absolute;
     top: 130px; /* MITAD de la altura de los sliders (que miden 200px) */
     left: 220px; /* A la DERECHA del freno */
 }
 
 #gearUp {
+    pointer-events: auto;
     position: absolute;
     top: 60px; /* MITAD de la altura de los sliders */
     left: 220px;   /* A la IZQUIERDA del acelerador */
@@ -698,27 +701,101 @@ manualTransmissionToggle.addEventListener('change', () => {
     }
 });
 
-// Cambio de marcha hacia arriba
-gearUpBtn.addEventListener('click', () => {
+// =========================
+// BOTONES DE MARCHAS MEJORADOS - PERMITEN CAMBIOS MIENTRAS ACELERAS/FRENAS
+// =========================
+
+// Cambio de marcha hacia arriba - CON MEJORA TÁCTIL
+gearUpBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (currentGear < maxGear && currentGear > 0) {
         currentGear++;
         updateGearIndicator();
         debug.textContent = `Cambiado a ${currentGear}ª marcha`;
+        // Efecto visual de pulsación
+        gearUpBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            gearUpBtn.style.transform = 'scale(1)';
+        }, 100);
     }
-});
+}, { passive: false });
 
-// Cambio de marcha hacia abajo
-gearDownBtn.addEventListener('click', () => {
+gearUpBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+}, { passive: false });
+
+// Cambio de marcha hacia abajo - CON MEJORA TÁCTIL
+gearDownBtn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (currentGear > 1) {
         currentGear--;
         updateGearIndicator();
         debug.textContent = `Cambiado a ${currentGear}ª marcha`;
+        // Efecto visual de pulsación
+        gearDownBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            gearDownBtn.style.transform = 'scale(1)';
+        }, 100);
     } else if (currentGear === 1) {
         // Cambiar a neutral
         currentGear = 0;
         updateGearIndicator();
         debug.textContent = "Cambiado a Neutral";
+        // Efecto visual de pulsación
+        gearDownBtn.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+            gearDownBtn.style.transform = 'scale(1)';
+        }, 100);
     }
+}, { passive: false });
+
+gearDownBtn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+}, { passive: false });
+
+// También mejorar los event listeners de clic para dispositivos con ratón
+gearUpBtn.addEventListener('mousedown', () => {
+    if (currentGear < maxGear && currentGear > 0) {
+        currentGear++;
+        updateGearIndicator();
+        debug.textContent = `Cambiado a ${currentGear}ª marcha`;
+        gearUpBtn.style.transform = 'scale(0.95)';
+    }
+});
+
+gearUpBtn.addEventListener('mouseup', () => {
+    gearUpBtn.style.transform = 'scale(1)';
+});
+
+gearDownBtn.addEventListener('mousedown', () => {
+    if (currentGear > 1) {
+        currentGear--;
+        updateGearIndicator();
+        debug.textContent = `Cambiado a ${currentGear}ª marcha`;
+        gearDownBtn.style.transform = 'scale(0.95)';
+    } else if (currentGear === 1) {
+        currentGear = 0;
+        updateGearIndicator();
+        debug.textContent = "Cambiado a Neutral";
+        gearDownBtn.style.transform = 'scale(0.95)';
+    }
+});
+
+gearDownBtn.addEventListener('mouseup', () => {
+    gearDownBtn.style.transform = 'scale(1)';
+});
+
+// Y también añadir eventos para cuando el toque sale del botón
+gearUpBtn.addEventListener('touchcancel', () => {
+    gearUpBtn.style.transform = 'scale(1)';
+});
+
+gearDownBtn.addEventListener('touchcancel', () => {
+    gearDownBtn.style.transform = 'scale(1)';
 });
 
 function updateGearIndicator() {
