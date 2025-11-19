@@ -217,6 +217,22 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     font-family: monospace;
     z-index: 10;
 }
+    /* Indicador de velocidad numérico */
+#speedNumber {
+    position: absolute;
+    bottom: 50px; /* Justo arriba del indicador de marchas */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    color: #0f0;
+    padding: 5px 15px;
+    border-radius: 5px;
+    font-size: 18px;
+    font-family: monospace;
+    z-index: 10;
+    border: 1px solid #0f0;
+    font-weight: bold;
+}
 
 </style>
 </head>
@@ -226,7 +242,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 <div id="debug">Cargando circuito...</div>
 <div id="resetPositionBtn" title="Posición Inicial">🏁</div>
 <div id="gearIndicator">N</div>
-
+<div id="speedNumber">0 km/h</div>
 <!-- Indicador de calibración de giroscopio -->
 <div id="gyroIndicator">
     <div id="gyroIndicatorBar"></div>
@@ -1146,6 +1162,8 @@ engine.runRenderLoop(() => {
     keepGround();
     
     debug.textContent = `Coche: ${cars[currentCar].name} | Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed * speedFactor).toFixed(0)} km/h | Acel: ${Math.round(throttlePressure*100)}% | Freno: ${Math.round(brakePressure*100)}%`;
+   // Actualizar indicador de velocidad numérico
+document.getElementById('speedNumber').textContent = Math.abs(currentSpeed * speedFactor).toFixed(0) + ' km/h';
     scene.render();
 });
 
