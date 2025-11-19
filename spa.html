@@ -178,7 +178,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     overflow: hidden;
 }
 #throttleSlider{ right: 30px; }
-#brakeSlider{ right: 130px; }
+#brakeSlider{ right: 130px; left: auto; }
 .slider-fill {
     width: 100%;
     height: 0%;
@@ -201,7 +201,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     font-size:12px;
     z-index:21;
 }
-.pedal-value.brake{ right:130px; }
+.pedal-value.brake{ right:130px; left: auto; }
 
 /* Indicador de marcha */
 #gearIndicator {
@@ -595,6 +595,12 @@ gyroToggle.addEventListener('change', () => {
     if (gyroEnabled) {
         // OCULTAR JOYSTICK CUANDO EL GIROSCOPIO ESTÁ ACTIVADO
         joystickContainer.style.display = 'none';
+        
+        // MOVER FRENO A LA IZQUIERDA EN MODO GIROSCOPIO
+        document.getElementById('brakeSlider').style.left = '30px';
+        document.getElementById('brakeSlider').style.right = 'auto';
+        document.querySelector('.pedal-value.brake').style.left = '30px';
+        document.querySelector('.pedal-value.brake').style.right = 'auto';
 
         gyroControls.style.display = 'block';
         gyroIndicator.style.display = 'block';
@@ -612,6 +618,8 @@ gyroToggle.addEventListener('change', () => {
                         gyroToggle.checked = false;
                         gyroEnabled = false;
                         joystickContainer.style.display = 'block';
+                        // RESTAURAR POSICIÓN ORIGINAL DEL FRENO
+                        resetBrakePosition();
                     }
                 })
                 .catch(err => {
@@ -619,6 +627,8 @@ gyroToggle.addEventListener('change', () => {
                     gyroToggle.checked = false;
                     gyroEnabled = false;
                     joystickContainer.style.display = 'block';
+                    // RESTAURAR POSICIÓN ORIGINAL DEL FRENO
+                    resetBrakePosition();
                 });
         } else {
             window.addEventListener('deviceorientation', handleDeviceOrientation);
@@ -627,6 +637,9 @@ gyroToggle.addEventListener('change', () => {
     } else {
         // MOSTRAR JOYSTICK CUANDO EL GIROSCOPIO ESTÁ APAGADO
         joystickContainer.style.display = 'block';
+        
+        // RESTAURAR POSICIÓN ORIGINAL DEL FRENO
+        resetBrakePosition();
 
         gyroControls.style.display = 'none';
         gyroIndicator.style.display = 'none';
@@ -638,6 +651,16 @@ gyroToggle.addEventListener('change', () => {
     }
 });
 
+// Función para restaurar la posición original del freno
+function resetBrakePosition() {
+    const brakeSlider = document.getElementById('brakeSlider');
+    const brakeValue = document.querySelector('.pedal-value.brake');
+    
+    brakeSlider.style.left = 'auto';
+    brakeSlider.style.right = '130px';
+    brakeValue.style.left = 'auto';
+    brakeValue.style.right = '130px';
+}
 // Función para determinar el eje correcto según la orientación
 function getSteeringAxis(event) {
     const beta = event.beta;  // Inclinación frontal (-180 a 180)
