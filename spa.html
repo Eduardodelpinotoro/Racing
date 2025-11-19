@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!-- Optimized full code with improved sliders, full proportional acceleration, joystick + sliders simultaneous -->
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SPA - Control Optimizado</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<style>
+/* NEW CLEAN STYLES HERE */
+html,body{margin:0;overflow:hidden;height:100%;background:#000}
+#renderCanvas{width:100%;height:100%}
+
+/* Smooth sliders */
+.slider { position:absolute; bottom:30px; width:80px; height:220px; background:rgba(255,255,255,0.05); border-radius:18px; border:2px solid rgba(255,255,255,0.15); overflow:hidden; touch-action:none; }
+#throttleSlider{ right:30px; }
+#brakeSlider{ right:130px; }
+.slider-fill { width:100%; height:0%; background:linear-gradient(180deg, rgba(0,255,0,0.2), rgba(0,255,0,0.6)); transition:height 0.02s linear; }
+
+/* Joystick */
+#joystickContainer{ position:absolute; bottom:30px; left:40px; width:160px; height:120px; }
+#joystickBase{ position:absolute; width:100%; height:100%; border-radius:50%; background:rgba(255,255,255,0.1); border:2px solid rgba(255,255,255,0.25); }
+#joystickHandle{ position:absolute; width:20px; height:100px; left:50%; top:50%; transform:translate(-50%,-50%); background:rgba(255,255,255,0.4); border-radius:10px; }
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+
+<!-- Sliders -->
+<div id="throttleSlider" class="slider"><div id="throttleFill" class="slider-fill"></div></div>
+<div id="brakeSlider" class="slider"><div id="brakeFill" class="slider-fill"></div></div>
+
+<!-- Joystick -->
+<div id="joystickContainer"><div id="joystickBase"></div><div id="joystickHandle"></div></div>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script>
+/* =============================================================
+   FIX 1: SLIDERS 100% SUAVES Y PROGRESIVOS
+   ============================================================= */
+let throttlePressure = 0;
+let brakePressure = 0;
+
+function setupSlider(slider, fill, callback) {
+    let active = false;
+
+    function update(touch){
+        const rect = slider.getBoundingClientRect();
+        let y = (touch.clientY - rect.top) / rect.height;
+        let p = 1 - Math.max(0, Math.min(1, y));
+        fill.style.height = (p*100) + "%";
+        callback(p);
+    }
+
+    slider.addEventListener("touchstart",e=>{active=true;update(e.touches[0]);}, {passive:false});
+    slider.addEventListener("touchmove",e=>{if(active) { e.preventDefault(); update(e.touches[0]); }}, {passive:false});
+    slider.addEventListener("touchend",()=>{active=false;callback(0);fill.style.height="0%";});
+}
+
+const throttleSlider = document.getElementById('throttleSlider');
+const throttleFill = document.getElementById('throttleFill');
+const brakeSlider = document.getElementById('brakeSlider');
+const brakeFill = document.getElementById('brakeFill');
+
+setupSlider(throttleSlider, throttleFill, p => throttlePressure = p);
+setupSlider(brakeSlider, brakeFill, p => brakePressure = p);
+
+/* =============================================================
+   FIX 2: JOYSTICK Y SLIDERS FUNCIONAN A LA VEZ SIN BLOQUEOS
+   ============================================================= */
+let joystickRotation = 0;
+let isJoystickActive = false;
+const joystickContainer = document.getElementById('joystickContainer');
+const joystickHandle = document.getElementById('joystickHandle');
+
+joystickContainer.addEventListener("touchstart",e=>{isJoystickActive=true; updateJoy(e.touches[0]);}, {passive:false});
+joystickContainer.addEventListener("touchmove",e=>{ if(isJoystickActive){ e.preventDefault(); updateJoy(e.touches[0]); } }, {passive:false});
+joystickContainer.addEventListener("touchend",()=>{isJoystickActive=false;joystickRotation=0; resetJoy();});
+
+function updateJoy(t){
+    const r = joystickContainer.getBoundingClientRect();
+    const dx = t.clientX - (r.left + r.width/2);
+    const max = r.width/2;
+    joystickRotation = Math.max(-1, Math.min(1, dx/max));
+    joystickHandle.style.transform = `translate(calc(-50% + ${joystickRotation*40}px), -50%)`;
+}
+function resetJoy(){ joystickHandle.style.transform="translate(-50%,-50%)"; }
+
+/* =============================================================
+   MOTOR PROPORCIONAL REAL
+   Si slider = 50% → velocidad = 50% velocidad máxima
+   ============================================================= */
+let currentSpeed = 0;
+let maxSpeed = 330; // km/h target scale
+let accel = 6.0;    // responsiveness (higher -> faster interpolation)
+let brakeForce = 200; // arbitrary braking force
+
+// Babylon minimal scene (placeholder for your full scene & models)
+const canvas = document.getElementById('renderCanvas');
+const engine = new BABYLON.Engine(canvas,true);
+const scene = new BABYLON.Scene(engine);
+
+// Simple camera and light
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0,5,-12), scene);
+camera.setTarget(BABYLON.Vector3.Zero());
+camera.attachControl(canvas, true);
+const light = new BABYLON.HemisphericLight("h", new BABYLON.Vector3(0,1,0), scene);
+
+// Player placeholder mesh
+const player = BABYLON.MeshBuilder.CreateBox("player",{height:1.2, width:1.8, depth:3}, scene);
+player.position.y = 1.2;
+
+// If you have your spa.glb, load it and parent player accordingly (uncomment and adapt):
+/*
+BABYLON.SceneLoader.Append("", "spa.glb", scene, (sc) => {
+    // scene loaded
+});
+*/
+
+function kmhToMs(kmh){
+    return (kmh*1000)/3600;
+}
+
+engine.runRenderLoop(()=>{
+    const dt = engine.getDeltaTime()/1000;
+
+    // Target speed (km/h) = throttlePressure * maxSpeed
+    const targetKmh = throttlePressure * maxSpeed;
+    // Convert to m/s for physics-like movement
+    const targetMs = kmhToMs(targetKmh);
+    let currentMs = kmhToMs(currentSpeed);
+
+    // Smooth interpolation towards target based on accel responsiveness
+    const lerpFactor = 1 - Math.exp(-accel * dt); // stable per-second smoothing
+    currentMs = currentMs + (targetMs - currentMs) * lerpFactor;
+
+    // Apply braking
+    currentMs -= brakePressure * (brakeForce/100) * dt; // brakeForce scaled
+    if (currentMs < 0) currentMs = 0;
+
+    // Convert back to km/h for display/internal
+    currentSpeed = currentMs * 3.6;
+
+    // Steering using joystick (rotation)
+    camera.rotation.y += joystickRotation * 1.5 * dt;
+
+    // Move player forward in world based on camera direction
+    const dir = new BABYLON.Vector3(Math.sin(camera.rotation.y),0,Math.cos(camera.rotation.y));
+    player.moveWithCollisions(dir.scale(currentMs * dt));
+
+    scene.render();
+});
+
+// Resize
+window.addEventListener('resize', ()=> engine.resize());
+
+</script>
+</body>
+</html>
