@@ -354,6 +354,41 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     border-color: #ff0;
 }
 
+
+/* Ocultar barra de velocidad de arriba */
+#speedBarContainer {
+    display: none;
+}
+
+/* Ocultar texto de debug de arriba */
+#debug {
+    display: none;
+}
+
+/* Ocultar números y texto del RPM, dejar solo la barra */
+#rpmIndicator {
+    background: transparent;
+    border: none;
+    padding: 0;
+    bottom: 120px; /* Ajustar posición si es necesario */
+}
+
+#rpmIndicator span {
+    display: none; /* Ocultar texto "RPM" y números */
+}
+
+#rpmBar {
+    width: 100px; /* Hacer la barra más ancha */
+    height: 12px; /* Hacer la barra más gruesa */
+    background: rgba(0,0,0,0.3); /* Fondo semitransparente para la barra */
+    border-radius: 6px;
+}
+
+#rpmFill {
+    height: 100%;
+    border-radius: 6px;
+}    
+
 </style>
 </head>
 <body>
