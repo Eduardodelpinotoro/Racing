@@ -744,7 +744,7 @@ manualTransmissionToggle.addEventListener('change', () => {
 gearUpBtn.addEventListener('touchstart', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (currentGear < maxGear && currentGear > 0) {
+    if (currentGear < maxGear && currentGear >= 0) {
         currentGear++;
         updateGearIndicator();
         debug.textContent = `Cambiado a ${currentGear}ª marcha`;
