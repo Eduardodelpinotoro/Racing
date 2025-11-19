@@ -234,6 +234,52 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     border: 1px solid #0f0;
     font-weight: bold;
 }
+    /* Controles de cambio de marchas */
+#gearControls {
+    position: absolute;
+    bottom: 250px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    z-index: 25;
+}
+
+.gear-btn {
+    width: 60px;
+    height: 60px;
+    background: rgba(255,255,255,0.2);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.gear-btn:active {
+    background: rgba(255,255,255,0.4);
+    transform: scale(0.95);
+}
+
+#gearModeBtn {
+    width: 120px;
+    height: 40px;
+    border-radius: 20px;
+    font-size: 14px;
+    background: rgba(0,255,0,0.3);
+    border: 2px solid #0f0;
+}
+
+#gearModeBtn.manual {
+    background: rgba(255,255,0,0.3);
+    border-color: #ff0;
+}
 
 </style>
 </head>
@@ -244,6 +290,11 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 <div id="resetPositionBtn" title="Posición Inicial">🏁</div>
 <div id="gearIndicator">N</div>
 <div id="speedNumber">0 km/h</div>
+<div id="gearControls">
+    <div class="gear-btn" id="gearDown">-</div>
+    <div class="gear-btn" id="gearModeBtn">AUTO</div>
+    <div class="gear-btn" id="gearUp">+</div>
+</div>
 <!-- Indicador de calibración de giroscopio -->
 <div id="gyroIndicator">
     <div id="gyroIndicatorBar"></div>
