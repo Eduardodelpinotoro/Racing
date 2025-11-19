@@ -508,7 +508,7 @@ gyroToggle.addEventListener('change', () => {
         gyroControls.style.display = 'block';
         gyroIndicator.style.display = 'block';
         orientationInfo.style.display = 'block';
-        
+        joystickContainer.style.display = 'none';
         // Solicitar permiso para el giroscopio (necesario en iOS)
         if (typeof DeviceOrientationEvent.requestPermission === 'function') {
             DeviceOrientationEvent.requestPermission()
@@ -528,6 +528,7 @@ gyroToggle.addEventListener('change', () => {
             gyroStatus.textContent = "Estado: Activado";
         }
     } else {
+        joystickContainer.style.display = 'block';
         gyroControls.style.display = 'none';
         gyroIndicator.style.display = 'none';
         orientationInfo.style.display = 'none';
