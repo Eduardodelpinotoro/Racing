@@ -1201,6 +1201,66 @@ function updateJoystickState() {
     }
 }
 
+
+// =========================
+// SISTEMA DE MARCHAS MANUAL/AUTOMÁTICO
+// =========================
+const gearUpBtn = document.getElementById("gearUp");
+const gearDownBtn = document.getElementById("gearDown");
+const gearModeBtn = document.getElementById("gearModeBtn");
+
+let isManualGear = false;
+let currentGear = 1;
+const maxGear = 6;
+const gearRatios = [0, 3.5, 2.5, 1.8, 1.3, 1.0, 0.8]; // Relaciones de marcha
+let manualMaxSpeed = 0;
+
+// Cambiar entre modo manual/automático
+gearModeBtn.addEventListener('click', () => {
+    isManualGear = !isManualGear;
+    gearModeBtn.textContent = isManualGear ? "MANUAL" : "AUTO";
+    gearModeBtn.classList.toggle('manual', isManualGear);
+    
+    // Mostrar/ocultar botones de cambio
+    gearUpBtn.style.display = isManualGear ? 'flex' : 'none';
+    gearDownBtn.style.display = isManualGear ? 'flex' : 'none';
+    
+    if (!isManualGear) {
+        currentGear = 1; // Resetear a primera al volver a automático
+    }
+    
+    debug.textContent = `Modo ${isManualGear ? 'MANUAL' : 'AUTOMÁTICO'} activado`;
+});
+
+// Cambio de marcha hacia arriba
+gearUpBtn.addEventListener('click', () => {
+    if (currentGear < maxGear) {
+        currentGear++;
+        updateGearPerformance();
+        debug.textContent = `Marcha ${currentGear} engranada`;
+    }
+});
+
+// Cambio de marcha hacia abajo
+gearDownBtn.addEventListener('click', () => {
+    if (currentGear > 1) {
+        currentGear--;
+        updateGearPerformance();
+        debug.textContent = `Marcha ${currentGear} engranada`;
+    }
+});
+
+// Actualizar rendimiento según la marcha
+function updateGearPerformance() {
+    if (isManualGear) {
+        manualMaxSpeed = maxSpeed * (gearRatios[currentGear] / gearRatios[1]);
+        gearIndicator.textContent = currentGear;
+    }
+}
+
+// En el bucle principal, modifica la física para modo manual
+// BUSCA esta parte en el bucle principal y modifícala:    
+
 // CRONÓMETRO
 const currentTimer = document.getElementById("currentTimer");
 const lapTimes = document.getElementById("lapTimes");
@@ -1353,9 +1413,16 @@ engine.runRenderLoop(() => {
     const dragDeceleration = (aeroForces.drag / effectiveMass) * dt;
     
     // Lógica de movimiento con física realista
-    if (throttlePressure > 0) {
+    // Lógica de movimiento con sistema de marchas
+if (throttlePressure > 0) {
+    if (isManualGear) {
+        // Modo manual - limitado por la marcha actual
+        currentSpeed = Math.min(currentSpeed + accelerationForce * dt, manualMaxSpeed);
+    } else {
+        // Modo automático - velocidad completa
         currentSpeed = Math.min(currentSpeed + accelerationForce * dt, maxSpeed);
-    } 
+    }
+} 
     else if (brakePressure > 0) {
         if (currentSpeed > 0) {
             currentSpeed = Math.max(currentSpeed - (brakingForce + dragDeceleration) * dt, 0);
@@ -1407,6 +1474,17 @@ engine.runRenderLoop(() => {
     }
     
     // Actualizar indicador de marcha
+if (isManualGear) {
+    // En manual, mostrar la marcha actual
+    if (currentSpeed > 0) {
+        gearIndicator.textContent = currentGear;
+    } else if (currentSpeed < 0) {
+        gearIndicator.textContent = "R";
+    } else {
+        gearIndicator.textContent = "N";
+    }
+} else {
+    // En automático, calcular marcha aproximada
     if (currentSpeed > 0) {
         gearIndicator.textContent = Math.floor(currentSpeed / 50) + 1;
     } else if (currentSpeed < 0) {
@@ -1414,6 +1492,7 @@ engine.runRenderLoop(() => {
     } else {
         gearIndicator.textContent = "N";
     }
+                                                  }
     
     // Actualizar barra de velocidad
     speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
