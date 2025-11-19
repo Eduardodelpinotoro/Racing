@@ -1023,7 +1023,7 @@ function calculateWeightTransfer(acceleration, braking, turning) {
 // Función para calcular fuerzas de giro realistas
 function calculateRealisticSteering(speed, steeringInput, weightTransfer) {
     const baseGrip = carTireGrip;
-    const speedFactor = Math.max(0.3, 1 - (speed / maxSpeed) * 0.7);
+    const speedFactor = Math.max(0.7, 1 - (speed / maxSpeed) * 0.3);
     
     // El agarre se reduce con la transferencia de peso excesiva
     const effectiveGrip = baseGrip * (1 - Math.abs(weightTransfer.lateral) * 0.3);
@@ -1098,7 +1098,7 @@ let airFriction = 8;
 const joystickHandle = document.getElementById("joystickHandle");
 let isJoystickActive = false;
 let joystickRotation = 0;
-const rotationSpeed = 0.5;
+const rotationSpeed = 1.2;
 const minSpeedForSteering = 5;
 
 joystickContainer.addEventListener('touchstart', e => { 
@@ -1351,7 +1351,7 @@ engine.runRenderLoop(() => {
     // Aplicar giro con efecto de peso
     if (steeringRotation !== 0) {
         // Los coches más pesados giran más lentamente
-        const weightSteeringFactor = Math.max(0.5, 1 - (carWeight - 800) / 2000);
+        const weightSteeringFactor = Math.max(0.9, 1 - (carWeight - 800) / 10000);
         camera.rotation.y += steeringRotation * weightSteeringFactor;
     }
     
