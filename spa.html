@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>SPA - Control por Vista (Touch Look) - Cronómetro Corregido</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<style>
+html,body{margin:0;overflow:hidden;height:100%;background:#000}
+#renderCanvas{width:100%;height:100%}
+.button{position:absolute;bottom:30px;width:80px;height:80px;background:rgba(255,255,255,0.25);border-radius:50%;pointer-events:auto;}
+#btnForward{right:40px}
+#btnBackward{right:140px}
+#speedBarContainer{position:absolute;top:10px;left:100px;width:200px;height:20px;background:#444;border:1px solid #fff}
+#speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
+#debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
+#joystickContainer { position: absolute; bottom: 30px; left: 50px; width: 160px; height: 120px; pointer-events: auto; z-index: 10; }
+#joystickBase { position: absolute; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.15); border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); }
+#joystickHandle { position: absolute; width: 20px; height: 100px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.05s; }
+#joystickAxis { position: absolute; width: 100%; height: 1px; background: rgba(255, 255, 255, 0.2); top: 50%; left: 0; transform: translateY(-50%); }
+.joystick-disabled { opacity: 0.5; pointer-events: none; }
+#timerPanel { position: absolute; top: 60px; left: 10 ; width: 140px; background: rgba(0,0,0,0.7); border: 2px solid #fff; border-radius: 10px; padding: 5px; color: #fff; font-family: monospace; z-index: 10; font-size: 12px;}
+#currentTimer { font-size: 18px; text-align: center; margin-bottom: 5px; color: #0f0; }
+#lapTimes { font-size: 10px; max-height: 100px; overflow-y: auto; }
+.lap-time { padding: 1px 0; border-bottom: 1px solid #444; }
+.lap-time:last-child { border-bottom: none; }
+.best-lap { color: #ff0; font-weight: bold; }
+#timerStatus { text-align: center; font-size: 12px; margin-top: 2px; color: #0ff; }
+#bestLapDisplay { text-align: center; font-size: 12px; margin-top: 2px; color: #ff0; }
+
+/* Botón pantalla completa */
+#fullscreenBtn{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    padding:15px 25px;
+    font-size:20px;
+    background:rgba(0,0,0,0.7);
+    color:#0f0;
+    border:2px solid #0f0;
+    border-radius:10px;
+    z-index:100;
+}
+
+/* Botones configuración y coches */
+#settingsBtn, #carsBtn {
+    position:absolute;
+    top:5px;
+    width:50px;
+    height:50px;
+    background:rgba(255,255,255,0.25);
+    border-radius:50%;
+    font-size:28px;
+    text-align:center;
+    line-height:50px;
+    cursor:pointer;
+    z-index:100;
+}
+#settingsBtn{ right:70px; }
+#carsBtn{ right:10px; font-size:24px; }
+
+/* Paneles */
+.settings-panel{
+    position:absolute;
+    top:60px;
+    right:10px;
+    width:240px;
+    background:rgba(0,0,0,0.95);
+    border:2px solid #fff;
+    border-radius:10px;
+    padding:15px;
+    color:#fff;
+    font-family:monospace;
+    display:none;
+    z-index:101;
+    max-height:80vh;
+    overflow-y:auto;
+}
+.settings-panel label{display:block;margin:8px 0 4px;font-size:14px;}
+.settings-panel input[type=range]{width:100%;margin:5px 0;}
+.settings-panel select, .settings-panel input[type=number]{width:100%;margin-bottom:8px;padding:4px;}
+.settings-panel button{width:100%;padding:8px;margin-top:8px;}
+
+/* Estilos específicos para el panel de coches */
+.car-option {
+    padding: 10px;
+    margin: 5px 0;
+    background: rgba(255,255,255,0.1);
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid transparent;
+}
+.car-option:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: #0f0;
+}
+.car-option.selected {
+    background: rgba(0,255,0,0.2);
+    border-color: #0f0;
+}
+.car-stats {
+    font-size: 12px;
+    color: #ccc;
+    margin-top: 5px;
+}
+
+/* Botón posición inicial */
+#resetPositionBtn{
+    position:absolute;
+    top:5px;
+    left:10px;
+    width:40px;
+    height:40px;
+    background:rgba(255,255,255,0.25);
+    border-radius:50%;
+    pointer-events:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:24px;
+    color:white;
+}
+
+/* Indicador de calibración de giroscopio */
+#gyroIndicator {
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    border: 1px solid #fff;
+    border-radius: 10px;
+    display: none;
+    z-index: 10;
+}
+
+#gyroIndicatorBar {
+    height: 100%;
+    width: 50%;
+    background: #0f0;
+    border-radius: 10px;
+    transition: width 0.1s;
+}
+</style>
+</head>
+<body>
+<canvas id="renderCanvas"></canvas>
+<div id="speedBarContainer"><div id="speedBar"></div></div>
+<div id="debug">Cargando circuito...</div>
+<div class="button" id="btnForward" title="Acelerar"></div>
+<div class="button" id="btnBackward" title="Freno / marcha atrás"></div>
+<div id="resetPositionBtn" title="Posición Inicial">🏁</div>
+
+<!-- Indicador de calibración de giroscopio -->
+<div id="gyroIndicator">
+    <div id="gyroIndicatorBar"></div>
+</div>
+
+<div id="joystickContainer" class="joystick-disabled">
+  <div id="joystickBase">
+    <div id="joystickAxis"></div>
+    <div id="joystickHandle"></div>
+  </div>
+</div>
+
+<div id="timerPanel">
+  <div id="currentTimer">00:00.000</div>
+  <div id="lapTimes"></div>
+  <div id="timerStatus">ESPERANDO EN META</div>
+  <div id="bestLapDisplay">MEJOR VUELTA: --:--.---</div>
+</div>
+
+<!-- Botones -->
+<button id="fullscreenBtn">Pantalla Completa</button>
+<div id="settingsBtn">⚙️</div>
+<div id="carsBtn">🚗</div>
+
+<!-- Panel de Configuración -->
+<div id="settingsPanel" class="settings-panel">
+    <label>Velocidad Máx: <span id="maxSpeedLabel">330</span> km/h</label>
+    <input type="range" id="maxSpeedRange" min="50" max="500" value="330">
+    
+    <label>Aceleración 0-100: <span id="accelLabel">2.0</span>s</label>
+    <input type="range" id="accelRange" min="1.5" max="6.0" step="0.1" value="2.0">
+
+    <label>Freno: <span id="brakeLabel">150</span></label>
+    <input type="range" id="brakeRange" min="20" max="300" value="150">
+
+    <label>Altura de Cámara: <span id="cameraHeightLabel">3.0</span> m</label>
+    <input type="range" id="cameraHeightRange" min="1.0" max="6.0" step="0.1" value="3.0">
+
+    <!-- Nuevos controles para giroscopio -->
+    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
+        <label style="display: flex; align-items: center; justify-content: space-between;">
+            <span>Control por Giroscopio</span>
+            <input type="checkbox" id="gyroToggle" style="width: auto;">
+        </label>
+        
+        <div id="gyroControls" style="display: none;">
+            <button id="calibrateGyroBtn">Calibrar Giroscopio</button>
+            <div style="font-size: 12px; margin-top: 5px; color: #ccc;">
+                <div>Inclina el dispositivo para girar</div>
+                <div id="gyroStatus">Estado: No disponible</div>
+            </div>
+        </div>
+    </div>
+
+    <label>Clima</label>
+    <select id="weatherSelect">
+        <option value="sunny">Soleado</option>
+        <option value="gray">Cielo Gris</option>
+        <option value="sunset">Atardecer Azul</option>
+    </select>
+
+    <label>Música</label>
+    <button id="musicBtn">On</button>
+
+    <label>Número de Vueltas</label>
+    <input type="number" id="lapsNumber" min="1" max="99" value="3">
+</div>
+
+<!-- Panel de Selección de Coches -->
+<div id="carsPanel" class="settings-panel">
+    <h3 style="text-align:center;margin-top:0;">SELECCIONAR COCHE</h3>
+    
+    <div class="car-option selected" data-car="f1">
+        <strong>Fórmula 1</strong>
+        <div class="car-stats">Vel: 350 km/h | 0-100: 1.8s | Freno: 180</div>
+    </div>
+    
+    <div class="car-option" data-car="gt3">
+        <strong>GT3</strong>
+        <div class="car-stats">Vel: 300 km/h | 0-100: 2.5s | Freno: 160</div>
+    </div>
+    
+    <div class="car-option" data-car="gt4">
+        <strong>GT4</strong>
+        <div class="car-stats">Vel: 250 km/h | 0-100: 3.2s | Freno: 140</div>
+    </div>
+    
+    <div class="car-option" data-car="hypercar">
+        <strong>Hypercar</strong>
+        <div class="car-stats">Vel: 400 km/h | 0-100: 2.2s | Freno: 200</div>
+    </div>
+    
+    <div class="car-option" data-car="touring">
+        <strong>Touring Car</strong>
+        <div class="car-stats">Vel: 280 km/h | 0-100: 3.5s | Freno: 130</div>
+    </div>
+    
+    <div class="car-option" data-car="rally">
+        <strong>Rally</strong>
+        <div class="car-stats">Vel: 220 km/h | 0-100: 4.0s | Freno: 120</div>
+    </div>
+    
+    <div class="car-option" data-car="drift">
+        <strong>Drift Car</strong>
+        <div class="car-stats">Vel: 240 km/h | 0-100: 3.8s | Freno: 110</div>
+    </div>
+</div>
+
+<audio id="motorAudio" src="motor.mp3" loop></audio>
+
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+<script src="https://cdn.babylonjs.com/loaders/babylon.glTF2FileLoader.min.js"></script>
+
+<script>
+// =========================
+// Fullscreen
+// =========================
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+fullscreenBtn.addEventListener('click', () => {
+    document.documentElement.requestFullscreen?.().catch(() => {});
+    if (screen.orientation && screen.orientation.lock) screen.orientation.lock("landscape").catch(() => {});
+    fullscreenBtn.style.display = 'none';
+});
+
+// =========================
+// Configuración
+// =========================
+const settingsBtn = document.getElementById("settingsBtn");
+const carsBtn = document.getElementById("carsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const carsPanel = document.getElementById("carsPanel");
+
+settingsBtn.addEventListener('click', () => { 
+    settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+    carsPanel.style.display = 'none';
+});
+
+carsBtn.addEventListener('click', () => { 
+    carsPanel.style.display = carsPanel.style.display === 'none' ? 'block' : 'none';
+    settingsPanel.style.display = 'none';
+});
+
+// Controles
+const maxSpeedRange = document.getElementById("maxSpeedRange");
+const accelRange = document.getElementById("accelRange");
+const brakeRange = document.getElementById("brakeRange");
+const cameraHeightRange = document.getElementById("cameraHeightRange");
+const maxSpeedLabel = document.getElementById("maxSpeedLabel");
+const accelLabel = document.getElementById("accelLabel");
+const brakeLabel = document.getElementById("brakeLabel");
+const cameraHeightLabel = document.getElementById("cameraHeightLabel");
+
+// Variables del juego
+let maxSpeed = 330;
+let targetAccelerationTime = 2.0;
+let brakeFriction = 150;
+let cameraHeight = 3.0;
+let currentCar = 'f1'; // Coches por defecto
+
+// Base de datos de coches
+const cars = {
+    'f1': { name: 'Fórmula 1', maxSpeed: 350, acceleration: 1.8, brake: 180 },
+    'gt3': { name: 'GT3', maxSpeed: 300, acceleration: 2.5, brake: 160 },
+    'gt4': { name: 'GT4', maxSpeed: 250, acceleration: 3.2, brake: 140 },
+    'hypercar': { name: 'Hypercar', maxSpeed: 400, acceleration: 2.2, brake: 200 },
+    'touring': { name: 'Touring Car', maxSpeed: 280, acceleration: 3.5, brake: 130 },
+    'rally': { name: 'Rally', maxSpeed: 220, acceleration: 4.0, brake: 120 },
+    'drift': { name: 'Drift Car', maxSpeed: 240, acceleration: 3.8, brake: 110 }
+};
+
+// Función para calcular aceleración
+function calculateAccelerationFromTime(zeroTo100Time) {
+    const targetSpeedMs = 27.78; // 100 km/h en m/s
+    return (targetSpeedMs / zeroTo100Time) * 3;
+}
+
+let accel = calculateAccelerationFromTime(targetAccelerationTime);
+
+// Función para cambiar de coche
+function changeCar(carType) {
+    const car = cars[carType];
+    if (!car) return;
+    
+    currentCar = carType;
+    
+    // Actualizar valores
+    maxSpeed = car.maxSpeed;
+    targetAccelerationTime = car.acceleration;
+    brakeFriction = car.brake;
+    accel = calculateAccelerationFromTime(targetAccelerationTime);
+    
+    // Actualizar UI
+    maxSpeedRange.value = maxSpeed;
+    maxSpeedLabel.textContent = maxSpeed;
+    
+    accelRange.value = targetAccelerationTime;
+    accelLabel.textContent = targetAccelerationTime.toFixed(1);
+    
+    brakeRange.value = brakeFriction;
+    brakeLabel.textContent = brakeFriction;
+    
+    // Actualizar selección visual
+    document.querySelectorAll('.car-option').forEach(option => {
+        option.classList.remove('selected');
+    });
+    document.querySelector(`.car-option[data-car="${carType}"]`).classList.add('selected');
+    
+    debug.textContent = `Coche cambiado a: ${car.name}`;
+}
+
+// Event listeners para selección de coches
+document.querySelectorAll('.car-option').forEach(option => {
+    option.addEventListener('click', () => {
+        const carType = option.getAttribute('data-car');
+        changeCar(carType);
+        carsPanel.style.display = 'none';
+    });
+});
+
+// Event listeners para los controles
+maxSpeedRange.addEventListener('input', () => { 
+    maxSpeed = parseInt(maxSpeedRange.value); 
+    maxSpeedLabel.textContent = maxSpeed; 
+});
+
+accelRange.addEventListener('input', () => { 
+    targetAccelerationTime = parseFloat(accelRange.value);
+    accel = calculateAccelerationFromTime(targetAccelerationTime);
+    accelLabel.textContent = targetAccelerationTime.toFixed(1);
+});
+
+brakeRange.addEventListener('input', () => { 
+    brakeFriction = parseInt(brakeRange.value); 
+    brakeLabel.textContent = brakeFriction; 
+});
+
+cameraHeightRange.addEventListener('input', () => { 
+    cameraHeight = parseFloat(cameraHeightRange.value);
+    cameraHeightLabel.textContent = cameraHeight.toFixed(1);
+    if (camera) {
+        camera.position.y = cameraHeight;
+    }
+});
+
+// Clima
+const weatherSelect = document.getElementById("weatherSelect");
+
+// Música
+const musicBtn = document.getElementById("musicBtn");
+const motorAudio = document.getElementById("motorAudio");
+let musicOn = true;
+musicBtn.addEventListener('click', () => {
+    musicOn = !musicOn;
+    if (musicOn) motorAudio.play();
+    else motorAudio.pause();
+    musicBtn.textContent = musicOn ? "On" : "Off";
+});
+
+// Número de vueltas
+const lapsNumberInput = document.getElementById("lapsNumber");
+let totalLaps = parseInt(lapsNumberInput.value);
+lapsNumberInput.addEventListener('input', () => { totalLaps = parseInt(lapsNumberInput.value); });
+
+// =========================
+// GIROSCOPIO
+// =========================
+const gyroToggle = document.getElementById("gyroToggle");
+const gyroControls = document.getElementById("gyroControls");
+const calibrateGyroBtn = document.getElementById("calibrateGyroBtn");
+const gyroStatus = document.getElementById("gyroStatus");
+const gyroIndicator = document.getElementById("gyroIndicator");
+const gyroIndicatorBar = document.getElementById("gyroIndicatorBar");
+
+let gyroEnabled = false;
+let gyroCalibrated = false;
+let gyroCalibrationValue = 0;
+let gyroRotation = 0;
+let gyroAvailable = false;
+
+// Verificar si el giroscopio está disponible
+if (window.DeviceOrientationEvent) {
+    gyroAvailable = true;
+    gyroStatus.textContent = "Estado: Disponible";
+} else {
+    gyroStatus.textContent = "Estado: No compatible";
+}
+
+// Evento para activar/desactivar el giroscopio
+gyroToggle.addEventListener('change', () => {
+    gyroEnabled = gyroToggle.checked;
+    
+    if (gyroEnabled) {
+        gyroControls.style.display = 'block';
+        gyroIndicator.style.display = 'block';
+        
+        // Solicitar permiso para el giroscopio (necesario en algunos navegadores)
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        window.addEventListener('deviceorientation', handleDeviceOrientation);
+                        gyroStatus.textContent = "Estado: Activado";
+                    } else {
+                        gyroStatus.textContent = "Estado: Permiso denegado";
+                        gyroToggle.checked = false;
+                        gyroEnabled = false;
+                    }
+                })
+                .catch(console.error);
+        } else {
+            window.addEventListener('deviceorientation', handleDeviceOrientation);
+            gyroStatus.textContent = "Estado: Activado";
+        }
+    } else {
+        gyroControls.style.display = 'none';
+        gyroIndicator.style.display = 'none';
+        window.removeEventListener('deviceorientation', handleDeviceOrientation);
+        gyroStatus.textContent = "Estado: Desactivado";
+    }
+});
+
+// Función para manejar la orientación del dispositivo
+function handleDeviceOrientation(event) {
+    if (!gyroEnabled) return;
+    
+    // Usamos gamma (inclinación izquierda/derecha) para controlar la dirección
+    let tilt = event.gamma;
+    
+    // Si no está calibrado, usar el valor actual como calibración
+    if (!gyroCalibrated) {
+        gyroCalibrationValue = tilt;
+        gyroCalibrated = true;
+    }
+    
+    // Aplicar calibración y calcular rotación
+    let adjustedTilt = tilt - gyroCalibrationValue;
+    
+    // Limitar el rango de inclinación para control
+    adjustedTilt = Math.max(-45, Math.min(45, adjustedTilt));
+    
+    // Convertir inclinación a rotación de dirección (-1 a 1)
+    gyroRotation = adjustedTilt / 45;
+    
+    // Actualizar indicador visual
+    const indicatorPosition = 50 + (gyroRotation * 50);
+    gyroIndicatorBar.style.width = `${indicatorPosition}%`;
+    
+    // Cambiar color según la dirección
+    if (gyroRotation > 0) {
+        gyroIndicatorBar.style.background = '#0f0'; // Verde para derecha
+    } else if (gyroRotation < 0) {
+        gyroIndicatorBar.style.background = '#f00'; // Rojo para izquierda
+    } else {
+        gyroIndicatorBar.style.background = '#0ff'; // Cian para centro
+    }
+}
+
+// Botón de calibración
+calibrateGyroBtn.addEventListener('click', () => {
+    if (!gyroEnabled) return;
+    
+    gyroStatus.textContent = "Calibrando... Mantén el dispositivo plano";
+    
+    // Usar el valor actual como nueva calibración
+    setTimeout(() => {
+        if (window.DeviceOrientationEvent) {
+            // La calibración se aplica en el siguiente evento deviceorientation
+            gyroCalibrated = false; // Forzar recalibración
+            gyroStatus.textContent = "Calibración completada";
+        }
+    }, 1000);
+});
+
+// =========================
+// Botón Posición Inicial
+// =========================
+const resetPositionBtn = document.getElementById("resetPositionBtn");
+resetPositionBtn.addEventListener("click", resetToStartPosition);
+
+function resetToStartPosition() {
+    currentSpeed = 0;
+    playerMesh.position.set(-3780, 330, -3980);
+    camera.rotation.y = 0;
+    
+    // Resetear cronómetro
+    isRacing = false;
+    hasCrossedFinishLine = false;
+    currentLapStartTime = 0;
+    raceStartTime = 0;
+    lapCount = 0;
+    timerStatus.textContent = "ESPERANDO EN META";
+    timerStatus.style.color = "#0ff";
+    lapTimes.innerHTML = "";
+    
+    debug.textContent = "Posición inicial restaurada";
+}
+
+// =========================
+// BabylonJS Juego
+// =========================
+const canvas = document.getElementById("renderCanvas");
+const engine = new BABYLON.Engine(canvas, true);
+const scene = new BABYLON.Scene(engine);
+scene.collisionsEnabled = true;
+
+// CIELO
+scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
+const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
+hemiLight.intensity = 1.2;
+
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
+dirLight.intensity = 0.8;
+dirLight.specular = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
+scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+scene.fogDensity = 0;
+
+// PLAYER
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
+playerMesh.isVisible = false;
+playerMesh.checkCollisions = true;
+playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 3, 0.5);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
+
+// CAMERA - CORREGIDO
+const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, cameraHeight, 0), scene);
+camera.parent = playerMesh;
+camera.detachControl(canvas);
+
+// UI
+const debug = document.getElementById("debug");
+const speedBar = document.getElementById("speedBar");
+
+// MOVIMIENTO
+let moveForward = false;
+let moveBackward = false;
+let currentSpeed = 0;
+let maxReverse = 50;
+let airFriction = 8;
+
+document.getElementById("btnForward").addEventListener("touchstart", () => moveForward = true);
+document.getElementById("btnForward").addEventListener("touchend", () => moveForward = false);
+document.getElementById("btnBackward").addEventListener("touchstart", () => moveBackward = true);
+document.getElementById("btnBackward").addEventListener("touchend", () => moveBackward = false);
+
+// JOYSTICK
+const joystickContainer = document.getElementById("joystickContainer");
+const joystickHandle = document.getElementById("joystickHandle");
+let isJoystickActive = false;
+let joystickRotation = 0;
+const rotationSpeed = 0.5;
+const minSpeedForSteering = 5;
+
+joystickContainer.addEventListener('touchstart', e => { 
+    if (Math.abs(currentSpeed) < minSpeedForSteering) return; 
+    e.preventDefault(); 
+    isJoystickActive = true; 
+    updateJoystick(e.touches[0]); 
+});
+
+joystickContainer.addEventListener('touchmove', e => { 
+    if (Math.abs(currentSpeed) < minSpeedForSteering) { 
+        resetJoystick(); 
+        return; 
+    } 
+    if (!isJoystickActive) return; 
+    e.preventDefault(); 
+    updateJoystick(e.touches[0]); 
+});
+
+joystickContainer.addEventListener('touchend', e => { 
+    e.preventDefault(); 
+    isJoystickActive = false; 
+    resetJoystick(); 
+});
+
+function updateJoystick(touch) { 
+    const rect = joystickContainer.getBoundingClientRect(); 
+    const dx = touch.clientX - (rect.left + rect.width / 2); 
+    const maxDist = rect.width / 2 - joystickHandle.offsetWidth / 2; 
+    const dist = Math.min(Math.abs(dx), maxDist); 
+    joystickHandle.style.transform = `translate(calc(-50% + ${Math.sign(dx) * dist}px), -50%)`; 
+    joystickRotation = Math.max(-1, Math.min(1, dx / maxDist)); 
+}
+
+function resetJoystick() { 
+    joystickHandle.style.transform = 'translate(-50%, -50%)'; 
+    joystickRotation = 0; 
+}
+
+function updateJoystickState() { 
+    if (Math.abs(currentSpeed) >= minSpeedForSteering) {
+        joystickContainer.classList.remove('joystick-disabled'); 
+    } else { 
+        joystickContainer.classList.add('joystick-disabled'); 
+        if (isJoystickActive) { 
+            resetJoystick(); 
+            isJoystickActive = false; 
+        }
+    }
+}
+
+// CRONÓMETRO
+const currentTimer = document.getElementById("currentTimer");
+const lapTimes = document.getElementById("lapTimes");
+const timerStatus = document.getElementById("timerStatus");
+const bestLapDisplay = document.getElementById("bestLapDisplay");
+
+let raceStartTime = 0;
+let currentLapStartTime = 0;
+let bestLapTime = 0;
+let lapCount = 0;
+let isRacing = false;
+let hasCrossedFinishLine = false;
+let prevPosZ = 0;
+
+const finishLine = {
+    minX: -3800,
+    maxX: -3700, 
+    z: -4025,
+    width: 30,
+    resetThresholdExtra: 10
+};
+
+finishLine.centerX = (finishLine.minX + finishLine.maxX) / 2;
+finishLine.resetThreshold = finishLine.width + finishLine.resetThresholdExtra;
+
+function formatTime(ms) {
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    const msr = Math.floor(ms % 1000);
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${msr.toString().padStart(3, '0')}`;
+}
+
+function updateTimerDisplay() { 
+    currentTimer.textContent = isRacing ? formatTime(Date.now() - currentLapStartTime) : "00:00.000"; 
+    bestLapDisplay.textContent = bestLapTime > 0 ? `MEJOR VUELTA: ${formatTime(bestLapTime)}` : "MEJOR VUELTA: --:--.---"; 
+}
+
+function registerCross() { 
+    if (!isRacing) {
+        isRacing = true; 
+        raceStartTime = Date.now(); 
+        currentLapStartTime = raceStartTime; 
+        lapCount = 1; 
+        timerStatus.textContent = "VUELTA 1"; 
+        timerStatus.style.color = "#0f0"; 
+        return;
+    } 
+    
+    const lapTime = Date.now() - currentLapStartTime; 
+    if (bestLapTime === 0 || lapTime < bestLapTime) bestLapTime = lapTime; 
+    
+    const lapEl = document.createElement("div"); 
+    lapEl.className = "lap-time"; 
+    lapEl.textContent = `Vuelta ${lapCount}: ${formatTime(lapTime)}` + (lapTime === bestLapTime ? " ★" : ""); 
+    if (lapTime === bestLapTime) lapEl.classList.add("best-lap"); 
+    lapTimes.insertBefore(lapEl, lapTimes.firstChild); 
+    
+    lapCount++; 
+    currentLapStartTime = Date.now(); 
+    
+    if (lapCount > totalLaps) { 
+        timerStatus.textContent = "CARRERA COMPLETADA"; 
+        isRacing = false; 
+    } else { 
+        timerStatus.textContent = `VUELTA ${lapCount}`; 
+    }
+}
+
+function checkFinishLine() { 
+    const pos = playerMesh.position; 
+    const insideX = (pos.x >= finishLine.minX && pos.x <= finishLine.maxX); 
+    
+    if (insideX) { 
+        if (!hasCrossedFinishLine && prevPosZ < finishLine.z && pos.z >= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
+            hasCrossedFinishLine = true; 
+            registerCross(); 
+        } else if (!hasCrossedFinishLine && prevPosZ > finishLine.z && pos.z <= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
+            hasCrossedFinishLine = true; 
+            registerCross(); 
+        } 
+    } 
+    
+    if (Math.abs(pos.z - finishLine.z) > finishLine.resetThreshold) hasCrossedFinishLine = false; 
+    prevPosZ = pos.z; 
+}
+
+// CARGAR CIRCUITO
+BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
+    scene.meshes.forEach(m => { 
+        if (m !== playerMesh) m.checkCollisions = true; 
+    });
+    playerMesh.position.set(-3780, 330, -3980); 
+    prevPosZ = playerMesh.position.z;
+    debug.textContent = "Circuito cargado - Línea de meta activa";
+}, null, (s, msg) => { 
+    console.error(msg); 
+    debug.textContent = 'Error cargando spa.glb'; 
+});
+
+function keepGround() { 
+    const ray = new BABYLON.Ray(
+        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
+        new BABYLON.Vector3(0, -1, 0), 
+        50
+    ); 
+    const hit = scene.pickWithRay(ray, m => m !== playerMesh); 
+    if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; 
+}
+
+const maxRealKmH = 330;
+const speedFactor = maxRealKmH / maxSpeed;
+
+// BUCLE PRINCIPAL
+engine.runRenderLoop(() => {
+    // Clima
+    switch(weatherSelect.value) {
+        case 'sunny': 
+            scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1); 
+            break;
+        case 'gray': 
+            scene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 1); 
+            break;
+        case 'sunset': 
+            scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.2, 1); 
+            break;
+    }
+
+    const dt = engine.getDeltaTime() / 1000;
+    
+    // Movimiento
+    if (moveForward && !moveBackward) {
+        currentSpeed = Math.min(currentSpeed + accel * dt, maxSpeed);
+    } else if (moveBackward && !moveForward) {
+        if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - brakeFriction * dt, 0);
+        } else {
+            currentSpeed = Math.max(currentSpeed - accel * dt, -maxReverse);
+        }
+    } else {
+        if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - airFriction * dt, 0);
+        } else if (currentSpeed < 0) {
+            currentSpeed = Math.min(currentSpeed + airFriction * dt, 0);
+        }
+    }
+    
+    updateJoystickState();
+    
+    // Control de dirección - prioridad: giroscopio > joystick
+    let steeringRotation = 0;
+    if (gyroEnabled && gyroCalibrated && Math.abs(currentSpeed) >= minSpeedForSteering) {
+        steeringRotation = gyroRotation * rotationSpeed * dt;
+    } else if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
+        steeringRotation = joystickRotation * rotationSpeed * dt;
+    }
+    
+    if (steeringRotation !== 0) {
+        camera.rotation.y += steeringRotation;
+    }
+    
+    speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
+    speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
+    
+    if (Math.abs(currentSpeed) > 0.001) { 
+        const yaw = camera.rotation.y; 
+        const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); 
+        playerMesh.moveWithCollisions(forward.scale(currentSpeed * speedFactor * dt)); 
+    }
+    
+    checkFinishLine(); 
+    updateTimerDisplay(); 
+    keepGround();
+    
+    debug.textContent = `Coche: ${cars[currentCar].name} | Pos: X${playerMesh.position.x.toFixed(0)} Z${playerMesh.position.z.toFixed(0)} | Vel: ${(currentSpeed * speedFactor).toFixed(0)} km/h`;
+    scene.render();
+});
+
+window.addEventListener('resize', () => engine.resize());
+</script>
+</body>
+</html>
