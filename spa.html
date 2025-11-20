@@ -1449,27 +1449,26 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // CIELO MEJORADO - REEMPLAZAR ESTA PARTE
+// CIELO SIMPLE PERO FUNCIONAL - NO TAPA EL CIRCUITO
 scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
 
-// Crear skybox con SkyMaterial (más realista)
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
-const skyMaterial = new BABYLON.SkyMaterial("skyMaterial", scene);
-skyMaterial.backFaceCulling = false;
+// Skybox básico que no interfiere
+const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 5000 }, scene);
+const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+skyboxMaterial.backFaceCulling = false;
+skyboxMaterial.disableLighting = true;
 
-// Configurar el cielo - puedes ajustar estos valores
-skyMaterial.turbidity = 10;      // Niebla/bruma (1-20)
-skyMaterial.luminance = 1;       // Luminosidad (0-1)
-skyMaterial.rayleigh = 3;        // Dispersión Rayleigh (0-8)
-skyMaterial.mieCoefficient = 0.005; // Coeficiente Mie (0-0.1)
-skyMaterial.mieDirectionalG = 0.8; // Direccionalidad Mie (0-1)
+// Crear gradiente de color para el cielo
+const skyTexture = new BABYLON.Texture("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", scene);
+skyboxMaterial.diffuseTexture = skyTexture;
+skyboxMaterial.diffuseColor = new BABYLON.Color3(0.4, 0.7, 1);
+skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
 
-// Posición del sol (ajusta estos valores para cambiar la hora del día)
-skyMaterial.sunPosition = new BABYLON.Vector3(0, 100, 0);
-
-skybox.material = skyMaterial;
+skybox.material = skyboxMaterial;
 skybox.infiniteDistance = true;
+skybox.renderingGroupId = 0; // Grupo de renderizado por detrás de todo
 
-// ILUMINACIÓN
+// ILUMINACIÓN (mantén esta parte igual)
 const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
 hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
 hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
@@ -1483,8 +1482,7 @@ dirLight.specular = new BABYLON.Color3(0.1, 0.1, 0.1);
 scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
 scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
 scene.fogColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-scene.fogDensity = 0.001; // Un poco de niebla para profundidad
-
+scene.fogDensity = 0;
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
 playerMesh.isVisible = false;
