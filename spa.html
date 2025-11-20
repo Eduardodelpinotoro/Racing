@@ -1678,7 +1678,22 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
     playerMesh.position.set(-3780, 330, -3980); 
     prevPosZ = playerMesh.position.z;
     debug.textContent = "Circuito cargado - Línea de meta activa";
-    
+    // BASE VERDE - MÁS CERCA
+const groundBase = BABYLON.MeshBuilder.CreateGround("groundBase", {
+    width: 8000, 
+    height: 8000
+}, scene);
+
+groundBase.position.y = 0; // EN LUGAR DE -50
+groundBase.position.x = -3780; // MISMA X que la posición inicial
+groundBase.position.z = -3980; // MISMA Z que la posición inicial
+
+const groundMaterial = new BABYLON.StandardMaterial("groundBaseMat", scene);
+groundMaterial.diffuseColor = new BABYLON.Color3(0.1, 0.4, 0.1); // Verde medio oscuro
+groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+
+groundBase.material = groundMaterial;
+groundBase.isPickable = false;
 }, null, (s, msg) => { 
     console.error(msg); 
     debug.textContent = 'Error cargando spa.glb'; 
