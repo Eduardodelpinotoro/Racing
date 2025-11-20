@@ -1449,31 +1449,42 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // CIELO MEJORADO - REEMPLAZAR ESTA PARTE
-// CIELO CON GRADIENTE - SIN TEXTURA EXTERNA
+// CIELO CON PROCEDURAL TEXTURE - INCLUYE TROPICAL
 scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
 
-// Crear material con gradiente
-const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
-skyMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 0.9);
-skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-skyMaterial.disableLighting = true;
+// Crear skybox
+const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
 
-// Crear esfera para el cielo (mejor que cubo para gradientes)
-const skySphere = BABYLON.MeshBuilder.CreateSphere("skySphere", { diameter: 5000, segments: 32 }, scene);
-skySphere.material = skyMaterial;
-skySphere.infiniteDistance = true;
+// Crear procedural texture para el cielo
+const proceduralTexture = new BABYLON.CloudProceduralTexture("cloudTexture", 256, scene);
+
+// Configurar las nubes
+proceduralTexture.skyColor = new BABYLON.Color4(0.4, 0.7, 1, 1);     // Color del cielo
+proceduralTexture.cloudColor = new BABYLON.Color4(1, 1, 1, 1);       // Color de nubes
+proceduralTexture.amplitude = 1.0;      // Intensidad de las nubes
+proceduralTexture.numOctaves = 5;       // Detalle de las nubes
+
+// Material para el skybox
+const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+skyboxMaterial.backFaceCulling = false;
+skyboxMaterial.disableLighting = true;
+skyboxMaterial.diffuseTexture = proceduralTexture;
+skyboxMaterial.diffuseTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+
+skybox.material = skyboxMaterial;
+skybox.infiniteDistance = true;
 
 // ILUMINACIÓN
-const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-hemiLight.diffuse = new BABYLON.Color3(0.9, 0.9, 1);
-hemiLight.groundColor = new BABYLON.Color3(0.2, 0.2, 0.3);
-hemiLight.intensity = 0.7;
+const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
+hemiLight.intensity = 1.2;
 
-const dirLight = new BABYLON.DirectionalLight("sunLight", new BABYLON.Vector3(-1, -0.5, 0), scene);
-dirLight.diffuse = new BABYLON.Color3(1, 0.9, 0.8);
-dirLight.intensity = 1.0;
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
+dirLight.intensity = 0.8;
 
-scene.ambientColor = new BABYLON.Color3(0.5, 0.6, 0.7);
+    
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
 playerMesh.isVisible = false;
