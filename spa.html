@@ -1449,21 +1449,45 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // CIELO MEJORADO - REEMPLAZAR ESTA PARTE
-// CIELO MÍNIMO QUE FUNCIONA - SOLO COLOR
+// CIELO CON IMAGEN - SKYBOX TEXTURIZADO
 scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
 
-// ILUMINACIÓN BÁSICA
+// Crear skybox con textura
+const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
+const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+
+// Usar una textura de cielo - puedes cambiar esta URL por cualquier imagen de skybox
+const files = [
+    "https://assets.babylonjs.com/textures/skybox/skybox_nx.jpg",
+    "https://assets.babylonjs.com/textures/skybox/skybox_px.jpg", 
+    "https://assets.babylonjs.com/textures/skybox/skybox_py.jpg",
+    "https://assets.babylonjs.com/textures/skybox/skybox_ny.jpg",
+    "https://assets.babylonjs.com/textures/skybox/skybox_pz.jpg",
+    "https://assets.babylonjs.com/textures/skybox/skybox_nz.jpg"
+];
+
+const reflectionTexture = new BABYLON.CubeTexture.CreateFromImages(files, scene);
+skyboxMaterial.reflectionTexture = reflectionTexture;
+skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
+skyboxMaterial.disableLighting = true;
+skyboxMaterial.backFaceCulling = false;
+
+skybox.material = skyboxMaterial;
+skybox.infiniteDistance = true;
+skybox.renderingGroupId = 0;
+
+// ILUMINACIÓN MEJORADA
 const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
-hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
-hemiLight.intensity = 1.2;
+hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.4);
+hemiLight.intensity = 0.8;
 
-const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
-dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
-dirLight.intensity = 0.8;
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-1, -0.5, -0.5), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);
+dirLight.intensity = 1.2;
+dirLight.specular = new BABYLON.Color3(0.3, 0.3, 0.3);
 
-scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
-
+scene.ambientColor = new BABYLON.Color3(0.6, 0.7, 0.8);
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
 playerMesh.isVisible = false;
