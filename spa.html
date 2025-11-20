@@ -1863,10 +1863,10 @@ engine.runRenderLoop(() => {
         `Marcha: ${currentGear}/${maxGear}` : 
         `Marcha: ${currentGear}`;
     
-    debug.textContent = `Coche: ${cars[currentCar].name} | ${transmissionMode} | Vel: ${(currentSpeed * speedFactor ).toFixed(0)} km/h | RPM: ${Math.round(currentRPM)} | ${gearInfo}`;
+    debug.textContent = `Coche: ${cars[currentCar].name} | ${transmissionMode} | Vel: ${(currentSpeedKmh * 0.67 ).toFixed(0)} km/h | RPM: ${Math.round(currentRPM)} | ${gearInfo}`;
     
     // Actualizar indicador de velocidad numérico
-    document.getElementById('speedNumber').textContent = Math.abs(currentSpeed * speedFactor).toFixed(0) + ' km/h';
+    document.getElementById('speedNumber').textContent = Math.abs(currentSpeedKmh * 0.67).toFixed(0) + ' km/h';
     
     scene.render();
 });
