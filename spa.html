@@ -1454,25 +1454,25 @@ scene.collisionsEnabled = true;
 // CIELO EXACTO - COMO TU OTRO JUEGO
 
 
-// FONDO CON IMAGEN - reemplaza el scene.clearColor
-scene.clearColor = new BABYLON.Color4(0, 0, 0, 1); // Fondo negro por si la imagen no carga
-
-// Crear plano de fondo gigante con tu imagen
-const backgroundPlane = BABYLON.MeshBuilder.CreatePlane("background", {width: 200, height: 200}, scene);
-backgroundPlane.position.z = 100; // Lejos detrás de todo
+// FONDO ESFÉRICO GIGANTE - como un planetario
+const skySphere = BABYLON.MeshBuilder.CreateSphere("skySphere", { 
+    diameter: 5000, 
+    segments: 32 
+}, scene);
 
 // Material con tu imagen
-const backgroundMaterial = new BABYLON.StandardMaterial("bgMaterial", scene);
-backgroundMaterial.diffuseTexture = new BABYLON.Texture("https://tusitio.com/tu-imagen-de-cielo.jpg", scene);
-backgroundMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); // Para que se vea brillante
-backgroundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-backgroundMaterial.disableLighting = true; // No afectado por luces
-backgroundMaterial.backFaceCulling = false;
+const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
+skyMaterial.diffuseTexture = new BABYLON.Texture("https://tu-imagen-de-cielo-esferico.jpg", scene);
+skyMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); // Brillante
+skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+skyMaterial.disableLighting = true; // No afectado por luces
+skyMaterial.backFaceCulling = false; // Importante: ver desde dentro
 
-backgroundPlane.material = backgroundMaterial;
-backgroundPlane.infiniteDistance = true;
+// Invertir la esfera para verla desde dentro
+skySphere.material = skyMaterial;
+skySphere.infiniteDistance = true;
 
-// Mantén tus luces igual
+// Mantén tus luces
 const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
 hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
 hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
@@ -1481,7 +1481,6 @@ hemiLight.intensity = 1.2;
 const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
 dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
 dirLight.intensity = 0.8;
-dirLight.specular = new BABYLON.Color3(0.1, 0.1, 0.1);
 
 scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
 
