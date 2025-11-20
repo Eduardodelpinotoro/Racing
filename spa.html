@@ -1452,26 +1452,38 @@ scene.collisionsEnabled = true;
 // CIELO CON NUBES - MEJORANDO TU VERSIÓN QUE SÍ FUNCIONA
 
 // CIELO EXACTO - COMO TU OTRO JUEGO
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", {size:1000.0}, scene);
-const skyboxMaterial = new BABYLON.StandardMaterial("skyBox", scene);
-skyboxMaterial.backFaceCulling = false;
-skyboxMaterial.reflectionTexture = new BABYLON.CubeTexture("https://assets.babylonjs.com/textures/skybox", scene);
-skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-skyboxMaterial.diffuseColor = new BABYLON.Color3(0, 0, 0);
-skyboxMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-skyboxMaterial.disableLighting = true;
-skybox.material = skyboxMaterial;
 
-// SOLO UNA LUZ - COMO TU OTRO JUEGO
-const sunLight = new BABYLON.DirectionalLight("sunLight", new BABYLON.Vector3(0, -1, 0), scene);
-sunLight.intensity = 1.2;
-sunLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
-sunLight.specular = new BABYLON.Color3(1, 0.98, 0.95);
 
-// ELIMINA ESTAS LUCES QUE ESTÁN CONFLICTUANDO:
-// const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-// const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
-// scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
+// FONDO CON IMAGEN - reemplaza el scene.clearColor
+scene.clearColor = new BABYLON.Color4(0, 0, 0, 1); // Fondo negro por si la imagen no carga
+
+// Crear plano de fondo gigante con tu imagen
+const backgroundPlane = BABYLON.MeshBuilder.CreatePlane("background", {width: 200, height: 200}, scene);
+backgroundPlane.position.z = 100; // Lejos detrás de todo
+
+// Material con tu imagen
+const backgroundMaterial = new BABYLON.StandardMaterial("bgMaterial", scene);
+backgroundMaterial.diffuseTexture = new BABYLON.Texture("https://tusitio.com/tu-imagen-de-cielo.jpg", scene);
+backgroundMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1); // Para que se vea brillante
+backgroundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+backgroundMaterial.disableLighting = true; // No afectado por luces
+backgroundMaterial.backFaceCulling = false;
+
+backgroundPlane.material = backgroundMaterial;
+backgroundPlane.infiniteDistance = true;
+
+// Mantén tus luces igual
+const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
+hemiLight.intensity = 1.2;
+
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
+dirLight.intensity = 0.8;
+dirLight.specular = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
 
 
 
