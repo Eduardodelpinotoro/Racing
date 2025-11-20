@@ -532,6 +532,10 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
         <option value="gray">Cielo Gris</option>
         <option value="sunset">Atardecer Azul</option>
     </select>
+    <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
+        <label>Intensidad de Luz: <span id="lightIntensityLabel">1.2</span></label>
+        <input type="range" id="lightIntensityRange" min="0.1" max="3.0" step="0.1" value="1.2" style="width:100%">
+    </div>
 
     <label>Música</label>
     <button id="musicBtn">On</button>
@@ -613,7 +617,21 @@ carsBtn.addEventListener('click', () => {
     carsPanel.style.display = carsPanel.style.display === 'none' ? 'block' : 'none';
     settingsPanel.style.display = 'none';
 });
+// AÑADE ESTO DESPUÉS de los otros event listeners de configuración
+const lightIntensityRange = document.getElementById("lightIntensityRange");
+const lightIntensityLabel = document.getElementById("lightIntensityLabel");
 
+lightIntensityRange.addEventListener('input', function() {
+    const intensity = parseFloat(this.value);
+    lightIntensityLabel.textContent = intensity.toFixed(1);
+    
+    // Actualizar TODAS las luces
+    if (dirLight) dirLight.intensity = intensity;
+    if (hemiLight) hemiLight.intensity = intensity;
+    
+    // Luz ambiental más suave
+    scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7).scale(intensity * 0.8);
+});
 // Controles
 const maxSpeedRange = document.getElementById("maxSpeedRange");
 const accelRange = document.getElementById("accelRange");
