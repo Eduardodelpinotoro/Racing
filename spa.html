@@ -1691,7 +1691,7 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
     });
     playerMesh.position.set(-3780, 330, -3980); 
     prevPosZ = playerMesh.position.z;
-    
+    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
 }, null, (s, msg) => { 
     console.error(msg); 
