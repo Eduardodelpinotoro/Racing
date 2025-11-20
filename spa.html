@@ -1449,45 +1449,31 @@ const scene = new BABYLON.Scene(engine);
 scene.collisionsEnabled = true;
 
 // CIELO MEJORADO - REEMPLAZAR ESTA PARTE
-// CIELO CON IMAGEN - SKYBOX TEXTURIZADO
+// CIELO CON GRADIENTE - SIN TEXTURA EXTERNA
 scene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1);
 
-// Crear skybox con textura
-const skybox = BABYLON.MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, scene);
-const skyboxMaterial = new BABYLON.StandardMaterial("skyBoxMaterial", scene);
+// Crear material con gradiente
+const skyMaterial = new BABYLON.StandardMaterial("skyMaterial", scene);
+skyMaterial.emissiveColor = new BABYLON.Color3(0.4, 0.6, 0.9);
+skyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+skyMaterial.disableLighting = true;
 
-// Usar una textura de cielo - puedes cambiar esta URL por cualquier imagen de skybox
-const files = [
-    "https://assets.babylonjs.com/textures/skybox/skybox_nx.jpg",
-    "https://assets.babylonjs.com/textures/skybox/skybox_px.jpg", 
-    "https://assets.babylonjs.com/textures/skybox/skybox_py.jpg",
-    "https://assets.babylonjs.com/textures/skybox/skybox_ny.jpg",
-    "https://assets.babylonjs.com/textures/skybox/skybox_pz.jpg",
-    "https://assets.babylonjs.com/textures/skybox/skybox_nz.jpg"
-];
+// Crear esfera para el cielo (mejor que cubo para gradientes)
+const skySphere = BABYLON.MeshBuilder.CreateSphere("skySphere", { diameter: 5000, segments: 32 }, scene);
+skySphere.material = skyMaterial;
+skySphere.infiniteDistance = true;
 
-const reflectionTexture = new BABYLON.CubeTexture.CreateFromImages(files, scene);
-skyboxMaterial.reflectionTexture = reflectionTexture;
-skyboxMaterial.reflectionTexture.coordinatesMode = BABYLON.Texture.SKYBOX_MODE;
-skyboxMaterial.disableLighting = true;
-skyboxMaterial.backFaceCulling = false;
+// ILUMINACIÓN
+const hemiLight = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+hemiLight.diffuse = new BABYLON.Color3(0.9, 0.9, 1);
+hemiLight.groundColor = new BABYLON.Color3(0.2, 0.2, 0.3);
+hemiLight.intensity = 0.7;
 
-skybox.material = skyboxMaterial;
-skybox.infiniteDistance = true;
-skybox.renderingGroupId = 0;
+const dirLight = new BABYLON.DirectionalLight("sunLight", new BABYLON.Vector3(-1, -0.5, 0), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.9, 0.8);
+dirLight.intensity = 1.0;
 
-// ILUMINACIÓN MEJORADA
-const hemiLight = new BABYLON.HemisphericLight("hemi", new BABYLON.Vector3(0, 1, 0), scene);
-hemiLight.diffuse = new BABYLON.Color3(1, 1, 1);
-hemiLight.groundColor = new BABYLON.Color3(0.3, 0.3, 0.4);
-hemiLight.intensity = 0.8;
-
-const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-1, -0.5, -0.5), scene);
-dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);
-dirLight.intensity = 1.2;
-dirLight.specular = new BABYLON.Color3(0.3, 0.3, 0.3);
-
-scene.ambientColor = new BABYLON.Color3(0.6, 0.7, 0.8);
+scene.ambientColor = new BABYLON.Color3(0.5, 0.6, 0.7);
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
 playerMesh.isVisible = false;
