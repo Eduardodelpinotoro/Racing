@@ -1385,7 +1385,7 @@ resetPositionBtn.addEventListener("click", resetToStartPosition);
 function resetToStartPosition() {
     currentSpeed = 0;
     playerMesh.position.set(-3780, 330, -3980);
-    camera.rotation.y = 0;
+    camera.rotation.y = 136;
     
     // Resetear cronómetro
     isRacing = false;
@@ -1699,27 +1699,9 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
     playerMesh.position.set(-3780, 330, -3980); 
     prevPosZ = playerMesh.position.z;
     debug.textContent = "Circuito cargado - Línea de meta activa";
-    // BASE CON TU IMAGEN - POSICIÓN CORREGIDA
-const groundBase = BABYLON.MeshBuilder.CreateGround("groundBase", {
-    width: 8000, 
-    height: 8000
-}, scene);
+    
 
-// POSICIÓN CLAVE: El circuito está en Y=330, ponemos el plano justo debajo
-groundBase.position.y = 240; // JUSTO DEBAJO del circuito
-groundBase.position.x = -3780; // MISMA X que el circuito
-groundBase.position.z = -3980; // MISMA Z que el circuito
 
-const groundMaterial = new BABYLON.StandardMaterial("groundBaseMat", scene);
-groundMaterial.diffuseTexture = new BABYLON.Texture("https://i.ibb.co/s9svv9hc/images.jpg", scene);
-groundMaterial.diffuseTexture.uScale = 50; // Repetir textura
-groundMaterial.diffuseTexture.vScale = 50;
-groundMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-
-groundBase.material = groundMaterial;
-groundBase.isPickable = false;
-
-console.log("✅ Plano base creado en Y=" + groundBase.position.y);
 }, null, (s, msg) => { 
     console.error(msg); 
     debug.textContent = 'Error cargando spa.glb'; 
