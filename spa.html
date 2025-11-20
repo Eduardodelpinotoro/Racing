@@ -1585,7 +1585,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "spa1992@.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "tsukuba.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh) m.checkCollisions = true; 
     });
