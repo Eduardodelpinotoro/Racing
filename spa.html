@@ -2421,9 +2421,9 @@ engine.runRenderLoop(() => {
     // NUEVO: Sincronizar vista F1 con la rotación de la cámara
     if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
         const rotation = camera.rotation.y;
-        const maxRotation = 20;
+        const maxRotation = 1;
         const offsetX = Math.sin(rotation) * maxRotation;
-        const tilt = Math.sin(rotation) * 2;
+        const tilt = Math.sin(rotation) * 1;
         f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
     }
     
