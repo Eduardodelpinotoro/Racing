@@ -2422,23 +2422,21 @@ engine.runRenderLoop(() => {
 
     const dt = engine.getDeltaTime() / 1000;
     
-    // NUEVO: SISTEMA DE VISTA F1 CON PERSPECTIVA 3D
+    // NUEVO: SISTEMA DE VISTA F1 CON PERSPECTIVA CORREGIDA
 if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
     const rotation = camera.rotation.y;
     
-    // Efecto de perspectiva 3D - giro en profundidad
-    const perspectiveRotation = rotation * 30; // Factor de intensidad del giro
-    const perspective = 1000; // Valor de perspectiva para el efecto 3D
+    // Efecto de perspectiva suave - SIN ROTACIÓN que distorsione
+    const perspective = 1200; // Perspectiva para efecto 3D
+    const lateralShift = Math.sin(rotation) * 15; // Movimiento lateral suave
+    const scaleEffect = 1 + Math.abs(Math.sin(rotation)) * 0.05; // Efecto de zoom sutil
     
-    // Aplicar transformación 3D con perspectiva
+    // Aplicar transformación CORREGIDA - sin rotateY
     f1CockpitView.style.transform = `
-        perspective(${perspective}px) 
-        rotateY(${perspectiveRotation}deg)
+        perspective(${perspective}px)
+        translateX(${lateralShift}px)
+        scale(${scaleEffect})
     `;
-    
-    // Opcional: añadir ligero desplazamiento lateral para mayor realismo
-    const lateralShift = Math.sin(rotation) * 10;
-    f1CockpitView.style.transform += ` translateX(${lateralShift}px)`;
 }
     
     // CALCULAR RPM
