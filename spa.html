@@ -528,6 +528,10 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     pointer-events: none;
     display: none;
     opacity: 1;
+    /* NUEVO: Propiedades para mejor efecto 3D */
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    transition: transform 0.1s ease-out; /* Suavizado */
 }
 
 /* Controles de ajuste de la vista F1 */
@@ -2418,10 +2422,23 @@ engine.runRenderLoop(() => {
 
     const dt = engine.getDeltaTime() / 1000;
     
-    // NUEVO: Sincronizar vista F1 con la rotación de la cámara - CORREGIDA
+    // NUEVO: SISTEMA DE VISTA F1 CON PERSPECTIVA 3D
 if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
-    // ELIMINAR TODAS LAS TRANSFORMACIONES - IMAGEN SIEMPRE RECTA
-    f1CockpitView.style.transform = 'none';
+    const rotation = camera.rotation.y;
+    
+    // Efecto de perspectiva 3D - giro en profundidad
+    const perspectiveRotation = rotation * 30; // Factor de intensidad del giro
+    const perspective = 1000; // Valor de perspectiva para el efecto 3D
+    
+    // Aplicar transformación 3D con perspectiva
+    f1CockpitView.style.transform = `
+        perspective(${perspective}px) 
+        rotateY(${perspectiveRotation}deg)
+    `;
+    
+    // Opcional: añadir ligero desplazamiento lateral para mayor realismo
+    const lateralShift = Math.sin(rotation) * 10;
+    f1CockpitView.style.transform += ` translateX(${lateralShift}px)`;
 }
     
     // CALCULAR RPM
