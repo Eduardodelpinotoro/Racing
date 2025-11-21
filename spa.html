@@ -738,7 +738,10 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 
 <script>
 // =========================
-// SISTEMA DE FANTASMA - NUEVO
+// REEMPLAZA COMPLETAMENTE el sistema de fantasma con esta versión optimizada:
+
+// =========================
+// SISTEMA DE FANTASMA OPTIMIZADO
 // =========================
 let ghostEnabled = true;
 let ghostCar = null;
@@ -751,15 +754,12 @@ let currentBestLapGhostData = [];
 const ghostToggle = document.getElementById("ghostToggle");
 const ghostIndicator = document.getElementById("ghostIndicator");
 
-// Inicializar sistema de fantasma
 function initGhostSystem() {
-    // Cargar datos de fantasma guardados
     const savedGhostData = localStorage.getItem('bestLapGhostData');
     if (savedGhostData) {
         currentBestLapGhostData = JSON.parse(savedGhostData);
     }
     
-    // Configurar toggle
     ghostToggle.checked = ghostEnabled;
     ghostToggle.addEventListener('change', () => {
         ghostEnabled = ghostToggle.checked;
@@ -772,7 +772,6 @@ function initGhostSystem() {
     updateGhostIndicator();
 }
 
-// Actualizar indicador de fantasma
 function updateGhostIndicator() {
     if (ghostEnabled && currentBestLapGhostData.length > 0) {
         ghostIndicator.style.display = 'block';
@@ -781,21 +780,16 @@ function updateGhostIndicator() {
     }
 }
 
-// Iniciar grabación de fantasma
 function startGhostRecording() {
     if (!ghostEnabled) return;
-    
     isRecordingGhost = true;
     ghostData = [];
-    console.log("Iniciando grabación de fantasma...");
 }
 
-// Detener grabación de fantasma
 function stopGhostRecording() {
     isRecordingGhost = false;
 }
 
-// Grabar datos para el fantasma
 function recordGhostData() {
     if (!isRecordingGhost || !ghostEnabled) return;
     
@@ -811,7 +805,6 @@ function recordGhostData() {
     ghostData.push(data);
 }
 
-// Guardar datos del fantasma si es mejor vuelta
 function saveGhostDataIfBestLap(lapTime) {
     if (!ghostEnabled || ghostData.length === 0) return;
     
@@ -820,95 +813,78 @@ function saveGhostDataIfBestLap(lapTime) {
     if (lapTime < currentBestTime) {
         currentBestLapGhostData = [...ghostData];
         localStorage.setItem('bestLapGhostData', JSON.stringify(currentBestLapGhostData));
-        console.log("Nuevo mejor tiempo guardado para fantasma:", formatTime(lapTime));
     }
 }
 
-// Crear coche fantasma
-// REEMPLAZA COMPLETAMENTE la función createGhostCar con esto:
-
-async function createGhostCar() {
+// 🔥 MESH SIMPLE Y EFICIENTE - SIN CARGAR ARCHIVOS
+function createGhostCar() {
     if (!ghostEnabled || currentBestLapGhostData.length === 0) return;
     
-    try {
-        console.log("🔄 Cargando modelo lambo.glb...");
-        
-        // Cargar modelo lambo.glb
-        const result = await BABYLON.SceneLoader.ImportMeshAsync("", "", "lambo.glb", scene);
-        
-        ghostCar = result.meshes[0];
-        ghostCar.name = "ghostCar";
-        
-        // 🔥 MATERIAL COMPLETAMENTE VISIBLE - COLOR ROJO PARA PRUEBA
-        const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
-        ghostMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // ROJO FUERTE
-        ghostMaterial.alpha = 1.0; // COMPLETAMENTE OPACO
-        ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-        ghostMaterial.disableLighting = false;
-        
-        // Aplicar material a todos los meshes
-        ghostCar.getChildMeshes().forEach(mesh => {
-            mesh.material = ghostMaterial;
-        });
-        
-        // 🔥 TAMAÑO GRANDE - 5 VECES MÁS GRANDE
-        ghostCar.scaling = new BABYLON.Vector3(5, 5, 5);
-        
-        // Configurar propiedades
-        ghostCar.checkCollisions = false;
-        ghostCar.isPickable = false;
-        
-        // Posicionar en un lugar visible para prueba
-        ghostCar.position.set(-3780, 335, -3980);
-        
-        // Iniciar reproducción
-        ghostPlaybackIndex = 0;
-        ghostStartTime = Date.now();
-        
-        console.log("✅ Fantasma creado - DEBERÍA SER VISIBLE EN ROJO");
-        console.log("Posición:", ghostCar.position);
-        
-    } catch (error) {
-        console.error("❌ Error cargando lambo.glb:", error);
-        console.log("🔧 Creando fantasma de respaldo...");
-        createFallbackGhostCar();
-    }
-}
-// Crear fantasma de respaldo (cubo simple)
-function createFallbackGhostCar() {
-    console.log("🔄 Creando fantasma de respaldo...");
-    
-    // 🔥 CUBO GRANDE Y ROJO - IMPOSIBLE NO VERLO
-    const ghostBox = BABYLON.MeshBuilder.CreateBox("ghostFallback", { 
-        width: 8,   // MUY ANCHO
-        height: 4,  // MUY ALTO  
-        depth: 12   // MUY LARGO
+    // Crear un coche simple con formas básicas
+    const ghostBody = BABYLON.MeshBuilder.CreateBox("ghostBody", {
+        width: 3,
+        height: 1.2,
+        depth: 6
     }, scene);
     
-    const ghostMaterial = new BABYLON.StandardMaterial("ghostFallbackMaterial", scene);
-    ghostMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // ROJO FUERTE
-    ghostMaterial.alpha = 1.0; // SIN TRANSPARENCIA
+    // Cabina del coche
+    const ghostCabin = BABYLON.MeshBuilder.CreateBox("ghostCabin", {
+        width: 2.2,
+        height: 1,
+        depth: 2.5
+    }, scene);
+    ghostCabin.position.y = 0.6;
+    ghostCabin.position.z = -0.5;
     
-    ghostBox.material = ghostMaterial;
-    ghostBox.checkCollisions = false;
-    ghostBox.isPickable = false;
+    // Ruedas
+    const wheelPositions = [
+        { x: 1.2, y: -0.4, z: 1.8 },   // Delantera derecha
+        { x: -1.2, y: -0.4, z: 1.8 },  // Delantera izquierda
+        { x: 1.2, y: -0.4, z: -1.8 },  // Trasera derecha
+        { x: -1.2, y: -0.4, z: -1.8 }  // Trasera izquierda
+    ];
     
-    // Posicionar claramente visible
-    ghostBox.position.set(-3780, 335, -3980);
+    const wheels = [];
+    wheelPositions.forEach((pos, index) => {
+        const wheel = BABYLON.MeshBuilder.CreateCylinder("ghostWheel" + index, {
+            diameter: 1.2,
+            height: 0.4
+        }, scene);
+        wheel.rotation.z = Math.PI / 2; // Rotar para que sea horizontal
+        wheel.position.set(pos.x, pos.y, pos.z);
+        wheels.push(wheel);
+    });
     
-    ghostCar = ghostBox;
+    // Combinar todo en un solo mesh
+    ghostCar = BABYLON.Mesh.MergeMeshes([
+        ghostBody, 
+        ghostCabin, 
+        ...wheels
+    ], true, false, null, false, true);
+    
+    ghostCar.name = "ghostCar";
+    
+    // Material blanco spectral SEMITRANSPARENTE pero VISIBLE
+    const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
+    ghostMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.95, 1.0); // Blanco azulado
+    ghostMaterial.alpha = 0.7; // Más visible pero mantiene efecto fantasma
+    ghostMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+    
+    ghostCar.material = ghostMaterial;
+    ghostCar.checkCollisions = false;
+    ghostCar.isPickable = false;
+    
+    // Iniciar reproducción
     ghostPlaybackIndex = 0;
     ghostStartTime = Date.now();
-    
-    console.log("✅ Fantasma de respaldo creado - CUBO ROJO GIGANTE");
 }
-// Actualizar posición del fantasma
+
 function updateGhostCar() {
     if (!ghostCar || currentBestLapGhostData.length === 0) return;
     
     const currentTime = Date.now() - ghostStartTime;
     
-    // Encontrar el frame actual basado en el tiempo
+    // Encontrar el frame actual
     while (ghostPlaybackIndex < currentBestLapGhostData.length - 1 && 
            currentBestLapGhostData[ghostPlaybackIndex + 1].time <= currentTime) {
         ghostPlaybackIndex++;
@@ -918,7 +894,7 @@ function updateGhostCar() {
         const currentFrame = currentBestLapGhostData[ghostPlaybackIndex];
         const nextFrame = currentBestLapGhostData[ghostPlaybackIndex + 1];
         
-        // Interpolación suave entre frames
+        // Interpolación suave
         if (nextFrame && currentFrame.time !== nextFrame.time) {
             const factor = (currentTime - currentFrame.time) / (nextFrame.time - currentFrame.time);
             ghostCar.position.x = currentFrame.x + (nextFrame.x - currentFrame.x) * factor;
@@ -926,17 +902,14 @@ function updateGhostCar() {
             ghostCar.position.z = currentFrame.z + (nextFrame.z - currentFrame.z) * factor;
             ghostCar.rotation.y = currentFrame.rotationY + (nextFrame.rotationY - currentFrame.rotationY) * factor;
         } else {
-            // Usar posición exacta del frame actual
             ghostCar.position.set(currentFrame.x, currentFrame.y, currentFrame.z);
             ghostCar.rotation.y = currentFrame.rotationY;
         }
     } else {
-        // La reproducción ha terminado
         removeGhostCar();
     }
 }
 
-// Eliminar coche fantasma
 function removeGhostCar() {
     if (ghostCar) {
         ghostCar.dispose();
@@ -945,16 +918,16 @@ function removeGhostCar() {
     ghostPlaybackIndex = 0;
 }
 
-// Reiniciar fantasma (llamado al cruzar meta)
 function resetGhost() {
     removeGhostCar();
     if (ghostEnabled && currentBestLapGhostData.length > 0) {
-        // Pequeño delay para que el jugador salga primero
         setTimeout(() => {
             createGhostCar();
         }, 500);
     }
-}
+            }
+ 
+             
 
 // =========================
 // SISTEMA DE DAÑO POR CHOQUES - NUEVO
