@@ -410,10 +410,10 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 /* SISTEMA DE DAÑO - NUEVO */
 #damageIndicator {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 200px;
-    height: 20px;
+    top: 0px;
+    right: 10px;
+    width: 140px;
+    height: 10px;
     background: rgba(0,0,0,0.7);
     border: 1px solid #fff;
     border-radius: 10px;
@@ -822,16 +822,16 @@ function createGhostCar() {
     
     // Crear un coche simple con formas básicas
     const ghostBody = BABYLON.MeshBuilder.CreateBox("ghostBody", {
-        width: 3,
-        height: 1.2,
-        depth: 6
+        width: 4.5,
+        height: 1.8,
+        depth: 9
     }, scene);
     
     // Cabina del coche
     const ghostCabin = BABYLON.MeshBuilder.CreateBox("ghostCabin", {
-        width: 2.2,
-        height: 1,
-        depth: 2.5
+        width: 3.3,
+        height: 1.5,
+        depth: 3.75
     }, scene);
     ghostCabin.position.y = 0.6;
     ghostCabin.position.z = -0.5;
@@ -847,8 +847,8 @@ function createGhostCar() {
     const wheels = [];
     wheelPositions.forEach((pos, index) => {
         const wheel = BABYLON.MeshBuilder.CreateCylinder("ghostWheel" + index, {
-            diameter: 1.2,
-            height: 0.4
+            diameter: 1.8,
+            height: 0.6
         }, scene);
         wheel.rotation.z = Math.PI / 2; // Rotar para que sea horizontal
         wheel.position.set(pos.x, pos.y, pos.z);
