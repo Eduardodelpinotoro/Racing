@@ -1698,9 +1698,8 @@ function resetToStartPosition() {
         resetAfterCrash();
     }
 }
-
 // =========================
-// SLIDERS MEJORADOS - TRANSICIÓN SUAVE
+// SLIDERS MEJORADOS - TRANSICIÓN SUAVE Y CONTINUA
 // =========================
 let throttlePressure = 0;
 let brakePressure = 0;
@@ -1710,9 +1709,15 @@ const throttleValueLabel = document.getElementById('throttleValue');
 const brakeValueLabel = document.getElementById('brakeValue');
 const gearIndicator = document.getElementById('gearIndicator');
 
+// Variables para suavizado
+let targetThrottle = 0;
+let targetBrake = 0;
+const SMOOTHING_FACTOR = 0.2; // Factor de suavizado (0.1 - 0.3)
+
 function setupAnalogSlider(slider, fillElement, valueCallback, valueLabel) {
     let active = false;
     let touchId = null;
+    let lastPressure = 0;
 
     slider.addEventListener('touchstart', e => {
         if (active) return;
@@ -1741,9 +1746,7 @@ function setupAnalogSlider(slider, fillElement, valueCallback, valueLabel) {
             if (e.changedTouches[i].identifier === touchId) {
                 active = false;
                 touchId = null;
-                valueCallback(0);
-                fillElement.style.height = '0%';
-                if (valueLabel) valueLabel.textContent = '0%';
+                targetPressure = 0;
                 break;
             }
         }
@@ -1756,13 +1759,61 @@ function setupAnalogSlider(slider, fillElement, valueCallback, valueLabel) {
             if (e.changedTouches[i].identifier === touchId) {
                 active = false;
                 touchId = null;
-                valueCallback(0);
-                fillElement.style.height = '0%';
-                if (valueLabel) valueLabel.textContent = '0%';
+                targetPressure = 0;
                 break;
             }
         }
     });
+
+    function updateSlider(touch) {
+        const rect = slider.getBoundingClientRect();
+        const relativeY = touch.clientY - rect.top;
+        let pressure = 1 - (relativeY / rect.height);
+        pressure = Math.max(0, Math.min(1, pressure));
+        
+        // Suavizado para evitar saltos bruscos
+        const smoothedPressure = lastPressure + (pressure - lastPressure) * 0.8;
+        lastPressure = smoothedPressure;
+        
+        // TRANSICIÓN MÁS SUAVE - sin saltos
+        fillElement.style.transition = 'height 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+        fillElement.style.height = (smoothedPressure * 100) + '%';
+        
+        if (valueLabel === throttleValueLabel) {
+            targetThrottle = smoothedPressure;
+        } else if (valueLabel === brakeValueLabel) {
+            targetBrake = smoothedPressure;
+        }
+        
+        if (valueLabel) valueLabel.textContent = Math.round(smoothedPressure * 100) + '%';
+    }
+}
+
+// Función para suavizar los valores (se llama en el bucle principal)
+function smoothPedalValues() {
+    // Suavizar throttle
+    throttlePressure = throttlePressure + (targetThrottle - throttlePressure) * SMOOTHING_FACTOR;
+    if (Math.abs(throttlePressure - targetThrottle) < 0.01) {
+        throttlePressure = targetThrottle;
+    }
+    
+    // Suavizar brake
+    brakePressure = brakePressure + (targetBrake - brakePressure) * SMOOTHING_FACTOR;
+    if (Math.abs(brakePressure - targetBrake) < 0.01) {
+        brakePressure = targetBrake;
+    }
+    
+    // Actualizar visualización en tiempo real
+    throttleValueLabel.textContent = Math.round(throttlePressure * 100) + '%';
+    brakeValueLabel.textContent = Math.round(brakePressure * 100) + '%';
+    
+    // Actualizar barras de fill con los valores suavizados
+    throttleFill.style.height = (throttlePressure * 100) + '%';
+    brakeFill.style.height = (brakePressure * 100) + '%';
+}
+
+setupAnalogSlider(document.getElementById('throttleSlider'), throttleFill, v => {}, throttleValueLabel);
+setupAnalogSlider(document.getElementById('brakeSlider'), brakeFill, v => {}, brakeValueLabel);
 
     function updateSlider(touch) {
         const rect = slider.getBoundingClientRect();
@@ -2014,6 +2065,8 @@ const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación m�
 
 // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
 engine.runRenderLoop(() => {
+    // Suavizar valores de pedales
+    smoothPedalValues();
     // Clima
     switch(weatherSelect.value) {
         case 'sunny': 
