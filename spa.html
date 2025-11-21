@@ -825,67 +825,83 @@ function saveGhostDataIfBestLap(lapTime) {
 }
 
 // Crear coche fantasma
+// REEMPLAZA COMPLETAMENTE la función createGhostCar con esto:
+
 async function createGhostCar() {
     if (!ghostEnabled || currentBestLapGhostData.length === 0) return;
     
     try {
+        console.log("🔄 Cargando modelo lambo.glb...");
+        
         // Cargar modelo lambo.glb
         const result = await BABYLON.SceneLoader.ImportMeshAsync("", "", "lambo.glb", scene);
         
         ghostCar = result.meshes[0];
         ghostCar.name = "ghostCar";
         
-        // Configurar material semitransparente blanco spectral
+        // 🔥 MATERIAL COMPLETAMENTE VISIBLE - COLOR ROJO PARA PRUEBA
         const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
-        ghostMaterial.diffuseColor = new BABYLON.Color3(0.91, 0.96, 0.97); // Blanco spectral
-        ghostMaterial.alpha = 1;
+        ghostMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // ROJO FUERTE
+        ghostMaterial.alpha = 1.0; // COMPLETAMENTE OPACO
         ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
         ghostMaterial.disableLighting = false;
         
-        // Aplicar material a todos los meshes del fantasma
+        // Aplicar material a todos los meshes
         ghostCar.getChildMeshes().forEach(mesh => {
             mesh.material = ghostMaterial;
         });
         
-        // Configurar propiedades del fantasma
+        // 🔥 TAMAÑO GRANDE - 5 VECES MÁS GRANDE
+        ghostCar.scaling = new BABYLON.Vector3(5, 5, 5);
+        
+        // Configurar propiedades
         ghostCar.checkCollisions = false;
         ghostCar.isPickable = false;
+        
+        // Posicionar en un lugar visible para prueba
+        ghostCar.position.set(-3780, 335, -3980);
         
         // Iniciar reproducción
         ghostPlaybackIndex = 0;
         ghostStartTime = Date.now();
         
-        console.log("Fantasma creado y listo para reproducir");
+        console.log("✅ Fantasma creado - DEBERÍA SER VISIBLE EN ROJO");
+        console.log("Posición:", ghostCar.position);
         
     } catch (error) {
-        console.error("Error cargando modelo de fantasma:", error);
-        // Fallback: crear un cubo simple si el modelo no carga
+        console.error("❌ Error cargando lambo.glb:", error);
+        console.log("🔧 Creando fantasma de respaldo...");
         createFallbackGhostCar();
     }
 }
-
 // Crear fantasma de respaldo (cubo simple)
 function createFallbackGhostCar() {
+    console.log("🔄 Creando fantasma de respaldo...");
+    
+    // 🔥 CUBO GRANDE Y ROJO - IMPOSIBLE NO VERLO
     const ghostBox = BABYLON.MeshBuilder.CreateBox("ghostFallback", { 
-        width: 4, 
-        height: 2, 
-        depth: 8 
+        width: 8,   // MUY ANCHO
+        height: 4,  // MUY ALTO  
+        depth: 12   // MUY LARGO
     }, scene);
     
     const ghostMaterial = new BABYLON.StandardMaterial("ghostFallbackMaterial", scene);
-    ghostMaterial.diffuseColor = new BABYLON.Color3(0.91, 0.96, 0.97);
-    ghostMaterial.alpha = 0.4;
-    ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    ghostMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0); // ROJO FUERTE
+    ghostMaterial.alpha = 1.0; // SIN TRANSPARENCIA
     
     ghostBox.material = ghostMaterial;
     ghostBox.checkCollisions = false;
     ghostBox.isPickable = false;
     
+    // Posicionar claramente visible
+    ghostBox.position.set(-3780, 335, -3980);
+    
     ghostCar = ghostBox;
     ghostPlaybackIndex = 0;
     ghostStartTime = Date.now();
+    
+    console.log("✅ Fantasma de respaldo creado - CUBO ROJO GIGANTE");
 }
-
 // Actualizar posición del fantasma
 function updateGhostCar() {
     if (!ghostCar || currentBestLapGhostData.length === 0) return;
