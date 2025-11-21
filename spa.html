@@ -2419,13 +2419,13 @@ engine.runRenderLoop(() => {
     const dt = engine.getDeltaTime() / 1000;
     
     // NUEVO: Sincronizar vista F1 con la rotación de la cámara
-    if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
-        const rotation = camera.rotation.y;
-        const maxRotation = none;
-        const offsetX = Math.sin(rotation) * maxRotation;
-        const tilt = Math.sin(rotation) * 0.1;
-        f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
-    }
+if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
+    const rotation = camera.rotation.y;
+    const maxRotation = 20;
+    const offsetX = Math.sin(rotation) * maxRotation;
+    const tilt = Math.sin(rotation) * 2;
+    f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
+}
     
     // CALCULAR RPM
     const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
