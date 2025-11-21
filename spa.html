@@ -838,7 +838,7 @@ async function createGhostCar() {
         // Configurar material semitransparente blanco spectral
         const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
         ghostMaterial.diffuseColor = new BABYLON.Color3(0.91, 0.96, 0.97); // Blanco spectral
-        ghostMaterial.alpha = 0.4;
+        ghostMaterial.alpha = 1;
         ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
         ghostMaterial.disableLighting = false;
         
@@ -867,9 +867,9 @@ async function createGhostCar() {
 // Crear fantasma de respaldo (cubo simple)
 function createFallbackGhostCar() {
     const ghostBox = BABYLON.MeshBuilder.CreateBox("ghostFallback", { 
-        width: 2, 
-        height: 1, 
-        depth: 4 
+        width: 4, 
+        height: 2, 
+        depth: 8 
     }, scene);
     
     const ghostMaterial = new BABYLON.StandardMaterial("ghostFallbackMaterial", scene);
