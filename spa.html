@@ -897,6 +897,10 @@ function updateCockpitView() {
 // =========================
 // SISTEMA DE FANTASMA - NUEVO
 // =========================
+
+// =========================
+// SISTEMA DE FANTASMA OPTIMIZADO
+// =========================
 let ghostEnabled = true;
 let ghostCar = null;
 let ghostData = [];
@@ -908,15 +912,12 @@ let currentBestLapGhostData = [];
 const ghostToggle = document.getElementById("ghostToggle");
 const ghostIndicator = document.getElementById("ghostIndicator");
 
-// Inicializar sistema de fantasma
 function initGhostSystem() {
-    // Cargar datos de fantasma guardados
     const savedGhostData = localStorage.getItem('bestLapGhostData');
     if (savedGhostData) {
         currentBestLapGhostData = JSON.parse(savedGhostData);
     }
     
-    // Configurar toggle
     ghostToggle.checked = ghostEnabled;
     ghostToggle.addEventListener('change', () => {
         ghostEnabled = ghostToggle.checked;
@@ -929,7 +930,6 @@ function initGhostSystem() {
     updateGhostIndicator();
 }
 
-// Actualizar indicador de fantasma
 function updateGhostIndicator() {
     if (ghostEnabled && currentBestLapGhostData.length > 0) {
         ghostIndicator.style.display = 'block';
@@ -938,21 +938,16 @@ function updateGhostIndicator() {
     }
 }
 
-// Iniciar grabación de fantasma
 function startGhostRecording() {
     if (!ghostEnabled) return;
-    
     isRecordingGhost = true;
     ghostData = [];
-    console.log("Iniciando grabación de fantasma...");
 }
 
-// Detener grabación de fantasma
 function stopGhostRecording() {
     isRecordingGhost = false;
 }
 
-// Grabar datos para el fantasma
 function recordGhostData() {
     if (!isRecordingGhost || !ghostEnabled) return;
     
@@ -968,7 +963,6 @@ function recordGhostData() {
     ghostData.push(data);
 }
 
-// Guardar datos del fantasma si es mejor vuelta
 function saveGhostDataIfBestLap(lapTime) {
     if (!ghostEnabled || ghostData.length === 0) return;
     
@@ -977,79 +971,78 @@ function saveGhostDataIfBestLap(lapTime) {
     if (lapTime < currentBestTime) {
         currentBestLapGhostData = [...ghostData];
         localStorage.setItem('bestLapGhostData', JSON.stringify(currentBestLapGhostData));
-        console.log("Nuevo mejor tiempo guardado para fantasma:", formatTime(lapTime));
     }
 }
 
-// Crear coche fantasma
-async function createGhostCar() {
+// 🔥 MESH SIMPLE Y EFICIENTE - SIN CARGAR ARCHIVOS
+function createGhostCar() {
     if (!ghostEnabled || currentBestLapGhostData.length === 0) return;
     
-    try {
-        // Cargar modelo lambo.glb
-        const result = await BABYLON.SceneLoader.ImportMeshAsync("", "", "lambo.glb", scene);
-        
-        ghostCar = result.meshes[0];
-        ghostCar.name = "ghostCar";
-        
-        // Configurar material semitransparente blanco spectral
-        const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
-        ghostMaterial.diffuseColor = new BABYLON.Color3(0.91, 0.96, 0.97); // Blanco spectral
-        ghostMaterial.alpha = 0.4;
-        ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-        ghostMaterial.disableLighting = false;
-        
-        // Aplicar material a todos los meshes del fantasma
-        ghostCar.getChildMeshes().forEach(mesh => {
-            mesh.material = ghostMaterial;
-        });
-        
-        // Configurar propiedades del fantasma
-        ghostCar.checkCollisions = false;
-        ghostCar.isPickable = false;
-        
-        // Iniciar reproducción
-        ghostPlaybackIndex = 0;
-        ghostStartTime = Date.now();
-        
-        console.log("Fantasma creado y listo para reproducir");
-        
-    } catch (error) {
-        console.error("Error cargando modelo de fantasma:", error);
-        // Fallback: crear un cubo simple si el modelo no carga
-        createFallbackGhostCar();
-    }
-}
-
-// Crear fantasma de respaldo (cubo simple)
-function createFallbackGhostCar() {
-    const ghostBox = BABYLON.MeshBuilder.CreateBox("ghostFallback", { 
-        width: 2, 
-        height: 1, 
-        depth: 4 
+    // Crear un coche simple con formas básicas
+    const ghostBody = BABYLON.MeshBuilder.CreateBox("ghostBody", {
+        width: 4.5,
+        height: 1.8,
+        depth: 9
     }, scene);
     
-    const ghostMaterial = new BABYLON.StandardMaterial("ghostFallbackMaterial", scene);
-    ghostMaterial.diffuseColor = new BABYLON.Color3(0.91, 0.96, 0.97);
-    ghostMaterial.alpha = 0.4;
-    ghostMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
+    // Cabina del coche
+    const ghostCabin = BABYLON.MeshBuilder.CreateBox("ghostCabin", {
+        width: 3.3,
+        height: 1.5,
+        depth: 3.75
+    }, scene);
+    ghostCabin.position.y = 0.6;
+    ghostCabin.position.z = -0.5;
     
-    ghostBox.material = ghostMaterial;
-    ghostBox.checkCollisions = false;
-    ghostBox.isPickable = false;
+    // Ruedas
+    const wheelPositions = [
+        { x: 1.2, y: -0.4, z: 1.8 },   // Delantera derecha
+        { x: -1.2, y: -0.4, z: 1.8 },  // Delantera izquierda
+        { x: 1.2, y: -0.4, z: -1.8 },  // Trasera derecha
+        { x: -1.2, y: -0.4, z: -1.8 }  // Trasera izquierda
+    ];
     
-    ghostCar = ghostBox;
+    const wheels = [];
+    wheelPositions.forEach((pos, index) => {
+        const wheel = BABYLON.MeshBuilder.CreateCylinder("ghostWheel" + index, {
+            diameter: 1.8,
+            height: 0.6
+        }, scene);
+        wheel.rotation.z = Math.PI / 2; // Rotar para que sea horizontal
+        wheel.position.set(pos.x, pos.y, pos.z);
+        wheels.push(wheel);
+    });
+    
+    // Combinar todo en un solo mesh
+    ghostCar = BABYLON.Mesh.MergeMeshes([
+        ghostBody, 
+        ghostCabin, 
+        ...wheels
+    ], true, false, null, false, true);
+    
+    ghostCar.name = "ghostCar";
+    
+    // Material blanco spectral SEMITRANSPARENTE pero VISIBLE
+    const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
+    ghostMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.95, 1.0); // Blanco azulado
+    ghostMaterial.alpha = 0.7; // Más visible pero mantiene efecto fantasma
+    ghostMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+    
+    ghostCar.material = ghostMaterial;
+    ghostCar.checkCollisions = false;
+    ghostCar.isPickable = false;
+    
+    // Iniciar reproducción
     ghostPlaybackIndex = 0;
     ghostStartTime = Date.now();
 }
 
-// Actualizar posición del fantasma
 function updateGhostCar() {
     if (!ghostCar || currentBestLapGhostData.length === 0) return;
     
     const currentTime = Date.now() - ghostStartTime;
     
-    // Encontrar el frame actual basado en el tiempo
+    // Encontrar el frame actual
     while (ghostPlaybackIndex < currentBestLapGhostData.length - 1 && 
            currentBestLapGhostData[ghostPlaybackIndex + 1].time <= currentTime) {
         ghostPlaybackIndex++;
@@ -1059,7 +1052,7 @@ function updateGhostCar() {
         const currentFrame = currentBestLapGhostData[ghostPlaybackIndex];
         const nextFrame = currentBestLapGhostData[ghostPlaybackIndex + 1];
         
-        // Interpolación suave entre frames
+        // Interpolación suave
         if (nextFrame && currentFrame.time !== nextFrame.time) {
             const factor = (currentTime - currentFrame.time) / (nextFrame.time - currentFrame.time);
             ghostCar.position.x = currentFrame.x + (nextFrame.x - currentFrame.x) * factor;
@@ -1067,17 +1060,14 @@ function updateGhostCar() {
             ghostCar.position.z = currentFrame.z + (nextFrame.z - currentFrame.z) * factor;
             ghostCar.rotation.y = currentFrame.rotationY + (nextFrame.rotationY - currentFrame.rotationY) * factor;
         } else {
-            // Usar posición exacta del frame actual
             ghostCar.position.set(currentFrame.x, currentFrame.y, currentFrame.z);
             ghostCar.rotation.y = currentFrame.rotationY;
         }
     } else {
-        // La reproducción ha terminado
         removeGhostCar();
     }
 }
 
-// Eliminar coche fantasma
 function removeGhostCar() {
     if (ghostCar) {
         ghostCar.dispose();
@@ -1086,16 +1076,16 @@ function removeGhostCar() {
     ghostPlaybackIndex = 0;
 }
 
-// Reiniciar fantasma (llamado al cruzar meta)
 function resetGhost() {
     removeGhostCar();
     if (ghostEnabled && currentBestLapGhostData.length > 0) {
-        // Pequeño delay para que el jugador salga primero
         setTimeout(() => {
             createGhostCar();
         }, 500);
     }
 }
+
+
 
 // =========================
 // SISTEMA DE DAÑO POR CHOQUES - NUEVO
