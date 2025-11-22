@@ -593,7 +593,11 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     </div>
     <div class="cockpit-control">
         <label>Posición Vertical: <span id="cockpitPositionValue">30</span>%</label>
-        <input type="range" id="cockpitPositionRange" min="-150" max="60" value="30">
+        <input type="range" id="cockpitPositionRange" min="-500" max="60" value="30">
+    </div>
+    <div class="cockpit-control">
+        <label>Posición Horizontal: <span id="cockpitHorizontalValue">50</span>%</label>
+        <input type="range" id="cockpitHorizontalRange" min="30" max="70" value="50">
     </div>
     <button id="closeCockpitControls" style="width:100%;margin-top:5px;">Cerrar</button>
 </div>
@@ -832,10 +836,13 @@ const cockpitPositionRange = document.getElementById('cockpitPositionRange');
 const cockpitSizeValue = document.getElementById('cockpitSizeValue');
 const cockpitPositionValue = document.getElementById('cockpitPositionValue');
 const closeCockpitControls = document.getElementById('closeCockpitControls');
-
+const cockpitHorizontalRange = document.getElementById('cockpitHorizontalRange'); // NUEVO
+const cockpitHorizontalValue = document.getElementById('cockpitHorizontalValue'); // NUEVO
+    
 // Variables ajustables
 let cockpitSize = 120;
 let cockpitPosition = 30;
+let cockpitHorizontal = 50;
 
 // Inicializar controles
 cockpitSizeRange.addEventListener('input', function() {
@@ -850,6 +857,13 @@ cockpitPositionRange.addEventListener('input', function() {
     updateCockpitView();
 });
 
+// NUEVO: Control horizontal
+cockpitHorizontalRange.addEventListener('input', function() {
+    cockpitHorizontal = parseInt(this.value);
+    cockpitHorizontalValue.textContent = cockpitHorizontal;
+    updateCockpitView();
+});
+
 closeCockpitControls.addEventListener('click', function() {
     cockpitControls.style.display = 'none';
 });
@@ -857,12 +871,12 @@ closeCockpitControls.addEventListener('click', function() {
 cockpitAdjustBtn.addEventListener('click', function() {
     cockpitControls.style.display = cockpitControls.style.display === 'none' ? 'block' : 'none';
 });
-
 function updateCockpitView() {
     if (currentCar === 'f1') {
         f1CockpitView.style.display = 'block';
         f1CockpitView.style.backgroundSize = cockpitSize + '% auto';
-        f1CockpitView.style.backgroundPosition = 'center ' + cockpitPosition + '%';
+        // MODIFICADO: Ahora usa cockpitHorizontal y cockpitPosition
+        f1CockpitView.style.backgroundPosition = cockpitHorizontal + '% ' + cockpitPosition + '%';
         cockpitAdjustBtn.style.display = 'flex';
     } else {
         f1CockpitView.style.display = 'none';
