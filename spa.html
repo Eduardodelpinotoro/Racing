@@ -2427,7 +2427,7 @@ if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
     const rotation = camera.rotation.y;
     
     // Giro sobre eje X (horizontal) - como inclinar la cabeza
-    const horizontalTilt = Math.sin(rotation) * 8; // Grados de inclinación
+    const horizontalTilt = Math.sin(rotation) * 20; // Grados de inclinación
     
     // Aplicar giro horizontal
     f1CockpitView.style.transform = `rotateX(${horizontalTilt}deg)`;
