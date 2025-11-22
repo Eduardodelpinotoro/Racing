@@ -2422,22 +2422,19 @@ engine.runRenderLoop(() => {
 
     const dt = engine.getDeltaTime() / 1000;
     
-    // NUEVO: SISTEMA DE VISTA F1 CON PERSPECTIVA CORREGIDA
+    // NUEVO: SISTEMA DE VISTA F1 CON GIRO HORIZONTAL CORRECTO
 if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
     const rotation = camera.rotation.y;
     
-    // Efecto de perspectiva suave - SIN ROTACIÓN que distorsione
-    const perspective = 1200; // Perspectiva para efecto 3D
-    const lateralShift = Math.sin(rotation) * 15; // Movimiento lateral suave
-    const scaleEffect = 1 + Math.abs(Math.sin(rotation)) * 0.05; // Efecto de zoom sutil
+    // Giro sobre eje X (horizontal) - como inclinar la cabeza
+    const horizontalTilt = Math.sin(rotation) * 8; // Grados de inclinación
     
-    // Aplicar transformación CORREGIDA - sin rotateY
-    f1CockpitView.style.transform = `
-        perspective(${perspective}px)
-        translateX(${lateralShift}px)
-        scale(${scaleEffect})
-    `;
-}
+    // Aplicar giro horizontal
+    f1CockpitView.style.transform = `rotateX(${horizontalTilt}deg)`;
+    
+    // Opcional: añadir perspectiva para mejor efecto 3D
+    f1CockpitView.style.transform = `perspective(1000px) rotateX(${horizontalTilt}deg)`;
+                     }
     
     // CALCULAR RPM
     const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
