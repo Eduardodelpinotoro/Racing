@@ -2422,19 +2422,13 @@ engine.runRenderLoop(() => {
 
     const dt = engine.getDeltaTime() / 1000;
     
-    // NUEVO: SISTEMA DE VISTA F1 CON GIRO HORIZONTAL CORRECTO
+ // VERSIÓN SIMPLE - Solo movimiento lateral suave
 if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
     const rotation = camera.rotation.y;
+    const lateralShift = Math.sin(rotation) * 20; // Movimiento lateral
     
-    // Giro sobre eje X (horizontal) - como inclinar la cabeza
-    const horizontalTilt = Math.sin(rotation) * 20; // Grados de inclinación
-    
-    // Aplicar giro horizontal
-    f1CockpitView.style.transform = `rotateX(${horizontalTilt}deg)`;
-    
-    // Opcional: añadir perspectiva para mejor efecto 3D
-    f1CockpitView.style.transform = `perspective(1000px) rotateX(${horizontalTilt}deg)`;
-                     }
+    f1CockpitView.style.transform = `translateX(${lateralShift}px)`;
+}
     
     // CALCULAR RPM
     const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
