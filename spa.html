@@ -897,9 +897,8 @@ function updateCockpitView() {
 // =========================
 // SISTEMA DE FANTASMA - NUEVO
 // =========================
-
 // =========================
-// SISTEMA DE FANTASMA OPTIMIZADO
+// SISTEMA DE FANTASMA MEJORADO - COCHE F1 GRANDE
 // =========================
 let ghostEnabled = true;
 let ghostCar = null;
@@ -974,63 +973,130 @@ function saveGhostDataIfBestLap(lapTime) {
     }
 }
 
-// 🔥 MESH SIMPLE Y EFICIENTE - SIN CARGAR ARCHIVOS
+// 🔥 COCHE F1 MEJORADO - MÁS GRANDE Y DETALLADO
 function createGhostCar() {
     if (!ghostEnabled || currentBestLapGhostData.length === 0) return;
     
-    // Crear un coche simple con formas básicas
-    const ghostBody = BABYLON.MeshBuilder.CreateBox("ghostBody", {
-        width: 4.5,
-        height: 1.8,
-        depth: 9
-    }, scene);
+    // Crear grupo principal para el coche
+    ghostCar = new BABYLON.TransformNode("ghostCar", scene);
     
-    // Cabina del coche
-    const ghostCabin = BABYLON.MeshBuilder.CreateBox("ghostCabin", {
-        width: 3.3,
-        height: 1.5,
-        depth: 3.75
+    // CHASIS PRINCIPAL - Forma aerodinámica de F1
+    const mainChassis = BABYLON.MeshBuilder.CreateCylinder("ghostChassis", {
+        diameterTop: 0.8,
+        diameterBottom: 1.2,
+        height: 5,
+        tessellation: 6
     }, scene);
-    ghostCabin.position.y = 0.6;
-    ghostCabin.position.z = -0.5;
+    mainChassis.parent = ghostCar;
+    mainChassis.rotation.x = Math.PI / 2; // Rotar para que sea horizontal
     
-    // Ruedas
+    // CABINA - Cockpit tipo F1
+    const cockpit = BABYLON.MeshBuilder.CreateBox("ghostCockpit", {
+        width: 0.9,
+        height: 0.4,
+        depth: 1.2
+    }, scene);
+    cockpit.parent = ghostCar;
+    cockpit.position.y = 0.3;
+    cockpit.position.z = -0.5;
+    
+    // ALERÓN TRASERO - Ala posterior grande
+    const rearWing = BABYLON.MeshBuilder.CreateBox("ghostRearWing", {
+        width: 2.5,
+        height: 0.1,
+        depth: 0.4
+    }, scene);
+    rearWing.parent = ghostCar;
+    rearWing.position.z = -2.2;
+    rearWing.position.y = 0.8;
+    
+    // SOPORTES ALERÓN TRASERO
+    const wingSupport1 = BABYLON.MeshBuilder.CreateCylinder("wingSupport1", {
+        height: 0.7,
+        diameter: 0.08
+    }, scene);
+    wingSupport1.parent = ghostCar;
+    wingSupport1.position.set(-0.8, 0.35, -2.2);
+    
+    const wingSupport2 = BABYLON.MeshBuilder.CreateCylinder("wingSupport2", {
+        height: 0.7,
+        diameter: 0.08
+    }, scene);
+    wingSupport2.parent = ghostCar;
+    wingSupport2.position.set(0.8, 0.35, -2.2);
+    
+    // ALERÓN DELANTERO
+    const frontWing = BABYLON.MeshBuilder.CreateBox("ghostFrontWing", {
+        width: 2.2,
+        height: 0.05,
+        depth: 0.6
+    }, scene);
+    frontWing.parent = ghostCar;
+    frontWing.position.z = 2.0;
+    frontWing.position.y = 0.1;
+    
+    // RUEDAS MÁS GRANDES Y DETALLADAS
     const wheelPositions = [
-        { x: 1.2, y: -0.4, z: 1.8 },   // Delantera derecha
-        { x: -1.2, y: -0.4, z: 1.8 },  // Delantera izquierda
-        { x: 1.2, y: -0.4, z: -1.8 },  // Trasera derecha
-        { x: -1.2, y: -0.4, z: -1.8 }  // Trasera izquierda
+        { x: 0.7, y: -0.3, z: 1.3 },   // Delantera derecha
+        { x: -0.7, y: -0.3, z: 1.3 },  // Delantera izquierda
+        { x: 0.7, y: -0.3, z: -1.3 },  // Trasera derecha
+        { x: -0.7, y: -0.3, z: -1.3 }  // Trasera izquierda
     ];
     
-    const wheels = [];
     wheelPositions.forEach((pos, index) => {
+        // Llanta
         const wheel = BABYLON.MeshBuilder.CreateCylinder("ghostWheel" + index, {
-            diameter: 1.8,
-            height: 0.6
+            diameter: 1.0, // Más grande
+            height: 0.5
         }, scene);
-        wheel.rotation.z = Math.PI / 2; // Rotar para que sea horizontal
+        wheel.parent = ghostCar;
+        wheel.rotation.z = Math.PI / 2;
         wheel.position.set(pos.x, pos.y, pos.z);
-        wheels.push(wheel);
+        
+        // Neumático (aro exterior)
+        const tire = BABYLON.MeshBuilder.CreateTorus("ghostTire" + index, {
+            diameter: 1.0,
+            thickness: 0.15,
+            tessellation: 16
+        }, scene);
+        tire.parent = ghostCar;
+        tire.rotation.x = Math.PI / 2;
+        tire.position.set(pos.x, pos.y, pos.z);
     });
     
-    // Combinar todo en un solo mesh
-    ghostCar = BABYLON.Mesh.MergeMeshes([
-        ghostBody, 
-        ghostCabin, 
-        ...wheels
-    ], true, false, null, false, true);
+    // Aleta laterales
+    const sidePod1 = BABYLON.MeshBuilder.CreateBox("sidePod1", {
+        width: 0.3,
+        height: 0.2,
+        depth: 2.5
+    }, scene);
+    sidePod1.parent = ghostCar;
+    sidePod1.position.set(0.5, 0.1, 0);
     
-    ghostCar.name = "ghostCar";
+    const sidePod2 = BABYLON.MeshBuilder.CreateBox("sidePod2", {
+        width: 0.3,
+        height: 0.2,
+        depth: 2.5
+    }, scene);
+    sidePod2.parent = ghostCar;
+    sidePod2.position.set(-0.5, 0.1, 0);
     
-    // Material blanco spectral SEMITRANSPARENTE pero VISIBLE
+    // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
+    ghostCar.scaling.set(1.8, 1.8, 1.8);
+    
+    // Material fantasma mejorado
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
-    ghostMaterial.diffuseColor = new BABYLON.Color3(0.9, 0.95, 1.0); // Blanco azulado
-    ghostMaterial.alpha = 0.7; // Más visible pero mantiene efecto fantasma
-    ghostMaterial.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
+    ghostMaterial.diffuseColor = new BABYLON.Color3(0.7, 0.9, 1.0); // Azul claro fantasma
+    ghostMaterial.alpha = 0.6;
+    ghostMaterial.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+    ghostMaterial.emissiveColor = new BABYLON.Color3(0.3, 0.4, 0.5); // Brillo suave
     
-    ghostCar.material = ghostMaterial;
-    ghostCar.checkCollisions = false;
-    ghostCar.isPickable = false;
+    // Aplicar material a todas las partes
+    ghostCar.getChildMeshes().forEach(mesh => {
+        mesh.material = ghostMaterial;
+        mesh.checkCollisions = false;
+        mesh.isPickable = false;
+    });
     
     // Iniciar reproducción
     ghostPlaybackIndex = 0;
@@ -1070,6 +1136,10 @@ function updateGhostCar() {
 
 function removeGhostCar() {
     if (ghostCar) {
+        // Eliminar todos los hijos primero
+        ghostCar.getChildMeshes().forEach(mesh => {
+            mesh.dispose();
+        });
         ghostCar.dispose();
         ghostCar = null;
     }
@@ -1083,7 +1153,8 @@ function resetGhost() {
             createGhostCar();
         }, 500);
     }
-}
+    }
+     
 
 
 
