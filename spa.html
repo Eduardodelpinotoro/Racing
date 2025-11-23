@@ -1896,7 +1896,82 @@ cameraHeightRange.addEventListener('input', () => {
 
 // Clima
 const weatherSelect = document.getElementById("weatherSelect");
+// =========================
+// SISTEMA DE SONIDOS POR MARCHA CORREGIDO
+// =========================
+const sonidosGT3 = {
+    marchas: {},
+    cambios: {}
+};
 
+// Cargar sonidos de marchas (1.mp3, 2.mp3, etc.)
+for (let i = 1; i <= 6; i++) {
+    sonidosGT3.marchas[i] = new Audio(i + '.mp3');
+    sonidosGT3.marchas[i].loop = true;
+    sonidosGT3.marchas[i].volume = 0;
+}
+
+// Cargar sonidos de cambios (6.5.mp3, 5.4.mp3, etc.)
+for (let i = 6; i >= 1; i--) {
+    const claveCambio = i + '.' + (i-1);
+    sonidosGT3.cambios[claveCambio] = new Audio(claveCambio + '.mp3');
+}
+
+// Variables de control de sonido
+let sonidoMarchaActual = null;
+let marchaAnteriorSonido = currentGear;
+
+function gestionarSonidosGT3() {
+    // 1. DETECTAR CAMBIO DE MARCHA (solo para efecto de cambio)
+    if (currentGear !== marchaAnteriorSonido) {
+        // Reproducir sonido de cambio
+        const claveCambio = `${marchaAnteriorSonido}.${currentGear}`;
+        if (sonidosGT3.cambios[claveCambio]) {
+            sonidosGT3.cambios[claveCambio].currentTime = 0;
+            sonidosGT3.cambios[claveCambio].play();
+        }
+        marchaAnteriorSonido = currentGear;
+    }
+    
+    // 2. GESTIONAR SONIDO DE MARCHA ACTUAL AL ACELERAR
+    if (currentGear > 0) {
+        const sonidoMarcha = sonidosGT3.marchas[currentGear];
+        
+        // Cambiar sonido si la marcha es diferente
+        if (sonidoMarchaActual !== sonidoMarcha) {
+            if (sonidoMarchaActual) {
+                sonidoMarchaActual.volume = 0;
+                sonidoMarchaActual.pause();
+            }
+            sonidoMarchaActual = sonidoMarcha;
+            sonidoMarchaActual.currentTime = 0;
+            sonidoMarchaActual.play();
+        }
+        
+        // CONTROLAR VOLUMEN SEGÚN ACELERACIÓN
+        if (throttlePressure > 0.1 && currentSpeed > 10) {
+            // Aumentar volumen al acelerar
+            let volumenBase = 0.3 + (throttlePressure * 0.4);
+            
+            // Ajustar pitch según RPM
+            const rpmNormalizado = currentRPM / currentGearConfig.redlineRPM;
+            sonidoMarchaActual.playbackRate = 0.8 + (rpmNormalizado * 0.6);
+            
+            sonidoMarchaActual.volume = Math.min(volumenBase, 0.7);
+        } else {
+            // Reducir volumen cuando no se acelera
+            sonidoMarchaActual.volume *= 0.95;
+            if (sonidoMarchaActual.volume < 0.05) {
+                sonidoMarchaActual.volume = 0;
+            }
+        }
+    } else {
+        // Si estamos en neutral o marcha atrás, silenciar
+        if (sonidoMarchaActual) {
+            sonidoMarchaActual.volume = 0;
+        }
+    }
+                                      }
 // Música
 const musicBtn = document.getElementById("musicBtn");
 const motorAudio = document.getElementById("motorAudio");
@@ -2514,7 +2589,10 @@ engine.runRenderLoop(() => {
         const tilt = Math.sin(rotation) * 2;
         f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
     }
-    
+    // NUEVO: GESTIONAR SONIDOS GT3 (solo añade esta línea)
+    if (currentCar === 'gt3') {
+        gestionarSonidosGT3();
+    }
     // CALCULAR RPM
     const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
     currentRPM = calculateRPM(currentSpeedKmh, currentGear);
