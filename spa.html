@@ -1900,17 +1900,14 @@ const weatherSelect = document.getElementById("weatherSelect");
 // SISTEMA DE SONIDOS POR MARCHA CORREGIDO
 // =========================
         
-        
-
-
 // =========================
-// SISTEMA CON UN SOLO SONIDO Y PITCH POR MARCHA
+// SISTEMA SIMPLIFICADO - SOLO BAJAR MARCHAS
 // =========================
 const sonidoUnico = new Audio('5.mp3');
-sonidoUnico.loop = true; // Loop continuo
+sonidoUnico.loop = true;
 sonidoUnico.volume = 0;
 
-// PITCH PARA CADA MARCHA (usando el mismo sonido 5.mp3)
+// PITCH PARA CADA MARCHA (usando 5.mp3)
 const pitchPorMarcha = {
     0: 0.5,   // Neutral - muy grave
     1: 0.6,   // Marcha 1 - grave
@@ -1922,10 +1919,20 @@ const pitchPorMarcha = {
     '-1': 0.4 // Marcha atrás - muy grave
 };
 
+// SOLO SONIDOS PARA BAJAR MARCHAS
+const sonidosBajarMarcha = {
+    '6.5': new Audio('6.5.mp3'),
+    '5.4': new Audio('5.4.mp3'),
+    '4.3': new Audio('4.3.mp3'),
+    '3.2': new Audio('3.2.mp3'),
+    '2.1': new Audio('2.1.mp3'),
+    '1.0': new Audio('1.0.mp3')
+};
+
 let marchaAnteriorSonido = currentGear;
 let sonidoIniciado = false;
 
-function gestionarSonidoUnico() {
+function gestionarSonidoSimple() {
     // 1. INICIAR SONIDO LA PRIMERA VEZ
     if (!sonidoIniciado && currentGear !== 0) {
         sonidoUnico.currentTime = 0;
@@ -1933,63 +1940,41 @@ function gestionarSonidoUnico() {
         sonidoIniciado = true;
     }
     
-    // 2. DETECTAR CAMBIO DE MARCHA
+    // 2. DETECTAR SOLO BAJADA DE MARCHAS
+    if (currentGear < marchaAnteriorSonido) {
+        // REPRODUCIR SONIDO DE BAJADA
+        const claveBajada = `${marchaAnteriorSonido}.${currentGear}`;
+        if (sonidosBajarMarcha[claveBajada]) {
+            sonidosBajarMarcha[claveBajada].currentTime = 0;
+            sonidosBajarMarcha[claveBajada].play();
+        }
+    }
+    
+    // 3. CAMBIO DE PITCH (siempre, tanto al subir como bajar)
     if (currentGear !== marchaAnteriorSonido) {
-        // Cambio suave de pitch entre marchas
         const pitchAnterior = pitchPorMarcha[marchaAnteriorSonido] || 1.0;
         const pitchNuevo = pitchPorMarcha[currentGear] || 1.0;
-        
-        // Transición suave de pitch
-        transicionarPitch(sonidoUnico, pitchAnterior, pitchNuevo, 500);
+        sonidoUnico.playbackRate = pitchNuevo; // Cambio directo, sin transición
         
         marchaAnteriorSonido = currentGear;
     }
     
-    // 3. CONTROLAR VOLUMEN SEGÚN ACELERACIÓN
-    if (currentGear !== 0) {
-        if (throttlePressure > 0.1 && currentSpeed > 5) {
-            // Volumen según acelerador
-            let volumenBase = 0.2 + (throttlePressure * 0.6);
-            sonidoUnico.volume = Math.min(volumenBase, 0.8);
-        } else {
-            // Reducir volumen cuando no se acelera
-            sonidoUnico.volume *= 0.93;
-            if (sonidoUnico.volume < 0.05) {
-                sonidoUnico.volume = 0;
-            }
-        }
+    // 4. VOLUMEN FIJO AL ACELERAR
+    if (currentGear !== 0 && throttlePressure > 0.1 && currentSpeed > 5) {
+        sonidoUnico.volume = 0.7; // Volumen fijo
     } else {
-        // En neutral - volumen muy bajo
-        sonidoUnico.volume *= 0.8;
-        if (sonidoUnico.volume < 0.05) {
-            sonidoUnico.volume = 0;
-        }
+        sonidoUnico.volume = 0; // Silencio si no se acelera
     }
 }
 
-// Función para transición suave de pitch
-function transicionarPitch(audio, pitchInicial, pitchFinal, duracion) {
-    const steps = 10;
-    const stepTime = duracion / steps;
-    
-    for (let i = 0; i <= steps; i++) {
-        setTimeout(() => {
-            if (audio) {
-                const progreso = i / steps;
-                const pitchActual = pitchInicial + (pitchFinal - pitchInicial) * progreso;
-                audio.playbackRate = pitchActual;
-            }
-        }, i * stepTime);
-    }
-}
-
-// Detener sonido
-function detenerSonidoUnico() {
+// Detener sonidos
+function detenerSonidosSimple() {
     sonidoUnico.pause();
     sonidoUnico.currentTime = 0;
     sonidoUnico.volume = 0;
     sonidoIniciado = false;
-}
+        }
+
 // Música
 const musicBtn = document.getElementById("musicBtn");
 const motorAudio = document.getElementById("motorAudio");
@@ -2247,7 +2232,7 @@ function resetToStartPosition() {
     stopGhostRecording();
     removeGhostCar();
 
-    detenerSonidoUnico();
+    detenerSonidosSimple();
     
     // Reparar el coche si está dañado
     if (isCarDestroyed) {
@@ -2611,7 +2596,7 @@ engine.runRenderLoop(() => {
     }
     // NUEVO: GESTIONAR SONIDOS GT3 (solo añade esta línea)
     if (currentCar === 'gt3') {
-        gestionarSonidoUnico();
+        gestionarSonidoSimple();
     }
     // CALCULAR RPM
     const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
