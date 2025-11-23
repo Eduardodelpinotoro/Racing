@@ -2649,7 +2649,7 @@ engine.runRenderLoop(() => {
     keepGround();
     
     // Actualizar indicador de velocidad numérico
-    document.getElementById('speedNumber').textContent = Math.abs(currentSpeed * speedFactor).toFixed(0) + ' km/h';
+    document.getElementById('speedNumber').textContent = Math.abs(currentSpeed).toFixed(0) + ' km/h';
     
     scene.render();
 });
