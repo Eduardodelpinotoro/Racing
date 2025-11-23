@@ -1899,79 +1899,160 @@ const weatherSelect = document.getElementById("weatherSelect");
 // =========================
 // SISTEMA DE SONIDOS POR MARCHA CORREGIDO
 // =========================
+// =========================
+// SISTEMA DE SONIDOS CON CROSSFADE CONTINUO
+// =========================
 const sonidosGT3 = {
     marchas: {},
     cambios: {}
 };
 
-// Cargar sonidos de marchas (1.mp3, 2.mp3, etc.)
+// Cargar DOBLE conjunto de sonidos para cada marcha
 for (let i = 1; i <= 6; i++) {
-    sonidosGT3.marchas[i] = new Audio(i + '.mp3');
-    sonidosGT3.marchas[i].loop = true;
-    sonidosGT3.marchas[i].volume = 0;
+    // Dos audios idénticos para cada marcha
+    sonidosGT3.marchas[i] = {
+        audio1: new Audio(i + '.mp3'),
+        audio2: new Audio(i + '.mp3'),
+        activo: 1 // 1 = audio1 activo, 2 = audio2 activo
+    };
+    
+    // Configurar ambos audios
+    sonidosGT3.marchas[i].audio1.loop = false;
+    sonidosGT3.marchas[i].audio2.loop = false;
+    sonidosGT3.marchas[i].audio1.volume = 0;
+    sonidosGT3.marchas[i].audio2.volume = 0;
 }
 
-// Cargar sonidos de cambios (6.5.mp3, 5.4.mp3, etc.)
+// Cargar sonidos de cambios
 for (let i = 6; i >= 1; i--) {
     const claveCambio = i + '.' + (i-1);
     sonidosGT3.cambios[claveCambio] = new Audio(claveCambio + '.mp3');
 }
 
-// Variables de control de sonido
+// Variables de control
 let sonidoMarchaActual = null;
 let marchaAnteriorSonido = currentGear;
+let audioActivo = null;
+let audioReserva = null;
 
 function gestionarSonidosGT3() {
-    // 1. DETECTAR CAMBIO DE MARCHA (solo para efecto de cambio)
+    // 1. DETECTAR CAMBIO DE MARCHA
     if (currentGear !== marchaAnteriorSonido) {
-        // Reproducir sonido de cambio
         const claveCambio = `${marchaAnteriorSonido}.${currentGear}`;
         if (sonidosGT3.cambios[claveCambio]) {
             sonidosGT3.cambios[claveCambio].currentTime = 0;
             sonidosGT3.cambios[claveCambio].play();
         }
+        
+        // CAMBIAR MARCHA
+        if (currentGear > 0 && sonidosGT3.marchas[currentGear]) {
+            sonidoMarchaActual = sonidosGT3.marchas[currentGear];
+            
+            // Configurar audios para nueva marcha
+            audioActivo = sonidoMarchaActual.audio1;
+            audioReserva = sonidoMarchaActual.audio2;
+            
+            // Iniciar audio activo
+            audioActivo.currentTime = 0;
+            audioActivo.play();
+            fadeInSonido(audioActivo, 300);
+        }
+        
         marchaAnteriorSonido = currentGear;
     }
     
-    // 2. GESTIONAR SONIDO DE MARCHA ACTUAL AL ACELERAR
-    if (currentGear > 0) {
-        const sonidoMarcha = sonidosGT3.marchas[currentGear];
+    // 2. GESTIONAR CROSSFADE CONTINUO
+    if (sonidoMarchaActual && currentGear > 0 && audioActivo) {
         
-        // Cambiar sonido si la marcha es diferente
-        if (sonidoMarchaActual !== sonidoMarcha) {
-            if (sonidoMarchaActual) {
-                sonidoMarchaActual.volume = 0;
-                sonidoMarchaActual.pause();
+        // DETECTAR CUÁNDO INICIAR CROSSFADE (últimos 2 segundos)
+        if (audioActivo.duration > 0 && 
+            audioActivo.duration - audioActivo.currentTime < 2.0) {
+            
+            // INICIAR AUDIO RESERVA EN EL MISMO PUNTO
+            const tiempoActual = audioActivo.currentTime;
+            audioReserva.currentTime = tiempoActual;
+            
+            if (audioReserva.paused) {
+                audioReserva.play();
             }
-            sonidoMarchaActual = sonidoMarcha;
-            sonidoMarchaActual.currentTime = 0;
-            sonidoMarchaActual.play();
+            
+            // CROSSFADE: bajar activo, subir reserva
+            fadeOutSonido(audioActivo, 1500);
+            fadeInSonido(audioReserva, 1500);
+            
+            // INTERCAMBIAR ROLES
+            const temp = audioActivo;
+            audioActivo = audioReserva;
+            audioReserva = temp;
         }
         
-        // CONTROLAR VOLUMEN SEGÚN ACELERACIÓN
+        // 3. CONTROLAR VOLUMEN Y PITCH
         if (throttlePressure > 0.1 && currentSpeed > 10) {
-            // Aumentar volumen al acelerar
             let volumenBase = 0.3 + (throttlePressure * 0.4);
-            
-            // Ajustar pitch según RPM
             const rpmNormalizado = currentRPM / currentGearConfig.redlineRPM;
-            sonidoMarchaActual.playbackRate = 0.8 + (rpmNormalizado * 0.6);
             
-            sonidoMarchaActual.volume = Math.min(volumenBase, 0.7);
+            // Aplicar pitch a AMBOS audios
+            audioActivo.playbackRate = 0.8 + (rpmNormalizado * 0.6);
+            audioReserva.playbackRate = 0.8 + (rpmNormalizado * 0.6);
+            
+            audioActivo.volume = Math.min(volumenBase, 0.7);
         } else {
-            // Reducir volumen cuando no se acelera
-            sonidoMarchaActual.volume *= 0.95;
-            if (sonidoMarchaActual.volume < 0.05) {
-                sonidoMarchaActual.volume = 0;
+            // Reducir volumen gradualmente
+            if (audioActivo.volume > 0.05) {
+                audioActivo.volume *= 0.95;
+                if (audioReserva.volume > 0.05) {
+                    audioReserva.volume *= 0.95;
+                }
+            } else {
+                audioActivo.volume = 0;
+                audioReserva.volume = 0;
             }
-        }
-    } else {
-        // Si estamos en neutral o marcha atrás, silenciar
-        if (sonidoMarchaActual) {
-            sonidoMarchaActual.volume = 0;
         }
     }
-                                      }
+}
+
+// Funciones de fade mejoradas
+function fadeOutSonido(audio, duracion) {
+    const volumenInicial = audio.volume;
+    const steps = 10;
+    const stepTime = duracion / steps;
+    
+    for (let i = 0; i <= steps; i++) {
+        setTimeout(() => {
+            if (audio) {
+                audio.volume = volumenInicial * (1 - (i / steps));
+            }
+        }, i * stepTime);
+    }
+}
+
+function fadeInSonido(audio, duracion) {
+    const steps = 10;
+    const stepTime = duracion / steps;
+    
+    for (let i = 0; i <= steps; i++) {
+        setTimeout(() => {
+            if (audio) {
+                audio.volume = (i / steps) * 0.7;
+            }
+        }, i * stepTime);
+    }
+}
+
+// Detener sonidos
+function detenerSonidosGT3() {
+    if (sonidoMarchaActual) {
+        sonidoMarchaActual.audio1.pause();
+        sonidoMarchaActual.audio2.pause();
+        sonidoMarchaActual.audio1.currentTime = 0;
+        sonidoMarchaActual.audio2.currentTime = 0;
+        sonidoMarchaActual.audio1.volume = 0;
+        sonidoMarchaActual.audio2.volume = 0;
+    }
+    sonidoMarchaActual = null;
+    audioActivo = null;
+    audioReserva = null;
+        }
 // Música
 const musicBtn = document.getElementById("musicBtn");
 const motorAudio = document.getElementById("motorAudio");
