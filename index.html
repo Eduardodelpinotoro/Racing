@@ -256,31 +256,31 @@
                 <button class="play-button">JUGAR EN SPA</button>
             </div>
 
-            <!-- Circuito SPA -->
+            <!-- Circuito TSUKUBA -->
             <div class="track-card" onclick="selectTrack('tsukuba')">
-                <div class="track-icon">🏁</div>
+                <div class="track-icon">🇯🇵</div>
                 <h2 class="track-name">CIRCUITO DE TSUKUBA</h2>
                 <p class="track-location">Japón</p>
-                <p class="track-length">7.004 km - 19 Curvas</p>
+                <p class="track-length">2.070 km - 12 Curvas</p>
                 
                 <div class="track-stats">
                     <div class="stat">
-                        <div class="stat-value">7.0km</div>
+                        <div class="stat-value">2.07km</div>
                         <div class="stat-label">Longitud</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">19</div>
+                        <div class="stat-value">12</div>
                         <div class="stat-label">Curvas</div>
                     </div>
                     <div class="stat">
-                        <div class="stat-value">1:41.2</div>
+                        <div class="stat-value">0:59.8</div>
                         <div class="stat-label">Récord</div>
                     </div>
                 </div>
 
                 <div class="track-difficulty">
-                    <div class="difficulty-stars">★★★★★</div>
-                    <div class="difficulty-text">Alta Dificultad</div>
+                    <div class="difficulty-stars">★★☆☆☆</div>
+                    <div class="difficulty-text">Baja Dificultad</div>
                 </div>
 
                 <button class="play-button">JUGAR EN TSUKUBA</button>
@@ -341,6 +341,11 @@
                 particle.style.left = `${Math.random() * 100}%`;
                 particle.style.top = `${Math.random() * 100}%`;
                 
+                // Color aleatorio
+                const colors = ['#00ff00', '#00cc00', '#00ffff', '#ffff00'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                particle.style.background = randomColor;
+                
                 // Animación aleatoria
                 particle.style.animationDelay = `${Math.random() * 6}s`;
                 particle.style.animationDuration = `${Math.random() * 3 + 3}s`;
@@ -356,14 +361,14 @@
             
             // Redirigir después de un breve delay para el efecto visual
             setTimeout(() => {
-    if (track === 'spa') {
-        window.location.href = 'spa.html';
-    } else if (track === 'jerez') {
-        window.location.href = 'jerez.html';
-    } else if (track === 'tsukuba') {
-        window.location.href = 'tsukuba.html';
-    }
-}, 300);
+                if (track === 'spa') {
+                    window.location.href = 'spa.html';
+                } else if (track === 'jerez') {
+                    window.location.href = 'jerez.html';
+                } else if (track === 'tsukuba') {
+                    window.location.href = 'tsukuba.html';
+                }
+            }, 300);
         }
 
         // También hacer que los botones funcionen
@@ -371,9 +376,13 @@
             button.addEventListener('click', function(e) {
                 e.stopPropagation(); // Evitar que se active dos veces
                 const trackCard = this.closest('.track-card');
-                if (trackCard.querySelector('.track-name').textContent.includes('SPA')) {
+                const trackName = trackCard.querySelector('.track-name').textContent;
+                
+                if (trackName.includes('SPA')) {
                     selectTrack('spa');
-                } else {
+                } else if (trackName.includes('TSUKUBA')) {
+                    selectTrack('tsukuba');
+                } else if (trackName.includes('JEREZ')) {
                     selectTrack('jerez');
                 }
             });
@@ -396,9 +405,11 @@
             if (e.key === '1') {
                 selectTrack('spa');
             } else if (e.key === '2') {
+                selectTrack('tsukuba');
+            } else if (e.key === '3') {
                 selectTrack('jerez');
             }
         });
     </script>
 </body>
-</html>
+                                                            </html>
