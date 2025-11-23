@@ -2458,7 +2458,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "tsukuba.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
