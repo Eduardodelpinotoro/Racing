@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>SPA - Simulación de Conducción Realista</title>
+<title>Jerez - Simulación de Conducción Realista</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0a0a0a">
@@ -2458,11 +2458,11 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(-3780, 330, -3980); 
+    playerMesh.position.set(-280, 0, -350); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
