@@ -1901,66 +1901,74 @@ const weatherSelect = document.getElementById("weatherSelect");
 // =========================
         
 // =========================
-// SISTEMA CON TODOS LOS AUDIOS RECORTADOS
+// SISTEMA SIMPLIFICADO - SOLO BAJAR MARCHAS
 // =========================
 const sonidoUnico = new Audio('5.mp3');
 sonidoUnico.loop = true;
 sonidoUnico.volume = 0;
 
-// PITCH PARA CADA MARCHA
+// PITCH PARA CADA MARCHA (usando 5.mp3)
 const pitchPorMarcha = {
-    0: 0.5, 1: 0.6, 2: 0.7, 3: 0.8, 4: 0.9, 5: 1.0, 6: 1.2, '-1': 0.4
+    0: 0.5,   // Neutral - muy grave
+    1: 0.6,   // Marcha 1 - grave
+    2: 0.7,   // Marcha 2 
+    3: 0.8,   // Marcha 3
+    4: 0.9,   // Marcha 4
+    5: 1.0,   // Marcha 5 - original (5.mp3)
+    6: 1.2,   // Marcha 6 - agudo
+    '-1': 0.4 // Marcha atrás - muy grave
 };
 
-// SONIDOS DE BAJADA CON TIEMPOS DE INICIO RECORTADOS
+// SOLO SONIDOS PARA BAJAR MARCHAS
 const sonidosBajarMarcha = {
-    '6.5': { audio: new Audio('6.5.mp3'), startTime: 0.1 },
-    '5.4': { audio: new Audio('5.4.mp3'), startTime: 0.1 },
-    '4.3': { audio: new Audio('4.3.mp3'), startTime: 0.1 },
-    '3.2': { audio: new Audio('3.2.mp3'), startTime: 0.1 },
-    '2.1': { audio: new Audio('2.1.mp3'), startTime: 0.1 },
-    '1.0': { audio: new Audio('1.0.mp3'), startTime: 0.1 }
+    '6.5': new Audio('6.5.mp3'),
+    '5.4': new Audio('5.4.mp3'),
+    '4.3': new Audio('4.3.mp3'),
+    '3.2': new Audio('3.2.mp3'),
+    '2.1': new Audio('2.1.mp3'),
+    '1.0': new Audio('1.0.mp3')
 };
 
 let marchaAnteriorSonido = currentGear;
 let sonidoIniciado = false;
 
-function gestionarSonidoRapido() {
-    // 1. INICIAR SONIDO LA PRIMERA VEZ - TAMBIÉN RECORTADO
+function gestionarSonidoSimple() {
+    // 1. INICIAR SONIDO LA PRIMERA VEZ
     if (!sonidoIniciado && currentGear !== 0) {
-        sonidoUnico.currentTime = 0.1; // ← RECORTAR TAMBIÉN EL 5.MP3
+        sonidoUnico.currentTime = 0;
         sonidoUnico.play();
         sonidoIniciado = true;
     }
     
-    // 2. DETECTAR BAJADA DE MARCHAS - RESPUESTA INMEDIATA
+    // 2. DETECTAR SOLO BAJADA DE MARCHAS
     if (currentGear < marchaAnteriorSonido) {
+        // REPRODUCIR SONIDO DE BAJADA
         const claveBajada = `${marchaAnteriorSonido}.${currentGear}`;
-        const sonidoBajada = sonidosBajarMarcha[claveBajada];
-        
-        if (sonidoBajada) {
-            sonidoBajada.audio.currentTime = sonidoBajada.startTime;
-            sonidoBajada.audio.play();
+        if (sonidosBajarMarcha[claveBajada]) {
+            sonidosBajarMarcha[claveBajada].currentTime = 0;
+            sonidosBajarMarcha[claveBajada].play();
         }
     }
     
-    // 3. CAMBIO DE PITCH INMEDIATO
+    // 3. CAMBIO DE PITCH (siempre, tanto al subir como bajar)
     if (currentGear !== marchaAnteriorSonido) {
+        const pitchAnterior = pitchPorMarcha[marchaAnteriorSonido] || 1.0;
         const pitchNuevo = pitchPorMarcha[currentGear] || 1.0;
-        sonidoUnico.playbackRate = pitchNuevo;
+        sonidoUnico.playbackRate = pitchNuevo; // Cambio directo, sin transición
+        
         marchaAnteriorSonido = currentGear;
     }
     
-    // 4. VOLUMEN RÁPIDO
+    // 4. VOLUMEN FIJO AL ACELERAR
     if (currentGear !== 0 && throttlePressure > 0.1 && currentSpeed > 5) {
-        sonidoUnico.volume = 0.7;
+        sonidoUnico.volume = 0.2; // Volumen fijo
     } else {
-        sonidoUnico.volume = 0;
+        sonidoUnico.volume = 0; // Silencio si no se acelera
     }
 }
 
 // Detener sonidos
-function detenerSonidosRapido() {
+function detenerSonidosSimple() {
     sonidoUnico.pause();
     sonidoUnico.currentTime = 0;
     sonidoUnico.volume = 0;
