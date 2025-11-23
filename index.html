@@ -256,6 +256,36 @@
                 <button class="play-button">JUGAR EN SPA</button>
             </div>
 
+            <!-- Circuito SPA -->
+            <div class="track-card" onclick="selectTrack('tsukuba')">
+                <div class="track-icon">🏁</div>
+                <h2 class="track-name">CIRCUITO DE TSUKUBA</h2>
+                <p class="track-location">Japón</p>
+                <p class="track-length">7.004 km - 19 Curvas</p>
+                
+                <div class="track-stats">
+                    <div class="stat">
+                        <div class="stat-value">7.0km</div>
+                        <div class="stat-label">Longitud</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">19</div>
+                        <div class="stat-label">Curvas</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">1:41.2</div>
+                        <div class="stat-label">Récord</div>
+                    </div>
+                </div>
+
+                <div class="track-difficulty">
+                    <div class="difficulty-stars">★★★★★</div>
+                    <div class="difficulty-text">Alta Dificultad</div>
+                </div>
+
+                <button class="play-button">JUGAR EN TSUKUBA</button>
+            </div>
+
             <!-- Circuito JEREZ -->
             <div class="track-card" onclick="selectTrack('jerez')">
                 <div class="track-icon">🇪🇸</div>
@@ -326,12 +356,14 @@
             
             // Redirigir después de un breve delay para el efecto visual
             setTimeout(() => {
-                if (track === 'spa') {
-                    window.location.href = 'spa.html';
-                } else if (track === 'jerez') {
-                    window.location.href = 'jerez.html';
-                }
-            }, 300);
+    if (track === 'spa') {
+        window.location.href = 'spa.html';
+    } else if (track === 'jerez') {
+        window.location.href = 'jerez.html';
+    } else if (track === 'tsukuba') {
+        window.location.href = 'tsukuba.html';
+    }
+}, 300);
         }
 
         // También hacer que los botones funcionen
