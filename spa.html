@@ -25,9 +25,9 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 /* CRONÓMETRO MOVIDO A LA DERECHA ARRIBA */
 #timerPanel { 
     position: absolute; 
-    top: 10px; 
-    right: 10px; 
-    width: 140px; 
+    top: 50px; 
+    left: 10px; 
+    width: 100px; 
     background: rgba(0,0,0,0.7); 
     border: 2px solid #fff; 
     border-radius: 10px; 
@@ -127,7 +127,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 #resetPositionBtn{
     position:absolute;
     top:5px;
-    left:10px;
+    left:5px;
     width:40px;
     height:40px;
     background:rgba(255,255,255,0.25);
@@ -565,8 +565,8 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 
 #cockpitAdjustBtn {
     position: absolute;
-    top: 50px;
-    left: 10px;
+    top: 5px;
+    left: 150px;
     width: 40px;
     height: 40px;
     background: rgba(255,255,255,0.25);
@@ -583,7 +583,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 #rearviewMirror {
     position: absolute;
     top: 10px;
-    left: 50%;
+    right: -100;
     transform: translateX(-50%);
     width: 200px;
     height: 50px; /* Reducido a la mitad de altura */
@@ -622,7 +622,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 <!-- NUEVO: Espejo retrovisor CENTRADO Y MÁS PEQUEÑO -->
 <div id="rearviewMirror">
     <canvas id="rearviewCanvas"></canvas>
-    <div id="mirrorLabel">RETROVISOR</div>
+    <div id="mirrorLabel"></div>
 </div>
 
 <!-- Controles de ajuste de vista F1 -->
