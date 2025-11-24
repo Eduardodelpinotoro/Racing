@@ -565,8 +565,8 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 
 #cockpitAdjustBtn {
     position: absolute;
-    top: 50px;
-    left: 10px;
+    top: 5px;
+    left: 80px;
     width: 40px;
     height: 40px;
     background: rgba(255,255,255,0.25);
@@ -622,7 +622,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 <!-- NUEVO: Espejo retrovisor CENTRADO Y MÁS PEQUEÑO -->
 <div id="rearviewMirror">
     <canvas id="rearviewCanvas"></canvas>
-    <div id="mirrorLabel">RETROVISOR</div>
+    <div id="mirrorLabel"></div>
 </div>
 
 <!-- Controles de ajuste de vista F1 -->
@@ -1208,7 +1208,7 @@ function createGhostCar() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
-    ghostCar.scaling.set(4, 4, 4);
+    ghostCar.scaling.set(6, 6, 6);
     
     // Material fantasma mejorado - MÁS VISIBLE
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
