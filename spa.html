@@ -2383,6 +2383,63 @@ const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, cameraHeight
 camera.parent = playerMesh;
 camera.detachControl(canvas);
 
+// =========================
+// ESPEJO RETROVISOR REAL
+// =========================
+
+const rearviewCanvas = document.getElementById("rearviewCanvas");
+
+const mirrorTexture = new BABYLON.RenderTargetTexture(
+    "mirrorTexture",
+    { width: 300, height: 150 },
+    scene,
+    false
+);
+
+const mirrorCamera = new BABYLON.FreeCamera(
+    "mirrorCamera",
+    new BABYLON.Vector3(0, 3, 0),
+    scene
+);
+
+mirrorCamera.fov = 1.1;
+mirrorCamera.minZ = 0.1;
+mirrorCamera.maxZ = 5000;
+
+mirrorTexture.activeCamera = mirrorCamera;
+
+// Actualizar imagen al canvas
+mirrorTexture.onAfterRenderObservable.add(() => {
+    const ctx = rearviewCanvas.getContext("2d");
+    const data = mirrorTexture.readPixels();
+    const img = new ImageData(new Uint8ClampedArray(data), mirrorTexture.getSize().width, mirrorTexture.getSize().height);
+    ctx.putImageData(img, 0, 0);
+});
+
+// actualizar cámara del espejo cada frame
+scene.onBeforeRenderObservable.add(() => {
+    if (!playerMesh) return;
+
+    // dirección opuesta a la cámara principal
+    const yaw = camera.rotation.y + Math.PI;
+
+    const offset = new BABYLON.Vector3(
+        Math.sin(yaw) * 3,
+        1.8,
+        Math.cos(yaw) * 3
+    );
+
+    // detrás del coche
+    mirrorCamera.position = playerMesh.position.add(offset);
+
+    // mira hacia atrás (opuesto a donde va el coche)
+    mirrorCamera.setTarget(playerMesh.position);
+});
+
+// asignar textura
+scene.customRenderTargets.push(mirrorTexture);
+    
+
 // UI
 const debug = document.getElementById("debug");
 const speedBar = document.getElementById("speedBar");
