@@ -928,7 +928,7 @@ function initRearviewMirror() {
         // Sincronizar la posición y rotación de la cámara del espejo con la cámara principal
         if (camera && rearviewCamera) {
             rearviewCamera.position.copyFrom(camera.position);
-            rearviewCamera.rotation.y = -camera.rotation.y; // Mirar en dirección opuesta
+            rearviewCamera.rotation.y = camera.rotation.y + Math.PI; // Mirar en dirección opuesta
         }
         
         // Sincronizar el clima
