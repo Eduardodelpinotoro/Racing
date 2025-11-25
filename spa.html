@@ -716,7 +716,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     </div>
     <div class="cockpit-control">
         <label>Posición Vertical: <span id="cockpitPositionValue">30</span>%</label>
-        <input type="range" id="cockpitPositionRange" min="-500" max="60" value="30">
+        <input type="range" id="cockpitPositionRange" min="-1000" max="1000" value="10">
     </div>
     <div class="cockpit-control">
         <label>Posición Horizontal: <span id="cockpitHorizontalValue">50</span>%</label>
@@ -801,7 +801,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <input type="range" id="brakeRange" min="20" max="300" value="150">
 
     <label>Altura de Cámara: <span id="cameraHeightLabel">3.0</span> m</label>
-    <input type="range" id="cameraHeightRange" min="1.0" max="6.0" step="0.1" value="3.0">
+    <input type="range" id="cameraHeightRange" min="1.0" max="20.0" step="0.1" value="3.0">
 
     <!-- NUEVO: Control de sensibilidad del joystick -->
     <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
@@ -843,10 +843,10 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
         
         <div id="gyroControls" style="display: none;">
             <label>Sensibilidad: <span id="gyroSensitivityLabel">1.0</span></label>
-            <input type="range" id="gyroSensitivityRange" min="0.1" max="8.0" step="0.1" value="1.0">
+            <input type="range" id="gyroSensitivityRange" min="0.1" max="2.5" step="0.1" value="1.0">
             
             <label>Máximo Giro: <span id="gyroMaxLabel">2.0</span></label>
-            <input type="range" id="gyroMaxRange" min="0.5" max="8.0" step="0.1" value="2.0">
+            <input type="range" id="gyroMaxRange" min="0.5" max="1.0" step="0.1" value="1.0">
             
             <label>Modo de Control</label>
             <select id="gyroModeSelect">
@@ -1294,7 +1294,7 @@ function updateCockpitView() {
         cockpitAdjustBtn.style.display = 'flex';
     } else {
         f1CockpitView.style.display = 'block';
-        f1CockpitView.style.backgroundImage = 'url("https://i.ibb.co/G34CHGsk/1000024931.png")';
+        f1CockpitView.style.backgroundImage = 'url("https://i.ibb.co/vv36qFqn/1000024943.png")';
         f1CockpitView.style.backgroundSize = cockpitSize + '% auto';
         f1CockpitView.style.backgroundPosition = cockpitHorizontal + '% ' + cockpitPosition + '%';
         cockpitAdjustBtn.style.display = 'flex';
@@ -1487,7 +1487,7 @@ function createGhostCar() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
-    ghostCar.scaling.set(4, 4, 4);
+    ghostCar.scaling.set(6, 6, 6);
     
     // Material fantasma mejorado - MÁS VISIBLE
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
