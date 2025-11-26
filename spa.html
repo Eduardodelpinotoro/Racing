@@ -1307,33 +1307,8 @@ function updatePlayersList(snapshot) {
         updateOtherPlayerInWorld(key, player);
     });
 }
-// DEBUG: Mostrar posiciones del jugador
-function showPlayerPosition() {
-    const pos = playerMesh.position;
-    const rot = camera.rotation.y;
-    
-    console.log(`POSICIÓN: X: ${pos.x.toFixed(2)}, Y: ${pos.y.toFixed(2)}, Z: ${pos.z.toFixed(2)}, Rotación: ${rot.toFixed(2)}`);
-    
-    // También mostrar en pantalla (opcional)
-    if (!document.getElementById('positionDebug')) {
-        const debugDiv = document.createElement('div');
-        debugDiv.id = 'positionDebug';
-        debugDiv.style.cssText = 'position:absolute; top:100px; left:10px; color:#0f0; font-family:monospace; z-index:1000; background:rgba(0,0,0,0.7); padding:10px;';
-        document.body.appendChild(debugDiv);
-    }
-    
-    document.getElementById('positionDebug').innerHTML = `
-        <strong>TUS POSICIONES:</strong><br>
-        X: ${pos.x.toFixed(2)}<br>
-        Y: ${pos.y.toFixed(2)}<br> 
-        Z: ${pos.z.toFixed(2)}<br>
-        Rotación: ${rot.toFixed(2)}<br>
-        Velocidad: ${(currentSpeed * speedFactor).toFixed(0)} km/h
-    `;
-}
 
-// Actualizar cada segundo
-setInterval(showPlayerPosition, 1000);
+
 // 🔥 NUEVA FUNCIÓN MEJORADA: Crear coches 3D IDÉNTICOS al fantasma
 function updateOtherPlayerInWorld(playerId, playerData) {
     let playerCar = scene.getTransformNodeByName(`otherPlayer_${playerId}`);
