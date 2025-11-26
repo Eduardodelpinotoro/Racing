@@ -2462,13 +2462,13 @@ BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
     // AÑADE ESTO para escalar el circuito (1.5 = 150% del tamaño original)
     scene.meshes.forEach(mesh => {
         if (mesh !== playerMesh && mesh !== skySphere) {
-            mesh.scaling = new BABYLON.Vector3(4, 4, 4);
+            mesh.scaling = new BABYLON.Vector3(3, 3, 3);
         }
     });
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(100, 0, 100); 
+    playerMesh.position.set(50, 0, 50); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
