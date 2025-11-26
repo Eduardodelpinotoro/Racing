@@ -680,7 +680,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <input type="range" id="brakeRange" min="20" max="300" value="150">
 
     <label>Altura de Cámara: <span id="cameraHeightLabel">3.0</span> m</label>
-    <input type="range" id="cameraHeightRange" min="1.0" max="6.0" step="0.1" value="3.0">
+    <input type="range" id="cameraHeightRange" min="0" max="6.0" step="0.01" value="1.0">
 
     <!-- NUEVO: Control de sensibilidad del joystick -->
     <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
@@ -1414,7 +1414,7 @@ const cameraHeightLabel = document.getElementById("cameraHeightLabel");
 let maxSpeed = 330;
 let targetAccelerationTime = 2.0;
 let brakeFriction = 150;
-let cameraHeight = 3.0;
+let cameraHeight = 1.0;
 let currentCar = 'f1';
 
 // =========================
@@ -2137,7 +2137,7 @@ resetPositionBtn.addEventListener("click", resetToStartPosition);
 
 function resetToStartPosition() {
     currentSpeed = 0;
-    playerMesh.position.set(-3780, 330, -3980);
+    playerMesh.position.set(-20, 0, -30);
     camera.rotation.y = 0;
     
     // Resetear cronómetro
@@ -2468,7 +2468,7 @@ BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(800, 0, 200); 
+    playerMesh.position.set(100, 0, 50); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
@@ -2493,7 +2493,7 @@ function keepGround() {
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
 const maxRealKmH = 330;
-const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
+const speedFactor = maxRealKmH / maxSpeed ; // Aumentado para sensación más rápida
 
 // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
 engine.runRenderLoop(() => {
