@@ -832,11 +832,11 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <h4 style="margin:0 0 8px 0;text-align:center;">AJUSTE VISTA F1</h4>
     <div class="cockpit-control">
         <label>Tamaño: <span id="cockpitSizeValue">120</span>%</label>
-        <input type="range" id="cockpitSizeRange" min="80" max="200" value="120">
+        <input type="range" id="cockpitSizeRange" min="10" max="200" value="120">
     </div>
     <div class="cockpit-control">
         <label>Posición Vertical: <span id="cockpitPositionValue">30</span>%</label>
-        <input type="range" id="cockpitPositionRange" min="-500" max="60" value="30">
+        <input type="range" id="cockpitPositionRange" min="-1000" max="1000" value="30">
     </div>
     <div class="cockpit-control">
         <label>Posición Horizontal: <span id="cockpitHorizontalValue">50</span>%</label>
@@ -3686,24 +3686,14 @@ function checkFinishLine() {
 // CARGAR CIRCUITO JEREZ
 BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
-            m.checkCollisions = true; 
-            // 🔥 ESCALAR EL CIRCUITO COMPLETO
-            m.scaling = new BABYLON.Vector3(1.5, 1.5, 1.5); // 50% más grande
-        } 
+        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
     
-    // Ajustar posición inicial según la nueva escala
-    playerMesh.position.set(250 * 1.5, 73.5 * 1.5, -320 * 1.5); 
+    // Posición inicial cerca de la línea de meta en Jerez
+    playerMesh.position.set(250, 73.5, -320); 
     prevPosZ = playerMesh.position.z;
     
-    // Ajustar también la línea de meta para la nueva escala
-    finishLine.minX = 260 * 1.5;
-    finishLine.maxX = 300 * 1.5;
-    finishLine.z = -325 * 1.5;
-    finishLine.width = 20 * 1.5;
-    
-    debug.textContent = "Circuito Jerez cargado y escalado 1.5x - Línea de meta activa";
+    debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
     
     // Inicializar sistemas
     initDamageSystem();
