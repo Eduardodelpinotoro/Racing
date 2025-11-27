@@ -3497,9 +3497,18 @@ hemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
 hemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
 hemiLight.intensity = 1.2;
 
-const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-0.5, -1, 0.5), scene);
-dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
-dirLight.intensity = 0.8;
+// CON ESTO:
+const dirLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-1, -2, -1), scene);
+dirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.85);
+dirLight.specular = new BABYLON.Color3(0.8, 0.8, 0.7);
+dirLight.intensity = 1.5;
+dirLight.shadowEnabled = true; // 🔥 ESTA LÍNEA ES CLAVE
+
+// GENERADOR DE SOMBRAS - AÑADE ESTO INMEDIATAMENTE DESPUÉS:
+const shadowGenerator = new BABYLON.ShadowGenerator(1024, dirLight);
+shadowGenerator.useBlurExponentialShadowMap = true;
+shadowGenerator.blurScale = 2;
+shadowGenerator.setDarkness(0.4);
 
 scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
