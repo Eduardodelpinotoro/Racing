@@ -3680,10 +3680,19 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO INTERLAGOS
+// CARGAR CIRCUITO INTERLAGOS
 BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
+    // AÑADE ESTO para escalar el circuito (1 = 100% del tamaño original)
+    scene.meshes.forEach(mesh => {
+        if (mesh !== playerMesh && mesh !== skySphere && mesh !== ghostCar) {
+            mesh.scaling = new BABYLON.Vector3(1, 1, 1);
+        }
+    });
+    
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
+    
     playerMesh.position.set(-824.16, 42.56, 765.72); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
@@ -3691,15 +3700,14 @@ BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
-    initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
-    initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
-    updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+    initLeaderboardSystem();
+    initMultiplayerSystem();
+    updateCockpitView();
+    initRearviewMirror();
     
 }, null, (s, msg) => { 
     console.error(msg); 
 });
-
 function keepGround() { 
     const ray = new BABYLON.Ray(
         playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
