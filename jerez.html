@@ -3686,8 +3686,9 @@ function checkFinishLine() {
 // CARGAR CIRCUITO JEREZ
 BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
-        // 🔥 ESCALAR EL CIRCUITO COMPLETO
+        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+            m.checkCollisions = true; 
+            // 🔥 ESCALAR EL CIRCUITO COMPLETO
             m.scaling = new BABYLON.Vector3(1.5, 1.5, 1.5); // 50% más grande
         } 
     });
@@ -3696,14 +3697,13 @@ BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     playerMesh.position.set(250 * 1.5, 73.5 * 1.5, -320 * 1.5); 
     prevPosZ = playerMesh.position.z;
     
-    debug.textContent = "Circuito Jerez cargado y escalado - Línea de meta activa";
-    });
+    // Ajustar también la línea de meta para la nueva escala
+    finishLine.minX = 260 * 1.5;
+    finishLine.maxX = 300 * 1.5;
+    finishLine.z = -325 * 1.5;
+    finishLine.width = 20 * 1.5;
     
-    // Posición inicial cerca de la línea de meta en Jerez
-    playerMesh.position.set(250, 73.5, -320); 
-    prevPosZ = playerMesh.position.z;
-    
-    debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
+    debug.textContent = "Circuito Jerez cargado y escalado 1.5x - Línea de meta activa";
     
     // Inicializar sistemas
     initDamageSystem();
