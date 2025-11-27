@@ -45,11 +45,35 @@
             margin-bottom: 30px;
         }
 
+        .difficulty-filter {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid #00ff00;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #00ff00;
+            color: black;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+        }
+
         .tracks-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 30px;
-            margin-top: 50px;
+            margin-top: 30px;
         }
 
         .track-card {
@@ -223,41 +247,18 @@
         <div class="header">
             <h1 class="title">CARRERAS DE ALTA VELOCIDAD</h1>
             <p class="subtitle">Selecciona tu circuito y demuestra tu habilidad al volante</p>
+            
+            <div class="difficulty-filter">
+                <button class="filter-btn active" data-filter="all">Todos</button>
+                <button class="filter-btn" data-filter="baja">Baja Dificultad</button>
+                <button class="filter-btn" data-filter="media">Media Dificultad</button>
+                <button class="filter-btn" data-filter="alta">Alta Dificultad</button>
+            </div>
         </div>
 
         <div class="tracks-grid">
-            <!-- Circuito SPA -->
-            <div class="track-card" onclick="selectTrack('spa')">
-                <div class="track-icon">🏁</div>
-                <h2 class="track-name">CIRCUITO DE SPA</h2>
-                <p class="track-location">Bélgica</p>
-                <p class="track-length">7.004 km - 19 Curvas</p>
-                
-                <div class="track-stats">
-                    <div class="stat">
-                        <div class="stat-value">7.0km</div>
-                        <div class="stat-label">Longitud</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">19</div>
-                        <div class="stat-label">Curvas</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value">1:41.2</div>
-                        <div class="stat-label">Récord</div>
-                    </div>
-                </div>
-
-                <div class="track-difficulty">
-                    <div class="difficulty-stars">★★★★★</div>
-                    <div class="difficulty-text">Alta Dificultad</div>
-                </div>
-
-                <button class="play-button">JUGAR EN SPA</button>
-            </div>
-
-            <!-- Circuito TSUKUBA -->
-            <div class="track-card" onclick="selectTrack('tsukuba')">
+            <!-- Circuito TSUKUBA (Baja Dificultad) -->
+            <div class="track-card" data-difficulty="baja" onclick="selectTrack('tsukuba')">
                 <div class="track-icon">🇯🇵</div>
                 <h2 class="track-name">CIRCUITO DE TSUKUBA</h2>
                 <p class="track-location">Japón</p>
@@ -286,8 +287,8 @@
                 <button class="play-button">JUGAR EN TSUKUBA</button>
             </div>
 
-            <!-- Circuito JEREZ -->
-            <div class="track-card" onclick="selectTrack('jerez')">
+            <!-- Circuito JEREZ (Media Dificultad) -->
+            <div class="track-card" data-difficulty="media" onclick="selectTrack('jerez')">
                 <div class="track-icon">🇪🇸</div>
                 <h2 class="track-name">CIRCUITO DE JEREZ</h2>
                 <p class="track-location">España</p>
@@ -314,6 +315,66 @@
                 </div>
 
                 <button class="play-button">JUGAR EN JEREZ</button>
+            </div>
+
+            <!-- Circuito INTERLAGOS (Alta Dificultad) -->
+            <div class="track-card" data-difficulty="alta" onclick="selectTrack('interlagos')">
+                <div class="track-icon">🏎️</div>
+                <h2 class="track-name">CIRCUITO DE INTERLAGOS</h2>
+                <p class="track-location">Brasil</p>
+                <p class="track-length">4.309 km - 15 Curvas</p>
+                
+                <div class="track-stats">
+                    <div class="stat">
+                        <div class="stat-value">4.3km</div>
+                        <div class="stat-label">Longitud</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">15</div>
+                        <div class="stat-label">Curvas</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">1:10.5</div>
+                        <div class="stat-label">Récord</div>
+                    </div>
+                </div>
+
+                <div class="track-difficulty">
+                    <div class="difficulty-stars">★★★★☆</div>
+                    <div class="difficulty-text">Alta Dificultad</div>
+                </div>
+
+                <button class="play-button">JUGAR EN INTERLAGOS</button>
+            </div>
+
+            <!-- Circuito SPA (Alta Dificultad) -->
+            <div class="track-card" data-difficulty="alta" onclick="selectTrack('spa')">
+                <div class="track-icon">🏁</div>
+                <h2 class="track-name">CIRCUITO DE SPA</h2>
+                <p class="track-location">Bélgica</p>
+                <p class="track-length">7.004 km - 19 Curvas</p>
+                
+                <div class="track-stats">
+                    <div class="stat">
+                        <div class="stat-value">7.0km</div>
+                        <div class="stat-label">Longitud</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">19</div>
+                        <div class="stat-label">Curvas</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">1:41.2</div>
+                        <div class="stat-label">Récord</div>
+                    </div>
+                </div>
+
+                <div class="track-difficulty">
+                    <div class="difficulty-stars">★★★★★</div>
+                    <div class="difficulty-text">Alta Dificultad</div>
+                </div>
+
+                <button class="play-button">JUGAR EN SPA</button>
             </div>
         </div>
 
@@ -367,30 +428,63 @@
                     window.location.href = 'jerez.html';
                 } else if (track === 'tsukuba') {
                     window.location.href = 'tsukuba.html';
+                } else if (track === 'interlagos') {
+                    window.location.href = 'interlagos.html';
                 }
             }, 300);
         }
 
-        // También hacer que los botones funcionen
-        document.querySelectorAll('.play-button').forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.stopPropagation(); // Evitar que se active dos veces
-                const trackCard = this.closest('.track-card');
-                const trackName = trackCard.querySelector('.track-name').textContent;
-                
-                if (trackName.includes('SPA')) {
-                    selectTrack('spa');
-                } else if (trackName.includes('TSUKUBA')) {
-                    selectTrack('tsukuba');
-                } else if (trackName.includes('JEREZ')) {
-                    selectTrack('jerez');
+        // Filtrar circuitos por dificultad
+        function filterTracks(difficulty) {
+            const tracks = document.querySelectorAll('.track-card');
+            
+            tracks.forEach(track => {
+                if (difficulty === 'all' || track.dataset.difficulty === difficulty) {
+                    track.style.display = 'block';
+                } else {
+                    track.style.display = 'none';
                 }
             });
-        });
+        }
 
         // Inicializar efectos cuando se carga la página
         document.addEventListener('DOMContentLoaded', function() {
             createParticles();
+            
+            // Configurar filtros de dificultad
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remover clase active de todos los botones
+                    filterButtons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Agregar clase active al botón clickeado
+                    this.classList.add('active');
+                    
+                    // Filtrar circuitos
+                    const filter = this.dataset.filter;
+                    filterTracks(filter);
+                });
+            });
+            
+            // También hacer que los botones funcionen
+            document.querySelectorAll('.play-button').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Evitar que se active dos veces
+                    const trackCard = this.closest('.track-card');
+                    const trackName = trackCard.querySelector('.track-name').textContent;
+                    
+                    if (trackName.includes('SPA')) {
+                        selectTrack('spa');
+                    } else if (trackName.includes('TSUKUBA')) {
+                        selectTrack('tsukuba');
+                    } else if (trackName.includes('JEREZ')) {
+                        selectTrack('jerez');
+                    } else if (trackName.includes('INTERLAGOS')) {
+                        selectTrack('interlagos');
+                    }
+                });
+            });
             
             // Efecto de entrada
             document.body.style.opacity = '0';
@@ -403,13 +497,15 @@
         // Efecto de teclado para accesibilidad
         document.addEventListener('keydown', function(e) {
             if (e.key === '1') {
-                selectTrack('spa');
-            } else if (e.key === '2') {
                 selectTrack('tsukuba');
-            } else if (e.key === '3') {
+            } else if (e.key === '2') {
                 selectTrack('jerez');
+            } else if (e.key === '3') {
+                selectTrack('interlagos');
+            } else if (e.key === '4') {
+                selectTrack('spa');
             }
         });
     </script>
 </body>
-                                                            </html>
+</html> 
