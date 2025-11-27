@@ -3684,7 +3684,7 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "spa.obj", scene, () => {
     // 🔥 ESCALA MUY GRANDE - Los OBJ suelen venir pequeños
     newMeshes.forEach(mesh => {
-        mesh.scaling.scaleInPlace(5000);
+        mesh.scaling.scaleInPlace(10000);
     });
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
