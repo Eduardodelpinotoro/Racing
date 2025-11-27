@@ -3694,6 +3694,10 @@ BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
     
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        // AÑADE ESTAS 2 LÍNEAS:
+            shadowGenerator.addShadowCaster(m);
+            m.receiveShadows = true;
+    }
     });
     playerMesh.position.set(-3780, 330, -3980); 
     prevPosZ = playerMesh.position.z;
@@ -3724,7 +3728,11 @@ function keepGround() {
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
 const maxRealKmH = 330;
 const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
-
+// POST-PROCESSING PARA MEJOR CALIDAD
+const pipeline = new BABYLON.DefaultRenderingPipeline("default", true, scene, [camera]);
+pipeline.samples = 4;
+pipeline.imageProcessingEnabled = true;
+pipeline.imageProcessing.contrast = 1.2;
 // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
 engine.runRenderLoop(() => {
     // Clima
