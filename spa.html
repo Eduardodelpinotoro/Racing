@@ -3682,6 +3682,10 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "spa.obj", scene, () => {
+    // 🔥 ESCALAR EL OBJ - AÑADE ESTAS 3 LÍNEAS
+    newMeshes.forEach(mesh => {
+        mesh.scaling.scaleInPlace(100); // Escala el OBJ
+    });
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
