@@ -3687,6 +3687,16 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        // 🔥 ESCALAR EL CIRCUITO COMPLETO
+            m.scaling = new BABYLON.Vector3(1.5, 1.5, 1.5); // 50% más grande
+        } 
+    });
+    
+    // Ajustar posición inicial según la nueva escala
+    playerMesh.position.set(250 * 1.5, 73.5 * 1.5, -320 * 1.5); 
+    prevPosZ = playerMesh.position.z;
+    
+    debug.textContent = "Circuito Jerez cargado y escalado - Línea de meta activa";
     });
     
     // Posición inicial cerca de la línea de meta en Jerez
