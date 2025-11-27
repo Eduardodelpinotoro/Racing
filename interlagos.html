@@ -3595,7 +3595,7 @@ let prevPosZ = 0;
 
 const finishLine = {
     minX: -824.16,
-    maxX: -825.10, 
+    maxX: -805.10, 
     z: 765,
     width: 30,
     resetThresholdExtra: 10
@@ -3695,7 +3695,7 @@ BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
     
     playerMesh.position.set(-824.16, 42.56, 765.72); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = 0; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
