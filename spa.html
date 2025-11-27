@@ -3681,7 +3681,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "spa.obj", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
