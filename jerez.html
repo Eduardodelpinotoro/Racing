@@ -3506,7 +3506,7 @@ scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
 // PLAYER
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 0.1, radius: 0.01}, scene);
 playerMesh.isVisible = false;
-playerMesh.checkCollisions = true;
+playerMesh.checkCollisions = false;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.01, 0.01, 0.01);
 playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.1, 0);
 
