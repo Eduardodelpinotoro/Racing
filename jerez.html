@@ -3684,7 +3684,45 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO JEREZ
-BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "jerez.glb", scene, (newScene) => {
+    // Encontrar el nodo raíz del modelo importado
+    let circuitRoot = null;
+    
+    // Buscar el nodo raíz (normalmente tiene un nombre específico o es el parent de todas las mallas)
+    scene.transformNodes.forEach(node => {
+        if (node.getChildMeshes().length > 0 && !circuitRoot) {
+            circuitRoot = node;
+        }
+    });
+    
+    // Si no encontramos un nodo raíz, usar la primera malla como referencia
+    if (!circuitRoot && scene.meshes.length > 0) {
+        circuitRoot = scene.meshes[0].parent;
+    }
+    
+    // Escalar todo el circuito desde el nodo raíz
+    const scaleFactor = 1.2; // Cambia este valor según necesites
+    
+    if (circuitRoot) {
+        // Escalar el nodo raíz mantiene la posición
+        circuitRoot.scaling.scaleInPlace(scaleFactor);
+        console.log("Circuito escalado desde nodo raíz:", circuitRoot.name);
+    } else {
+        // Fallback: escalar todas las mallas del circuito
+        scene.meshes.forEach(mesh => {
+            // Excluir mallas que no son parte del circuito
+            if (mesh !== playerMesh && 
+                mesh !== skySphere && 
+                mesh !== ghostCar && 
+                !mesh.name.includes('otherPlayer') &&
+                !mesh.name.includes('nameTag') &&
+                mesh.parent === null) { // Solo mallas sin parent
+                mesh.scaling.scaleInPlace(scaleFactor);
+            }
+        });
+        console.log("Circuito escalado malla por malla");
+    }
+    
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
@@ -3693,25 +3731,15 @@ BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     playerMesh.position.set(250, 73.5, -320); 
     prevPosZ = playerMesh.position.z;
     
-    debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
-    // AÑADE ESTO PARA ESCALAR EL CIRCUITO
-    scene.meshes.forEach(mesh => {
-        // Escalar solo las mallas del circuito, no el jugador, cielo, etc.
-        if (mesh !== playerMesh && 
-            mesh !== skySphere && 
-            mesh !== ghostCar && 
-            !mesh.name.includes('otherPlayer') &&
-            !mesh.name.includes('nameTag')) {
-            mesh.scaling.scaleInPlace(1.2); // Cambia 1.2 por el factor que necesites
-        }
-    });
+    debug.textContent = "Circuito Jerez cargado y escalado - Línea de meta activa";
+    
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
-    initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
-    initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
-    updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+    initLeaderboardSystem();
+    initMultiplayerSystem();
+    updateCockpitView();
+    initRearviewMirror();
     
 }, null, (s, msg) => { 
     console.error(msg); 
