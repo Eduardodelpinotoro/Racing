@@ -3471,7 +3471,7 @@ setupAnalogSlider(document.getElementById('brakeSlider'), brakeFill, v => brakeP
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
 const scene = new BABYLON.Scene(engine);
-scene.collisionsEnabled = true;
+scene.collisionsEnabled = false;
 
 // CIELO EXACTO
 const skySphere = BABYLON.MeshBuilder.CreateSphere("skySphere", { 
