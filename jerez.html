@@ -3775,19 +3775,20 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO JEREZ
 BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
-    // ESCALAR EL MODELO 100 VECES (inverso de 0.01)
+    // Escalar todos los meshes del circuito
+    scene.meshes.forEach(m => { 
+        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+            m.checkCollisions = true;
+            // ESCALAR EL MODELO 100 VECES (inverso de 0.01)
             m.scaling = new BABYLON.Vector3(100, 100, 100);
         }
-    
-    scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
     
-    // Posición inicial cerca de la línea de meta en Jerez
-    playerMesh.position.set(250, 73.5, -320); 
+    // Ajustar la posición inicial para el circuito escalado
+    playerMesh.position.set(250 * 100, 73.5 * 100, -320 * 100); 
     prevPosZ = playerMesh.position.z;
     
-    debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
+    debug.textContent = "Circuito Jerez cargado y escalado - Línea de meta activa";
     
     // Inicializar sistemas
     initDamageSystem();
@@ -3799,7 +3800,7 @@ BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
     
 }, null, (s, msg) => { 
     console.error(msg); 
-    debug.textContent = 'Error cargando jerez.glb'; 
+    debug.textContent = 'Error cargando jerez.obj'; 
 });
 
 function keepGround() { 
