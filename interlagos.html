@@ -3681,7 +3681,7 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO INTERLAGOS
 // CARGAR CIRCUITO INTERLAGOS
-BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "ls.glb", scene, () => {
     // AÑADE ESTO para escalar el circuito (1 = 100% del tamaño original)
     scene.meshes.forEach(mesh => {
         if (mesh !== playerMesh && mesh !== skySphere && mesh !== ghostCar) {
