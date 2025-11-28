@@ -3775,6 +3775,10 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO JEREZ
 BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
+    // ESCALAR EL MODELO 100 VECES (inverso de 0.01)
+            m.scaling = new BABYLON.Vector3(100, 100, 100);
+        }
+    });
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
