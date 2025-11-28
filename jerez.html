@@ -3780,7 +3780,7 @@ BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
         if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
             m.checkCollisions = true;
             // ESCALAR EL MODELO 100 VECES (inverso de 0.01)
-            m.scaling = new BABYLON.Vector3(100, 100, 100);
+            m.scaling = new BABYLON.Vector3(1000, 1000, 1000);
         }
     });
     
