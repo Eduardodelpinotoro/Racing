@@ -3780,12 +3780,12 @@ BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
         if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
             m.checkCollisions = true;
             // ESCALAR EL MODELO 100 VECES (inverso de 0.01)
-            m.scaling = new BABYLON.Vector3(1000, 1000, 1000);
+            m.scaling = new BABYLON.Vector3(10000, 10000, 10000);
         }
     });
     
     // Ajustar la posición inicial para el circuito escalado
-    playerMesh.position.set(250 * 100, 73.5 * 100, -320 * 100); 
+    playerMesh.position.set(250 * 100, 1 * 100, -320 * 100); 
     prevPosZ = playerMesh.position.z;
     
     debug.textContent = "Circuito Jerez cargado y escalado - Línea de meta activa";
