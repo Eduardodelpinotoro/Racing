@@ -3694,7 +3694,17 @@ BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
     prevPosZ = playerMesh.position.z;
     
     debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
-    
+    // AÑADE ESTO PARA ESCALAR EL CIRCUITO
+    scene.meshes.forEach(mesh => {
+        // Escalar solo las mallas del circuito, no el jugador, cielo, etc.
+        if (mesh !== playerMesh && 
+            mesh !== skySphere && 
+            mesh !== ghostCar && 
+            !mesh.name.includes('otherPlayer') &&
+            !mesh.name.includes('nameTag')) {
+            mesh.scaling.scaleInPlace(1.2); // Cambia 1.2 por el factor que necesites
+        }
+    });
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
