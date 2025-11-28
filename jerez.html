@@ -3774,13 +3774,13 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO JEREZ
-BABYLON.SceneLoader.Append("", "jerez.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "jerez.obj", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
     
     // Posición inicial cerca de la línea de meta en Jerez
-    playerMesh.position.set(250, 73.5, -320); 
+    playerMesh.position.set(250, 1, -320); 
     prevPosZ = playerMesh.position.z;
     
     debug.textContent = "Circuito Jerez cargado - Línea de meta activa";
