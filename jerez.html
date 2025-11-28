@@ -3504,7 +3504,7 @@ dirLight.intensity = 0.8;
 scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
 // PLAYER
-const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 0.5, radius: 0.2}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 3, 0.5);
