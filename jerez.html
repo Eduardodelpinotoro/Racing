@@ -832,11 +832,11 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <h4 style="margin:0 0 8px 0;text-align:center;">AJUSTE VISTA F1</h4>
     <div class="cockpit-control">
         <label>Tamaño: <span id="cockpitSizeValue">120</span>%</label>
-        <input type="range" id="cockpitSizeRange" min="80" max="200" value="120">
+        <input type="range" id="cockpitSizeRange" min="10" max="250" value="120">
     </div>
     <div class="cockpit-control">
         <label>Posición Vertical: <span id="cockpitPositionValue">30</span>%</label>
-        <input type="range" id="cockpitPositionRange" min="-500" max="60" value="30">
+        <input type="range" id="cockpitPositionRange" min="-1000" max="1000" value="30">
     </div>
     <div class="cockpit-control">
         <label>Posición Horizontal: <span id="cockpitHorizontalValue">50</span>%</label>
@@ -922,7 +922,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <input type="range" id="brakeRange" min="20" max="300" value="150">
 
     <label>Altura de Cámara: <span id="cameraHeightLabel">3.0</span> m</label>
-    <input type="range" id="cameraHeightRange" min="1.0" max="6.0" step="0.1" value="3.0">
+    <input type="range" id="cameraHeightRange" min="-1.0" max="6.0" step="0.01" value="1.0">
 
     <!-- NUEVO: Control de sensibilidad del joystick -->
     <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
@@ -3504,7 +3504,7 @@ dirLight.intensity = 0.8;
 scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
 // PLAYER
-const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 0.5, radius: 0.2}, scene);
+const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 0.05, radius: 0.2}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 3, 0.5);
