@@ -3685,7 +3685,7 @@ BABYLON.SceneLoader.Append("", "ls.glb", scene, () => {
     // AÑADE ESTO para escalar el circuito (1 = 100% del tamaño original)
     scene.meshes.forEach(mesh => {
         if (mesh !== playerMesh && mesh !== skySphere && mesh !== ghostCar) {
-            mesh.scaling = new BABYLON.Vector3(10, 10, 10);
+            mesh.scaling = new BABYLON.Vector3(3, 3, 3);
         }
     });
     
@@ -3693,7 +3693,7 @@ BABYLON.SceneLoader.Append("", "ls.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
     
-    playerMesh.position.set(-824.16, 1, 765.72); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0; // 180 grados - mira al contrario
     
