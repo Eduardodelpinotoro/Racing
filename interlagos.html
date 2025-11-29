@@ -1858,7 +1858,7 @@ function initRearviewMirror() {
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
     // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "br.glb", rearviewScene, () => {
+    BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
         rearviewScene.meshes.forEach(m => { 
             if (m !== mirrorSkySphere) m.checkCollisions = true; 
         });
@@ -3680,11 +3680,11 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO INTERLAGOS
-BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(-824.16, 42.56, 765.72); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
