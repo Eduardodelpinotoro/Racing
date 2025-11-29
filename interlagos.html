@@ -3681,67 +3681,9 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO INTERLAGOS
 // =========================
-// SISTEMA DE CARGA DE CIRCUITO EN PARTES
-// =========================
-const circuitParts = [
-    "ls1.glb",
-    "ls2.glb"
-];
 
-let loadedParts = 0;
-const totalParts = circuitParts.length;
 
-// Función para mostrar progreso de carga
-function updateLoadingProgress(loaded, total) {
-    const progress = (loaded / total) * 100;
-    debug.textContent = `Cargando circuito... ${loaded}/${total} partes (${progress.toFixed(1)}%)`;
-    
-    // Barra de progreso visual
-    if (!window.loadingBar) {
-        window.loadingBar = document.createElement('div');
-        window.loadingBar.style.cssText = `
-            position: absolute; 
-            top: 50%; 
-            left: 10%; 
-            width: 80%; 
-            height: 20px;
-            background: #333; 
-            border: 2px solid #fff; 
-            border-radius: 10px;
-            z-index: 1000;
-            overflow: hidden;
-        `;
-        window.loadingBar.innerHTML = `
-            <div id="progressBarFill" style="height:100%; width:0%; background:linear-gradient(90deg, #0f0, #0ff); transition:width 0.5s;"></div>
-            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; color:white; font-family:monospace; font-size:12px; line-height:20px;">
-                CARGANDO CIRCUITO...
-            </div>
-        `;
-        document.body.appendChild(window.loadingBar);
-    }
-    
-    const progressBar = document.getElementById('progressBarFill');
-    if (progressBar) {
-        progressBar.style.width = `${progress}%`;
-    }
-    
-    // Eliminar barra cuando termine
-    if (loaded === total) {
-        setTimeout(() => {
-            if (window.loadingBar) {
-                window.loadingBar.style.opacity = '0';
-                window.loadingBar.style.transition = 'opacity 1s';
-                setTimeout(() => {
-                    if (window.loadingBar) {
-                        window.loadingBar.remove();
-                        window.loadingBar = null;
-                    }
-                }, 1000);
-            }
-            debug.textContent = "Circuito cargado ✓ Listo para correr!";
-        }, 500);
-    }
-}
+
 
 // =========================
 // SISTEMA DE CARGA DE CIRCUITO EN PARTES
