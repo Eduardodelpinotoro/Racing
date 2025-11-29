@@ -3690,12 +3690,12 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
             m.checkCollisions = true;
             // Aplicar escala grande - ajusta este valor
-            m.scaling = new BABYLON.Vector3(500, 500, 500); // 500x más grande
+            m.scaling = new BABYLON.Vector3(5, 5, 5); // 500x más grande
         }
     });
     
     // Posición inicial - ajustada para el circuito escalado
-    playerMesh.position.set(0, 50, 0); 
+    playerMesh.position.set(0, 5, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0; // Mirar hacia adelante
     
@@ -3717,7 +3717,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), // Empezar más alto
+        playerMesh.position.add(new BABYLON.Vector3(0, 5, 0)), // Empezar más alto
         new BABYLON.Vector3(0, -1, 0), 
         100 // Rango mayor para el circuito escalado
     ); 
