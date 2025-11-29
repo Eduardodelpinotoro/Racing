@@ -1858,13 +1858,17 @@ function initRearviewMirror() {
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
     // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
-        rearviewScene.meshes.forEach(m => { 
-            if (m !== mirrorSkySphere) m.checkCollisions = true; 
-        });
-    }, null, (s, msg) => { 
-        console.error("Error cargando circuito en espejo:", msg); 
+    // En initRearviewMirror(), después de cargar el circuito:
+BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
+    rearviewScene.meshes.forEach(m => { 
+        if (m !== mirrorSkySphere) {
+            m.checkCollisions = true;
+            m.scaling = new BABYLON.Vector3(100, 100, 100); // MISMA ESCALA
+        }
     });
+}, null, (s, msg) => { 
+    console.error("Error cargando circuito en espejo:", msg); 
+});
     
     // Bucle de renderizado para el espejo
     rearviewEngine.runRenderLoop(() => {
@@ -3679,25 +3683,57 @@ function checkFinishLine() {
     prevPosZ = pos.z; 
 }
 
-// CARGAR CIRCUITO INTERLAGOS
+// CARGAR CIRCUITO LAGUNA SECA
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
+    console.log("✅ Circuito cargado. Aplicando escala...");
+    
+    // ESCALAR EL CIRCUITO A TAMAÑO REAL
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+            m.checkCollisions = true;
+            // Aplicar escala grande - prueba con estos valores:
+            m.scaling = new BABYLON.Vector3(100, 100, 100); // 100x más grande
+        }
     });
-    playerMesh.position.set(100, -1, 100); 
+    
+    // Posición inicial ajustada
+    playerMesh.position.set(0, 10, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = 0;
+    
+    // Sistema para ajustar escala automáticamente
+    setTimeout(() => {
+        const testScales = [100, 200, 500, 1000, 2000];
+        let currentScale = 0;
+        
+        const scaleInterval = setInterval(() => {
+            if (currentScale < testScales.length) {
+                const scale = testScales[currentScale];
+                scene.meshes.forEach(m => {
+                    if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+                        m.scaling = new BABYLON.Vector3(scale, scale, scale);
+                    }
+                });
+                console.log(`🔍 Probando escala: ${scale}x`);
+                currentScale++;
+            } else {
+                clearInterval(scaleInterval);
+                console.log("🏁 Fin de ajuste de escala");
+            }
+        }, 3000);
+        
+    }, 2000);
     
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
-    initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
-    initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
-    updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+    initLeaderboardSystem();
+    initMultiplayerSystem();
+    updateCockpitView();
+    initRearviewMirror();
     
 }, null, (s, msg) => { 
-    console.error(msg); 
+    console.error("Error cargando circuito:", msg); 
 });
 
 function keepGround() { 
