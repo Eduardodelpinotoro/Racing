@@ -3680,7 +3680,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
-BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=0", scene, () => {
+BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=1", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
