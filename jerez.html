@@ -2665,8 +2665,10 @@ let targetAccelerationTime = 15.0; // AUMENTADO (más lento)
 let brakeFriction = 5; // REDUCIDO
 let cameraHeight = 0; // BAJADO PARA ADAPTARSE A LA ESCALA
 let currentCar = 'f1';
-
-// =========================
+const CAMERA_SCALE = 0.1; // Reducir cámara 10 veces
+const PLAYER_SCALE = 0.1; // Reducir jugador 10 veces
+let cameraFOV = 0.8;
+    // =========================
 // SISTEMA DE MARCHAS REALISTA POR COCHE - AJUSTADO A NUEVA ESCALA
 // =========================
 const manualTransmissionToggle = document.getElementById("manualTransmissionToggle");
@@ -3711,7 +3713,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(0, 2.4, 0); 
+    playerMesh.position.set(0, 2, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
