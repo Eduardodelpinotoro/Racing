@@ -3718,16 +3718,25 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 1, 0)), // 10x más bajo
+        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), // Empezar MÁS ALTO
         new BABYLON.Vector3(0, -1, 0), 
-        2 // Distancia muy corta
+        20 // Distancia MÁS LARGA
     ); 
-    const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar && m !== skySphere); 
+    const hit = scene.pickWithRay(ray, m => {
+        return m !== playerMesh && 
+               m !== ghostCar && 
+               m !== skySphere &&
+               !m.name.includes('otherPlayer') &&
+               !m.name.includes('nameTag');
+    }); 
+    
     if (hit && hit.hit) {
-        playerMesh.position.y = hit.pickedPoint.y + 0.1; // Muy cerca del suelo
+        playerMesh.position.y = hit.pickedPoint.y + 1.5; // Altura normal del coche
+    } else {
+        // Si no detecta suelo, usar una altura por defecto
+        playerMesh.position.y = 2;
     }
-}
-
+        }
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
 const maxRealKmH = 300;
 const speedFactor = maxRealKmH / maxSpeed ; // Aumentado para sensación más rápida
