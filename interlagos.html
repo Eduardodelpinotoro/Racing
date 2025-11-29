@@ -3686,34 +3686,34 @@ function checkFinishLine() {
 
 
 // =========================
-// SISTEMA DE CARGA DE CIRCUITO EN PARTES
+// SISTEMA TOLERANTE A CARGA DUPLICADA
 // =========================
 const circuitParts = [
-    "ls1.glb",  // Primera mitad del circuito
-    "ls2.glb"   // Segunda mitad del circuito
+    "ls1.glb",
+    "ls2.glb"
 ];
 
 let loadedParts = 0;
-const totalParts = circuitParts.length;
 
 function loadCircuitPart(partIndex) {
     if (partIndex >= circuitParts.length) {
-        // ✅ TODAS LAS PARTES CARGADAS
-        console.log("✅ Circuito completo cargado");
+        console.log("✅ Todas las partes cargadas");
         
-        // Configurar colisiones
-        scene.meshes.forEach(m => { 
-            if (m !== playerMesh && m !== ghostCar && !m.name.includes('otherPlayer')) {
-                m.checkCollisions = true; 
+        // ELIMINAR DUPLICADOS (por nombre)
+        const meshNames = new Set();
+        scene.meshes.forEach(mesh => {
+            if (meshNames.has(mesh.name)) {
+                mesh.dispose(); // Eliminar duplicado
+            } else {
+                meshNames.add(mesh.name);
+                mesh.checkCollisions = true;
             }
         });
         
-        // Posición inicial
-        playerMesh.position.set(0, 0, 0); 
-        prevPosZ = playerMesh.position.z;
+        // Configuración inicial
+        playerMesh.position.set(100, 0, 0);
         camera.rotation.y = Math.PI;
         
-        // Inicializar sistemas
         initDamageSystem();
         initGhostSystem();
         initLeaderboardSystem();
@@ -3725,43 +3725,18 @@ function loadCircuitPart(partIndex) {
     }
     
     const partName = circuitParts[partIndex];
-    console.log(`🔄 Cargando: ${partName}`);
+    console.log(`Cargando: ${partName}`);
     
     BABYLON.SceneLoader.Append("", partName, scene, () => {
         loadedParts++;
-        
-        // 🔥 ARREGLAR ESCALA Y POSICIÓN DE LOS OBJETOS RECIÉN CARGADOS
-        scene.meshes.forEach(mesh => {
-            // Solo objetos del circuito (excluir jugador, cielo, etc.)
-            if (mesh !== playerMesh && 
-                mesh !== ghostCar && 
-                !mesh.name.includes('otherPlayer') &&
-                !mesh.name.includes('sky') &&
-                !mesh.name.includes('light') &&
-                !mesh.name.includes('camera')) {
-                
-                // Resetear escala a normal
-                mesh.scaling = new BABYLON.Vector3(1, 1, 1);
-                
-                // Si el objeto es muy pequeño, escalarlo
-                const boundingInfo = mesh.getBoundingInfo();
-                const size = boundingInfo.boundingBox.extendSize;
-                if (size.x < 5 && size.y < 5 && size.z < 5) {
-                    mesh.scaling = new BABYLON.Vector3(50, 50, 50);
-                }
-            }
-        });
-        
-        console.log(`✅ ${partName} cargado - Escalado aplicado`);
         loadCircuitPart(partIndex + 1);
-        
     }, null, (s, msg) => { 
-        console.error(`❌ Error cargando ${partName}:`, msg);
+        console.error(`Error en ${partName}:`, msg);
         loadCircuitPart(partIndex + 1);
     });
 }
 
-// INICIAR CARGA
+// Iniciar carga
 loadCircuitPart(0);
     
 
