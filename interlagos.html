@@ -3718,12 +3718,14 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 0, 0)), // Empezar más alto
+        playerMesh.position.add(new BABYLON.Vector3(0, 1, 0)), // 10x más bajo
         new BABYLON.Vector3(0, -1, 0), 
-        100 // Rango mayor para el circuito escalado
+        2 // Distancia muy corta
     ); 
     const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar && m !== skySphere); 
-    if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; 
+    if (hit && hit.hit) {
+        playerMesh.position.y = hit.pickedPoint.y + 0.1; // Muy cerca del suelo
+    }
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
