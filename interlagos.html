@@ -3683,12 +3683,21 @@ function checkFinishLine() {
 // CARGAR CIRCUITO LAGUNA SECA
 // CARGAR CIRCUITO LAGUNA SECA
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
+    console.log("✅ Circuito cargado. Aplicando escala...");
+    
+    // ESCALAR EL CIRCUITO A TAMAÑO REAL
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+            m.checkCollisions = true;
+            // Aplicar escala grande - ajusta este valor
+            m.scaling = new BABYLON.Vector3(500, 500, 500); // 500x más grande
+        }
     });
-    playerMesh.position.set(100, -2, 100); 
+    
+    // Posición inicial - ajustada para el circuito escalado
+    playerMesh.position.set(0, 50, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = 0; // Mirar hacia adelante
     
     // Inicializar sistemas
     initDamageSystem();
@@ -3701,16 +3710,18 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 }, null, (s, msg) => { 
     console.error("Error cargando circuito:", msg); 
 });
+     
+    
     
     
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 0, 0)), 
+        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), // Empezar más alto
         new BABYLON.Vector3(0, -1, 0), 
-        50
+        100 // Rango mayor para el circuito escalado
     ); 
-    const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar); 
+    const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar && m !== skySphere); 
     if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; 
 }
 
