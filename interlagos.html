@@ -3679,26 +3679,30 @@ function checkFinishLine() {
     prevPosZ = pos.z; 
 }
 
-// CARGAR CIRCUITO INTERLAGOS
-BABYLON.SceneLoader.Append("", "br.glb", scene, () => {
+// CARGAR CIRCUITO LAGUNA SECA
+BABYLON.SceneLoader.Append("", "https://drive.google.com/uc?export=download&id=1O-iYwAW2O3DxjgKDV9UTFrcMPGFDSa4N", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(-824.16, 42.56, 765.72); 
+    // Posición inicial ajustada para Laguna Seca
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = 0;
     
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
-    initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
-    initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
-    updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+    initLeaderboardSystem();
+    initMultiplayerSystem();
+    updateCockpitView();
+    initRearviewMirror();
     
 }, null, (s, msg) => { 
     console.error(msg); 
 });
+
+
+
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
