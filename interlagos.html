@@ -3680,34 +3680,120 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO INTERLAGOS
-// CARGAR CIRCUITO INTERLAGOS
-BABYLON.SceneLoader.Append("", "ls.glb", scene, () => {
-    // AÑADE ESTO para escalar el circuito (1 = 100% del tamaño original)
-    scene.meshes.forEach(mesh => {
-        if (mesh !== playerMesh && mesh !== skySphere && mesh !== ghostCar) {
-            mesh.scaling = new BABYLON.Vector3(1, 1, 1);
-        }
+// =========================
+// SISTEMA DE CARGA DE CIRCUITO EN PARTES
+// =========================
+const circuitParts = [
+    "ls1.glb",
+    "ls2.glb"
+];
+
+let loadedParts = 0;
+const totalParts = circuitParts.length;
+
+// Función para mostrar progreso de carga
+function updateLoadingProgress(loaded, total) {
+    const progress = (loaded / total) * 100;
+    debug.textContent = `Cargando circuito... ${loaded}/${total} partes (${progress.toFixed(1)}%)`;
+    
+    // Barra de progreso visual
+    if (!window.loadingBar) {
+        window.loadingBar = document.createElement('div');
+        window.loadingBar.style.cssText = `
+            position: absolute; 
+            top: 50%; 
+            left: 10%; 
+            width: 80%; 
+            height: 20px;
+            background: #333; 
+            border: 2px solid #fff; 
+            border-radius: 10px;
+            z-index: 1000;
+            overflow: hidden;
+        `;
+        window.loadingBar.innerHTML = `
+            <div id="progressBarFill" style="height:100%; width:0%; background:linear-gradient(90deg, #0f0, #0ff); transition:width 0.5s;"></div>
+            <div style="position:absolute; top:0; left:0; width:100%; text-align:center; color:white; font-family:monospace; font-size:12px; line-height:20px;">
+                CARGANDO CIRCUITO...
+            </div>
+        `;
+        document.body.appendChild(window.loadingBar);
+    }
+    
+    const progressBar = document.getElementById('progressBarFill');
+    if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+    }
+    
+    // Eliminar barra cuando termine
+    if (loaded === total) {
+        setTimeout(() => {
+            if (window.loadingBar) {
+                window.loadingBar.style.opacity = '0';
+                window.loadingBar.style.transition = 'opacity 1s';
+                setTimeout(() => {
+                    if (window.loadingBar) {
+                        window.loadingBar.remove();
+                        window.loadingBar = null;
+                    }
+                }, 1000);
+            }
+            debug.textContent = "Circuito cargado ✓ Listo para correr!";
+        }, 500);
+    }
+}
+
+// Función principal para cargar partes del circuito
+function loadCircuitPart(partIndex) {
+    if (partIndex >= circuitParts.length) {
+        // ✅ TODAS LAS PARTES CARGADAS
+        console.log("✅ Circuito completo cargado");
+        updateLoadingProgress(totalParts, totalParts);
+        
+        // Configurar colisiones para todas las mallas
+        scene.meshes.forEach(m => { 
+            if (m !== playerMesh && m !== ghostCar && !m.name.includes('otherPlayer')) {
+                m.checkCollisions = true; 
+            }
+        });
+        
+        // Posición inicial del jugador
+        playerMesh.position.set(-3780, 330, -3980); 
+        prevPosZ = playerMesh.position.z;
+        camera.rotation.y = Math.PI;
+        
+        // Inicializar todos los sistemas del juego
+        initDamageSystem();
+        initGhostSystem();
+        initLeaderboardSystem();
+        initMultiplayerSystem();
+        updateCockpitView();
+        initRearviewMirror();
+        
+        return;
+    }
+    
+    const partName = circuitParts[partIndex];
+    console.log(`🔄 Cargando parte ${partIndex + 1}/${totalParts}: ${partName}`);
+    updateLoadingProgress(partIndex, totalParts);
+    
+    // Cargar la parte actual del circuito
+    BABYLON.SceneLoader.Append("", partName, scene, () => {
+        loadedParts++;
+        console.log(`✅ Parte ${partIndex + 1} cargada correctamente`);
+        
+        // Cargar siguiente parte
+        loadCircuitPart(partIndex + 1);
+    }, null, (s, msg) => { 
+        console.error(`❌ Error cargando parte ${partName}:`, msg);
+        // Intentar cargar siguiente parte aunque falle esta
+        console.log("⚠️ Continuando con siguiente parte...");
+        loadCircuitPart(partIndex + 1);
     });
-    
-    scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
-    });
-    
-    playerMesh.position.set(0, 0, 0); 
-    prevPosZ = playerMesh.position.z;
-    camera.rotation.y = 0; // 180 grados - mira al contrario
-    
-    // Inicializar sistemas
-    initDamageSystem();
-    initGhostSystem();
-    initLeaderboardSystem();
-    initMultiplayerSystem();
-    updateCockpitView();
-    initRearviewMirror();
-    
-}, null, (s, msg) => { 
-    console.error(msg); 
-});
+}
+
+// INICIAR CARGA DEL CIRCUITO
+loadCircuitPart(0);
 function keepGround() { 
     const ray = new BABYLON.Ray(
         playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
