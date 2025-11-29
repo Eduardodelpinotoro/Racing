@@ -3507,8 +3507,9 @@ scene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
 const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 1.8, radius: 0.3}, scene);
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
-playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 3, 0.5);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0);
+playerMesh.ellipsoid = new BABYLON.Vector3(0.05, 3, 0.05);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.2, 0);
+playerMesh.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // 10 veces más pequeño    
 
 // CAMERA
 const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, cameraHeight, 0), scene);
