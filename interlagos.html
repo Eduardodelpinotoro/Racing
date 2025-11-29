@@ -3680,8 +3680,7 @@ function checkFinishLine() {
     prevPosZ = pos.z; 
 }
 
-// CARGAR CIRCUITO LAGUNA SECA
-// CARGAR CIRCUITO LAGUNA SECA
+// // CARGAR CIRCUITO LAGUNA SECA
 BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=1", scene, (scene) => {
     console.log("Circuito cargado. Número de mallas:", scene.meshes.length);
     
@@ -3690,42 +3689,63 @@ BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje
         console.log(`Malla ${index}: ${mesh.name} - Posición:`, mesh.position, "Escala:", mesh.scaling);
     });
     
-    // Hacer el circuito visible y con colisiones
-    scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) {
-            m.checkCollisions = true;
-            m.isVisible = true;
+    // Aplicar diferentes escalas para probar
+    scene.meshes.forEach(mesh => {
+        if (mesh !== playerMesh && mesh !== ghostCar && mesh !== skySphere) {
+            mesh.checkCollisions = true;
+            mesh.isVisible = true;
+            
+            // Probar con escala grande (puede que el circuito sea muy pequeño)
+            mesh.scaling = new BABYLON.Vector3(100, 100, 100);
         }
     });
     
-    // Posición inicial más alta para ver mejor
-    playerMesh.position.set(0, 0, 0);
+    // Posición inicial más alta
+    playerMesh.position.set(0, 200, 0);
     
-    // Buscar el circuito automáticamente
+    // Probar diferentes escalas automáticamente
     setTimeout(() => {
-        const testPositions = [
-            {x: 0, y: 50, z: 0},
-            {x: 100, y: 50, z: 0},
-            {x: -100, y: 50, z: 0},
-            {x: 0, y: 50, z: 100},
-            {x: 0, y: 50, z: -100},
-            {x: 500, y: 100, z: 500}
-        ];
+        const testScales = [1000, 500, 100, 50, 10, 1, 0.1, 0.01];
+        let currentScale = 0;
         
-        let currentTest = 0;
-        const testInterval = setInterval(() => {
-            if (currentTest < testPositions.length) {
-                const pos = testPositions[currentTest];
-                playerMesh.position.set(pos.x, pos.y, pos.z);
-                console.log(`Probando posición:`, pos);
-                currentTest++;
+        const scaleInterval = setInterval(() => {
+            if (currentScale < testScales.length) {
+                const scale = testScales[currentScale];
+                scene.meshes.forEach(mesh => {
+                    if (mesh !== playerMesh && mesh !== ghostCar && mesh !== skySphere) {
+                        mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
+                    }
+                });
+                console.log(`Probando escala: ${scale}x`);
+                currentScale++;
             } else {
-                clearInterval(testInterval);
-                console.log("Fin de pruebas de posición");
+                clearInterval(scaleInterval);
+                console.log("Fin de pruebas de escala");
+                
+                // Si no se encontró, probar posiciones extremas
+                const testPositions = [
+                    {x: 0, y: 1000, z: 0},
+                    {x: 10000, y: 1000, z: 10000},
+                    {x: -10000, y: 1000, z: -10000},
+                    {x: 50000, y: 5000, z: 50000}
+                ];
+                
+                let currentPos = 0;
+                const posInterval = setInterval(() => {
+                    if (currentPos < testPositions.length) {
+                        const pos = testPositions[currentPos];
+                        playerMesh.position.set(pos.x, pos.y, pos.z);
+                        console.log(`Probando posición extrema:`, pos);
+                        currentPos++;
+                    } else {
+                        clearInterval(posInterval);
+                        console.log("Fin de todas las pruebas");
+                    }
+                }, 3000);
             }
-        }, 2000);
+        }, 3000);
         
-    }, 3000);
+    }, 2000);
     
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0;
