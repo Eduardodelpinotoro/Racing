@@ -1863,7 +1863,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
     rearviewScene.meshes.forEach(m => { 
         if (m !== mirrorSkySphere) {
             m.checkCollisions = true;
-            m.scaling = new BABYLON.Vector3(100, 100, 100); // MISMA ESCALA
+            m.scaling = new BABYLON.Vector3(10, 10, 10); // MISMA ESCALA
         }
     });
 }, null, (s, msg) => { 
@@ -3692,12 +3692,12 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
             m.checkCollisions = true;
             // Aplicar escala grande - prueba con estos valores:
-            m.scaling = new BABYLON.Vector3(100, 100, 100); // 100x más grande
+            m.scaling = new BABYLON.Vector3(10, 10, 10); // 100x más grande
         }
     });
     
     // Posición inicial ajustada
-    playerMesh.position.set(0, 50, 0); 
+    playerMesh.position.set(0, 10, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0;
     
