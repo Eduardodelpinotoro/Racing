@@ -1857,14 +1857,15 @@ function initRearviewMirror() {
 
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
-    // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=0", rearviewScene, () => {
-        rearviewScene.meshes.forEach(m => { 
-            if (m !== mirrorSkySphere) m.checkCollisions = true; 
-        });
-    }, null, (s, msg) => { 
-        console.error("Error cargando circuito en espejo:", msg); 
+    // Y también cambia en el espejo retrovisor:
+BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=1", rearviewScene, () => {
+    rearviewScene.meshes.forEach(m => { 
+        if (m !== mirrorSkySphere) m.checkCollisions = true; 
     });
+}, null, (s, msg) => { 
+    console.error("Error cargando circuito en espejo:", msg); 
+});
+
     
     // Bucle de renderizado para el espejo
     rearviewEngine.runRenderLoop(() => {
@@ -3680,16 +3681,55 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
-BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=1", scene, () => {
-    scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+// CARGAR CIRCUITO LAGUNA SECA
+BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=1", scene, (scene) => {
+    console.log("Circuito cargado. Número de mallas:", scene.meshes.length);
+    
+    // Listar todas las mallas para debug
+    scene.meshes.forEach((mesh, index) => {
+        console.log(`Malla ${index}: ${mesh.name} - Posición:`, mesh.position, "Escala:", mesh.scaling);
     });
-    // Posición inicial ajustada para Laguna Seca
-    playerMesh.position.set(0, 10, 0); 
+    
+    // Hacer el circuito visible y con colisiones
+    scene.meshes.forEach(m => { 
+        if (m !== playerMesh && m !== ghostCar) {
+            m.checkCollisions = true;
+            m.isVisible = true;
+        }
+    });
+    
+    // Posición inicial más alta para ver mejor
+    playerMesh.position.set(0, 100, 0);
+    
+    // Buscar el circuito automáticamente
+    setTimeout(() => {
+        const testPositions = [
+            {x: 0, y: 50, z: 0},
+            {x: 100, y: 50, z: 0},
+            {x: -100, y: 50, z: 0},
+            {x: 0, y: 50, z: 100},
+            {x: 0, y: 50, z: -100},
+            {x: 500, y: 100, z: 500}
+        ];
+        
+        let currentTest = 0;
+        const testInterval = setInterval(() => {
+            if (currentTest < testPositions.length) {
+                const pos = testPositions[currentTest];
+                playerMesh.position.set(pos.x, pos.y, pos.z);
+                console.log(`Probando posición:`, pos);
+                currentTest++;
+            } else {
+                clearInterval(testInterval);
+                console.log("Fin de pruebas de posición");
+            }
+        }, 2000);
+        
+    }, 3000);
+    
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0;
     
-    // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
     initLeaderboardSystem();
@@ -3697,9 +3737,12 @@ BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje
     updateCockpitView();
     initRearviewMirror();
     
-}, null, (s, msg) => { 
-    console.error(msg); 
+}, (progress) => {
+    console.log("Cargando:", progress.loaded + "/" + progress.total);
+}, (s, msg) => { 
+    console.error("Error cargando circuito:", msg);
 });
+
 
 
 
