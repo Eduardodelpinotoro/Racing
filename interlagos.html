@@ -3691,7 +3691,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== skySphere) {
-            m.checkCollisions = fase;
+            m.checkCollisions = true;
             
             // Buscar el mesh principal de la pista
             if (m.name && (m.name.toLowerCase().includes('track') || 
