@@ -3695,7 +3695,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     });
     
     // Posición inicial - ajustada para el circuito escalado
-    playerMesh.position.set(0, 1, 0); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0; // Mirar hacia adelante
     
@@ -3717,7 +3717,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 1, 0)), // Empezar más alto
+        playerMesh.position.add(new BABYLON.Vector3(0, 0, 0)), // Empezar más alto
         new BABYLON.Vector3(0, -1, 0), 
         100 // Rango mayor para el circuito escalado
     ); 
