@@ -3680,68 +3680,52 @@ function checkFinishLine() {
     prevPosZ = pos.z; 
 }
 
-// // CARGAR CIRCUITO LAGUNA SECA
+
+    
+// CARGAR CIRCUITO LAGUNA SECA DESDE MEGA
 BABYLON.SceneLoader.Append("", "https://mega.nz/file/cIM2zKxb#0tizpJGYvnDsleePwwrXaJiIkCYsVswStAOHw9TL8MA", scene, (scene) => {
-    console.log("Circuito cargado. Número de mallas:", scene.meshes.length);
+    console.log("✅ Circuito Laguna Seca cargado EXITOSAMENTE");
+    console.log("Número de mallas:", scene.meshes.length);
     
     // Listar todas las mallas para debug
     scene.meshes.forEach((mesh, index) => {
-        console.log(`Malla ${index}: ${mesh.name} - Posición:`, mesh.position, "Escala:", mesh.scaling);
-    });
-    
-    // Aplicar diferentes escalas para probar
-    scene.meshes.forEach(mesh => {
         if (mesh !== playerMesh && mesh !== ghostCar && mesh !== skySphere) {
-            mesh.checkCollisions = true;
-            mesh.isVisible = true;
+            console.log(`Malla ${index}: ${mesh.name} - Posición:`, mesh.position, "Escala:", mesh.scaling);
             
-            // Probar con escala grande (puede que el circuito sea muy pequeño)
-            mesh.scaling = new BABYLON.Vector3(100, 100, 100);
+            // Hacer visible y con colisiones
+            mesh.isVisible = true;
+            mesh.checkCollisions = true;
+            
+            // Probar diferentes escalas si es necesario
+            mesh.scaling = new BABYLON.Vector3(1, 1, 1);
         }
     });
     
-    // Posición inicial más alta
-    playerMesh.position.set(0, 200, 0);
+    // Posición inicial - probar diferentes alturas
+    playerMesh.position.set(0, 100, 0);
     
-    // Probar diferentes escalas automáticamente
+    // Sistema para encontrar la posición correcta
     setTimeout(() => {
-        const testScales = [1000, 500, 100, 50, 10, 1, 0.1, 0.01];
-        let currentScale = 0;
+        const testPositions = [
+            {x: 0, y: 50, z: 0},
+            {x: 0, y: 10, z: 0},
+            {x: 0, y: 5, z: 0},
+            {x: 100, y: 50, z: 0},
+            {x: -100, y: 50, z: 0},
+            {x: 0, y: 50, z: 100},
+            {x: 0, y: 50, z: -100}
+        ];
         
-        const scaleInterval = setInterval(() => {
-            if (currentScale < testScales.length) {
-                const scale = testScales[currentScale];
-                scene.meshes.forEach(mesh => {
-                    if (mesh !== playerMesh && mesh !== ghostCar && mesh !== skySphere) {
-                        mesh.scaling = new BABYLON.Vector3(scale, scale, scale);
-                    }
-                });
-                console.log(`Probando escala: ${scale}x`);
-                currentScale++;
+        let currentTest = 0;
+        const testInterval = setInterval(() => {
+            if (currentTest < testPositions.length) {
+                const pos = testPositions[currentTest];
+                playerMesh.position.set(pos.x, pos.y, pos.z);
+                console.log(`🔍 Probando posición:`, pos);
+                currentTest++;
             } else {
-                clearInterval(scaleInterval);
-                console.log("Fin de pruebas de escala");
-                
-                // Si no se encontró, probar posiciones extremas
-                const testPositions = [
-                    {x: 0, y: 1000, z: 0},
-                    {x: 10000, y: 1000, z: 10000},
-                    {x: -10000, y: 1000, z: -10000},
-                    {x: 50000, y: 5000, z: 50000}
-                ];
-                
-                let currentPos = 0;
-                const posInterval = setInterval(() => {
-                    if (currentPos < testPositions.length) {
-                        const pos = testPositions[currentPos];
-                        playerMesh.position.set(pos.x, pos.y, pos.z);
-                        console.log(`Probando posición extrema:`, pos);
-                        currentPos++;
-                    } else {
-                        clearInterval(posInterval);
-                        console.log("Fin de todas las pruebas");
-                    }
-                }, 3000);
+                clearInterval(testInterval);
+                console.log("🏁 Fin de búsqueda de posición");
             }
         }, 3000);
         
@@ -3750,6 +3734,7 @@ BABYLON.SceneLoader.Append("", "https://mega.nz/file/cIM2zKxb#0tizpJGYvnDsleePww
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0;
     
+    // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
     initLeaderboardSystem();
@@ -3758,10 +3743,16 @@ BABYLON.SceneLoader.Append("", "https://mega.nz/file/cIM2zKxb#0tizpJGYvnDsleePww
     initRearviewMirror();
     
 }, (progress) => {
-    console.log("Cargando:", progress.loaded + "/" + progress.total);
+    const percent = ((progress.loaded / progress.total) * 100).toFixed(1);
+    console.log(`📥 Cargando circuito: ${percent}%`);
 }, (s, msg) => { 
-    console.error("Error cargando circuito:", msg);
+    console.error("❌ Error cargando circuito:", msg);
 });
+
+
+        
+        
+
 
 
 
