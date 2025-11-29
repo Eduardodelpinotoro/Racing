@@ -3682,23 +3682,24 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
-// CARGAR CIRCUITO LAGUNA SECA
+// CARGAR CIRCUITO LAGUNA SECA - CORREGIDO (JUGADOR PEQUEÑO)
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    console.log("✅ Circuito cargado. Aplicando escala...");
+    console.log("✅ Circuito cargado. Ajustando jugador...");
     
-    // ESCALAR EL CIRCUITO A TAMAÑO REAL
+    // HACER EL JUGADOR MÁS PEQUEÑO para que encaje con el circuito pequeño
+    playerMesh.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // 10x más pequeño
+    
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
             m.checkCollisions = true;
-            // Aplicar escala grande - ajusta este valor
-            m.scaling = new BABYLON.Vector3(1, 1, 1); // 500x más grande
+            // NO escalar el circuito - mantener tamaño original
         }
     });
     
-    // Posición inicial - ajustada para el circuito escalado
-    playerMesh.position.set(0, 0, 0); 
+    // Posición inicial - ajustada para circuito pequeño
+    playerMesh.position.set(0, 0.5, 0); // Altura ajustada para jugador pequeño
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = 0; // Mirar hacia adelante
+    camera.rotation.y = 0;
     
     // Inicializar sistemas
     initDamageSystem();
@@ -3715,19 +3716,15 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
+        playerMesh.position.add(new BABYLON.Vector3(0, 2, 0)), // Menor altura para jugador pequeño
         new BABYLON.Vector3(0, -1, 0), 
-        20 // Distancia más corta para circuito pequeño
+        10 // Distancia más corta para jugador pequeño
     ); 
     const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar && m !== skySphere); 
     if (hit && hit.hit) {
-        // Para circuito pequeño, ajustar la altura de contacto
-        playerMesh.position.y = hit.pickedPoint.y + 0.5; // Muy poca altura
-    } else {
-        // Si no hay contacto, poner en altura mínima
-        playerMesh.position.y = 0.5;
+        playerMesh.position.y = hit.pickedPoint.y + 0.2; // Muy poca altura para jugador pequeño
     }
-                                                                                                         }    
+}                                                                                                     }    
     
 
 
