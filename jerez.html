@@ -3714,6 +3714,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) {
             m.checkCollisions = true;
+            m.position.y += 0.5;
             // Asegurar que los meshes tienen geometría de colisión
             if (!m.ellipsoid) {
                 m.ellipsoid = new BABYLON.Vector3(1, 1, 1);
