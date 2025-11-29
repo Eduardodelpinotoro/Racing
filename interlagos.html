@@ -3682,22 +3682,39 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
-// CARGAR CIRCUITO LAGUNA SECA - CORREGIDO (JUGADOR PEQUEÑO)
+// CARGAR CIRCUITO LAGUNA SECA - SIN ESCALAR
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    console.log("✅ Circuito cargado. Ajustando jugador...");
+    console.log("✅ Circuito cargado. Buscando pista...");
     
-    // HACER EL JUGADOR MÁS PEQUEÑO para que encaje con el circuito pequeño
-    playerMesh.scaling = new BABYLON.Vector3(0.1, 0.1, 0.1); // 10x más pequeño
+    // NO ESCALAR - mantener tamaño original
+    let trackMesh = null;
     
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
+        if (m !== playerMesh && m !== skySphere) {
             m.checkCollisions = true;
-            // NO escalar el circuito - mantener tamaño original
+            
+            // Buscar el mesh principal de la pista
+            if (m.name && (m.name.toLowerCase().includes('track') || 
+                           m.name.toLowerCase().includes('road') ||
+                           m.name.toLowerCase().includes('circuit') ||
+                           m.geometry)) {
+                trackMesh = m;
+                console.log("✅ Mesh de pista encontrado:", m.name);
+            }
         }
     });
     
-    // Posición inicial - ajustada para circuito pequeño
-    playerMesh.position.set(0, 0.5, 0); // Altura ajustada para jugador pequeño
+    // Si encontramos la pista, posicionar al jugador encima
+    if (trackMesh) {
+        playerMesh.position.copyFrom(trackMesh.position);
+        playerMesh.position.y += 5; // 5 unidades arriba de la pista
+        console.log("📍 Posicionado encima de la pista:", trackMesh.name);
+    } else {
+        // Si no encontramos pista, usar posición por defecto
+        playerMesh.position.set(0, 10, 0);
+        console.log("⚠️ Usando posición por defecto");
+    }
+    
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = 0;
     
@@ -3712,18 +3729,48 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 }, null, (s, msg) => { 
     console.error("Error cargando circuito:", msg); 
 });
-     
-    
+
 function keepGround() { 
-    const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 2, 0)), // Menor altura para jugador pequeño
-        new BABYLON.Vector3(0, -1, 0), 
-        10 // Distancia más corta para jugador pequeño
-    ); 
-    const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar && m !== skySphere); 
-    if (hit && hit.hit) {
-        playerMesh.position.y = hit.pickedPoint.y + 0.2; // Muy poca altura para jugador pequeño
+    // Lanzar rayos en varias direcciones para encontrar el suelo
+    const rayDirections = [
+        new BABYLON.Vector3(0, -1, 0),  // Abajo
+        new BABYLON.Vector3(0, -1, 0.2), // Abajo + adelante
+        new BABYLON.Vector3(0.2, -1, 0), // Abajo + derecha
+        new BABYLON.Vector3(0, -1, -0.2) // Abajo + atrás
+    ];
+    
+    let groundFound = false;
+    
+    for (let dir of rayDirections) {
+        const ray = new BABYLON.Ray(
+            playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)),
+            dir,
+            50
+        );
+        
+        const hit = scene.pickWithRay(ray, m => {
+            return m !== playerMesh && 
+                   m !== skySphere && 
+                   m.name && m.name.length > 0;
+        });
+        
+        if (hit && hit.hit) {
+            console.log("✅ Contacto con:", hit.pickedMesh?.name, "distancia:", hit.distance.toFixed(2));
+            playerMesh.position.y = hit.pickedPoint.y + 2;
+            groundFound = true;
+            break;
+        }
     }
+    
+    if (!groundFound) {
+        console.log("❌ No se encontró suelo, manteniendo altura actual");
+        // Si no encontramos suelo, mantener altura mínima
+        if (playerMesh.position.y < 5) {
+            playerMesh.position.y = 5;
+        }
+    }
+}
+        
                                                                                                      }    
     
 
