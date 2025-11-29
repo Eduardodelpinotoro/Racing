@@ -1858,13 +1858,10 @@ function initRearviewMirror() {
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
     // Cargar el circuito en la escena del espejo
-    // En initRearviewMirror(), después de cargar el circuito:
+// En initRearviewMirror()
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
     rearviewScene.meshes.forEach(m => { 
-        if (m !== mirrorSkySphere) {
-            m.checkCollisions = true;
-            m.scaling = new BABYLON.Vector3(1, 1, 1); // MISMA ESCALA
-        }
+        if (m !== mirrorSkySphere) m.checkCollisions = true; 
     });
 }, null, (s, msg) => { 
     console.error("Error cargando circuito en espejo:", msg); 
@@ -3684,45 +3681,14 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
+// CARGAR CIRCUITO LAGUNA SECA
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    console.log("✅ Circuito cargado. Aplicando escala...");
-    
-    // ESCALAR EL CIRCUITO A TAMAÑO REAL
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
-            m.checkCollisions = true;
-            // Aplicar escala grande - prueba con estos valores:
-            m.scaling = new BABYLON.Vector3(1, 1, 1); // 100x más grande
-        }
+        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    
-    // Posición inicial ajustada
-    playerMesh.position.set(0, 1, 0); 
+    playerMesh.position.set(100, -1, 100); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = 0;
-    
-    // Sistema para ajustar escala automáticamente
-    setTimeout(() => {
-        const testScales = [100, 200, 500, 1000, 2000];
-        let currentScale = 0;
-        
-        const scaleInterval = setInterval(() => {
-            if (currentScale < testScales.length) {
-                const scale = testScales[currentScale];
-                scene.meshes.forEach(m => {
-                    if (m !== playerMesh && m !== ghostCar && m !== skySphere) {
-                        m.scaling = new BABYLON.Vector3(scale, scale, scale);
-                    }
-                });
-                console.log(`🔍 Probando escala: ${scale}x`);
-                currentScale++;
-            } else {
-                clearInterval(scaleInterval);
-                console.log("🏁 Fin de ajuste de escala");
-            }
-        }, 3000);
-        
-    }, 2000);
+    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
@@ -3735,6 +3701,8 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 }, null, (s, msg) => { 
     console.error("Error cargando circuito:", msg); 
 });
+    
+    
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
