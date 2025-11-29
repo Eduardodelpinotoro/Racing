@@ -3707,11 +3707,11 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     // Si encontramos la pista, posicionar al jugador encima
     if (trackMesh) {
         playerMesh.position.copyFrom(trackMesh.position);
-        playerMesh.position.y += 0.5; // 5 unidades arriba de la pista
+        playerMesh.position.y += 0.2; // 5 unidades arriba de la pista
         console.log("📍 Posicionado encima de la pista:", trackMesh.name);
     } else {
         // Si no encontramos pista, usar posición por defecto
-        playerMesh.position.set(0, 0.5, 0);
+        playerMesh.position.set(0, 0.2, 0);
         console.log("⚠️ Usando posición por defecto");
     }
     
@@ -3732,7 +3732,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 0.5, 0)), 
+        playerMesh.position.add(new BABYLON.Vector3(0, 0.2, 0)), 
         new BABYLON.Vector3(0, -1, 0), 
         15
     ); 
@@ -3752,8 +3752,8 @@ function keepGround() {
 
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
-const maxRealKmH = 300;
-const speedFactor = maxRealKmH / maxSpeed / 1.5; // Aumentado para sensación más rápida
+const maxRealKmH = 30;
+const speedFactor = maxRealKmH / maxSpeed ; // Aumentado para sensación más rápida
 
 // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
 engine.runRenderLoop(() => {
