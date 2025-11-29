@@ -3710,33 +3710,60 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
+    // Configurar colisiones para todos los meshes del circuito
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        if (m !== playerMesh && m !== ghostCar) {
+            m.checkCollisions = true;
+            // Asegurar que los meshes tienen geometría de colisión
+            if (!m.ellipsoid) {
+                m.ellipsoid = new BABYLON.Vector3(1, 1, 1);
+            }
+            m.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+        }
     });
-    playerMesh.position.set(3, 1, 2.8); 
+    
+    // POSICIÓN CORREGIDA DEL JUGADOR
+    playerMesh.position.set(3, 0.2, 2.8); // Y reducido a 0.2
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    
+    // Configurar colisiones del jugador
+    playerMesh.checkCollisions = true;
+    playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 0.3, 0.5); // Colisión más baja
+    playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.3, 0);
+    
+    // Activar colisiones en la escena
+    scene.collisionsEnabled = true;
+    scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
     
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
-    initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
-    initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
-    updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+    initLeaderboardSystem();
+    initMultiplayerSystem();
+    updateCockpitView();
+    initRearviewMirror();
     
 }, null, (s, msg) => { 
     console.error(msg); 
 });
 
+// FUNCIÓN keepGround MEJORADA
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
+        playerMesh.position.add(new BABYLON.Vector3(0, 5, 0)), // Rayo más corto
         new BABYLON.Vector3(0, -1, 0), 
-        50
+        10 // Distancia reducida
     ); 
+    
     const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar); 
-    if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; 
+    if (hit && hit.pickedPoint) {
+        // Posicionar el coche justo por encima del suelo
+        playerMesh.position.y = hit.pickedPoint.y + 0.3; // Solo 0.3 unidades arriba
+    } else {
+        // Si no hay suelo, mantener altura mínima
+        playerMesh.position.y = 0.3;
+    }
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
