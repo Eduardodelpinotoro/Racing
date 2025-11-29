@@ -1411,8 +1411,8 @@ const brakeLabel = document.getElementById("brakeLabel");
 const cameraHeightLabel = document.getElementById("cameraHeightLabel");
 
 // Variables del juego
-let maxSpeed = 330;
-let targetAccelerationTime = 2.0;
+let maxSpeed = 10;
+let targetAccelerationTime = 0.1;
 let brakeFriction = 150;
 let cameraHeight = 3.0;
 let currentCar = 'f1';
@@ -2285,7 +2285,7 @@ const playerMesh = BABYLON.MeshBuilder.CreateCapsule("player", {height: 0.01, ra
 playerMesh.isVisible = false;
 playerMesh.checkCollisions = true;
 playerMesh.ellipsoid = new BABYLON.Vector3(0.01, 0.01, 0.01);
-playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.01, 0);
+playerMesh.ellipsoidOffset = new BABYLON.Vector3(0.01, 0.01, 0.01);
 
 // CAMERA
 const camera = new BABYLON.FreeCamera("cam", new BABYLON.Vector3(0, cameraHeight, 0), scene);
@@ -2462,7 +2462,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     // AÑADE ESTO para escalar el circuito (1.5 = 150% del tamaño original)
     scene.meshes.forEach(mesh => {
         if (mesh !== playerMesh && mesh !== skySphere) {
-            mesh.scaling = new BABYLON.Vector3(1.5, 1.5, 1.5);
+            mesh.scaling = new BABYLON.Vector3(1, 1, 1);
         }
     });
     scene.meshes.forEach(m => { 
