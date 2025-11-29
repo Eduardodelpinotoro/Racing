@@ -1858,7 +1858,7 @@ function initRearviewMirror() {
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
     // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "https://drive.google.com/uc?export=download&id=1O-iYwAW2O3DxjgKDV9UTFrcMPGFDSa4N", rearviewScene, () => {
+    BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=0", rearviewScene, () => {
         rearviewScene.meshes.forEach(m => { 
             if (m !== mirrorSkySphere) m.checkCollisions = true; 
         });
@@ -3680,7 +3680,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO LAGUNA SECA
-BABYLON.SceneLoader.Append("", "https://drive.google.com/uc?export=download&id=1O-iYwAW2O3DxjgKDV9UTFrcMPGFDSa4N", scene, () => {
+BABYLON.SceneLoader.Append("", "https://www.dropbox.com/scl/fi/k7v8s0fylvyzf7pje8qz7/laguna_seca.glb?rlkey=7a1ncxvhbdv5a5w6iyqc2kgvh&st=yo7oqw0d&dl=0", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
