@@ -3710,30 +3710,44 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    // Configurar colisiones para todos los meshes del circuito
+    // QUITAR el ajuste de posición Y del circuito
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) {
             m.checkCollisions = true;
-            m.position.y += 0.9;
-            // Asegurar que los meshes tienen geometría de colisión
-            if (!m.ellipsoid) {
-                m.ellipsoid = new BABYLON.Vector3(1, 1, 1);
-            }
-            m.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0);
+            // ELIMINAR esta línea: m.position.y += 0.9;
         }
     });
     
-    // POSICIÓN CORREGIDA DEL JUGADOR
-    playerMesh.position.set(3, 0, 2.8); // Y reducido a 0.2
+    // ENCONTRAR la altura correcta del circuito
+    let circuitHeight = 0;
+    const groundRay = new BABYLON.Ray(
+        new BABYLON.Vector3(3, 100, 2.8), // Rayo desde arriba
+        new BABYLON.Vector3(0, -1, 0), 
+        200
+    );
+    
+    const hit = scene.pickWithRay(groundRay, m => m !== playerMesh && m !== ghostCar);
+    if (hit && hit.pickedPoint) {
+        circuitHeight = hit.pickedPoint.y;
+        console.log("Altura del circuito encontrada:", circuitHeight);
+    }
+    
+    // POSICIÓN DEL JUGADOR RELATIVA AL CIRCUITO
+    playerMesh.position.set(3, circuitHeight + 0.3, 2.8); // 0.3 unidades sobre el circuito
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
-    // Configurar colisiones del jugador
+    // AJUSTAR LA CÁMARA para que siga al jugador correctamente
+    camera.position = new BABYLON.Vector3(
+        playerMesh.position.x,
+        playerMesh.position.y + 2, // Cámara 2 unidades arriba del jugador
+        playerMesh.position.z + 5  // Cámara 5 unidades detrás
+    );
+    camera.rotation.y = Math.PI;
+    
+    // Configurar colisiones
     playerMesh.checkCollisions = true;
-    playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 0.3, 0.5); // Colisión más baja
-    playerMesh.ellipsoidOffset = new BABYLON.Vector3(0, 0.3, 0);
+    playerMesh.ellipsoid = new BABYLON.Vector3(0.5, 0.3, 0.5);
     
-    // Activar colisiones en la escena
     scene.collisionsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -0.5, 0);
     
@@ -3752,21 +3766,18 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
 // FUNCIÓN keepGround MEJORADA
 function keepGround() { 
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 5, 0)), // Rayo más corto
+        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
         new BABYLON.Vector3(0, -1, 0), 
-        10 // Distancia reducida
+        20
     ); 
     
     const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar); 
     if (hit && hit.pickedPoint) {
-        // Posicionar el coche justo por encima del suelo
-        playerMesh.position.y = hit.pickedPoint.y + 0.3; // Solo 0.3 unidades arriba
-    } else {
-        // Si no hay suelo, mantener altura mínima
-        playerMesh.position.y = 0.3;
+        playerMesh.position.y = hit.pickedPoint.y + 0.3;
     }
-}
-
+    }
+    
+    
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
 const maxRealKmH = 3; // REDUCIDO
 const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
