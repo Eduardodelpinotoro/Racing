@@ -3386,8 +3386,8 @@ resetPositionBtn.addEventListener("click", resetToStartPosition);
 
 function resetToStartPosition() {
     currentSpeed = 0;
-    playerMesh.position.set(-3780, 330, -3980);
-    camera.rotation.y = 0;
+    playerMesh.position.set(0, 0, 0);
+    camera.rotation.y = 90;
     
     // Resetear cronómetro
     isRacing = false;
@@ -3621,9 +3621,9 @@ let hasCrossedFinishLine = false;
 let prevPosZ = 0;
 
 const finishLine = {
-    minX: -3800,
-    maxX: -3700, 
-    z: -4025,
+    minX: 1,
+    maxX: -1, 
+    z: -0,
     width: 30,
     resetThresholdExtra: 10
 };
@@ -3714,7 +3714,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     });
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = 90; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
