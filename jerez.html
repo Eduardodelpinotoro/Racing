@@ -3710,6 +3710,7 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
+        m.scaling = new BABYLON.Vector3(1, 1, 1); // Escala uniforme x2
     });
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
@@ -3738,7 +3739,7 @@ function keepGround() {
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
-const maxRealKmH = 3; // REDUCIDO
+const maxRealKmH = 300; // REDUCIDO
 const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
 
 // NUEVO: Actualizar posición del jugador en pantalla
