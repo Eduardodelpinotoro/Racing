@@ -3683,7 +3683,7 @@ function checkFinishLine() {
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
-        m.scaling = new BABYLON.Vector3(6, 6, 6);
+        m.scaling = new BABYLON.Vector3(10, 10, 10);
     });
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
