@@ -3682,9 +3682,13 @@ function checkFinishLine() {
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     scene.meshes.forEach(m => { 
-        if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
-        m.scaling = new BABYLON.Vector3(2, 2, 2); 
-    // Escala uniforme x2
+        if (m !== playerMesh && m !== ghostCar) {
+            m.scaling = new BABYLON.Vector3(5, 5, 5);
+            
+            // Para físicas más complejas
+            m.refreshBoundingInfo();
+            m._boundingInfo = new BABYLON.BoundingInfo(m.getBoundingInfo().minimum, m.getBoundingInfo().maximum);
+            m.checkCollisions = true;
     });
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
