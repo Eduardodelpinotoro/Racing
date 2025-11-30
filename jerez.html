@@ -3680,31 +3680,29 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    // Crear un contenedor para TODOS los elementos del circuito
+
+        BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     const circuitContainer = new BABYLON.TransformNode("circuitContainer");
     
-    // Identificar y agrupar todos los meshes del circuito - ERROR CORREGIDO
+    // Filtrar mejor para evitar duplicar playerMesh y ghostCar
     const circuitMeshes = scene.meshes.filter(m => 
-        m.name.includes("env") || 
-        m.name.includes("Road") || 
-        m.name.includes("built") ||
-        (m !== playerMesh && m !== ghostCar)
-    );  // ← Este paréntesis estaba mal ubicado
+        (m.name.includes("env") || m.name.includes("Road") || m.name.includes("built")) &&
+        m !== playerMesh && 
+        m !== ghostCar
+    );
     
-    // Parentear todos al contenedor
     circuitMeshes.forEach(m => {
         m.parent = circuitContainer;
         m.checkCollisions = true;
     });
     
-    // Escalar solo el contenedor (mantiene la relación entre objetos)
     circuitContainer.scaling = new BABYLON.Vector3(5, 5, 5);
     
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI;
 });
+
     // Inicializar sistemas
     initDamageSystem();
     initGhostSystem();
