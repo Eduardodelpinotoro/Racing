@@ -3061,7 +3061,7 @@ let carTireGrip = 1.4;
 // Función para calcular aceleración
 function calculateAccelerationFromTime(zeroTo100Time) {
     const targetSpeedMs = 27.78; // 100 km/h en m/s
-    return (targetSpeedMs / zeroTo100Time) * 0.03; // REDUCIDO SIGNIFICATIVAMENTE
+    return (targetSpeedMs / zeroTo100Time) * 1.5; // REDUCIDO SIGNIFICATIVAMENTE
 }
 
 let accel = calculateAccelerationFromTime(targetAccelerationTime);
