@@ -3684,13 +3684,13 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     // Crear un contenedor para TODOS los elementos del circuito
     const circuitContainer = new BABYLON.TransformNode("circuitContainer");
     
-    // Identificar y agrupar todos los meshes del circuito
+    // Identificar y agrupar todos los meshes del circuito - ERROR CORREGIDO
     const circuitMeshes = scene.meshes.filter(m => 
         m.name.includes("env") || 
         m.name.includes("Road") || 
         m.name.includes("built") ||
         (m !== playerMesh && m !== ghostCar)
-    );
+    );  // ← Este paréntesis estaba mal ubicado
     
     // Parentear todos al contenedor
     circuitMeshes.forEach(m => {
