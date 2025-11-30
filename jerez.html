@@ -3681,18 +3681,12 @@ function checkFinishLine() {
 
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
-    const circuitContainer = new BABYLON.TransformNode("circuitContainer");
-    
-    // Solo estas líneas son esenciales
-    scene.meshes.forEach(m => {
+    scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) {
-            m.parent = circuitContainer;
             m.checkCollisions = true;
+            m.scaling = new BABYLON.Vector3(5, 5, 5); // ← AÑADIR ESTA LÍNEA
         }
     });
-    
-    circuitContainer.scaling = new BABYLON.Vector3(5, 5, 5);
-    
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI;
