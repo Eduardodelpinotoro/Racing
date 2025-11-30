@@ -2660,8 +2660,8 @@ const brakeLabel = document.getElementById("brakeLabel");
 const cameraHeightLabel = document.getElementById("cameraHeightLabel");
 
 // Variables del juego - AJUSTADAS PARA ESCALA 1:10
-let maxSpeed = 3; // REDUCIDO SIGNIFICATIVAMENTE (3 km/h)
-let targetAccelerationTime = 15.0; // AUMENTADO (más lento)
+let maxSpeed = 330; // REDUCIDO SIGNIFICATIVAMENTE (3 km/h)
+let targetAccelerationTime = 5; // AUMENTADO (más lento)
 let brakeFriction = 5; // REDUCIDO
 let cameraHeight = 0.2; // BAJADO PARA ADAPTARSE A LA ESCALA
 let currentCar = 'f1';
@@ -3547,8 +3547,8 @@ const speedBar = document.getElementById("speedBar");
 
 // MOVIMIENTO - AJUSTADO A NUEVA ESCALA
 let currentSpeed = 0;
-let maxReverse = 1; // REDUCIDO
-let airFriction = 0.002; // REDUCIDO
+let maxReverse = 50; // REDUCIDO
+let airFriction = 8; // REDUCIDO
 
 // JOYSTICK
 const joystickHandle = document.getElementById("joystickHandle");
