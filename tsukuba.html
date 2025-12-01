@@ -3621,9 +3621,9 @@ let hasCrossedFinishLine = false;
 let prevPosZ = 0;
 
 const finishLine = {
-    minX: 0,
-    maxX: -1, 
-    z: 0,
+    minX: 258,
+    maxX: 300, 
+    z: 52,
     width: 30,
     resetThresholdExtra: 10
 };
@@ -3714,7 +3714,7 @@ BABYLON.SceneLoader.Append("", "lg.glb", scene, () => {
     });
     playerMesh.position.set(258, 52, 300); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = -45; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
