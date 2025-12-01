@@ -80,7 +80,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 }
 #settingsBtn{ left:100px; }
 #carsBtn{ left:50px; font-size:30px; }
-#leaderboardBtn{ left:150px; font-size:24px; }
+#leaderboardBtn{ left:250px; font-size:24px; }
 #multiplayerBtn{ left:200px; font-size:24px; }
 
 /* Paneles */
@@ -1858,7 +1858,7 @@ function initRearviewMirror() {
     rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
     // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "spa.glb", rearviewScene, () => {
+    BABYLON.SceneLoader.Append("", "laguna_seca.glb", rearviewScene, () => {
         rearviewScene.meshes.forEach(m => { 
             if (m !== mirrorSkySphere) m.checkCollisions = true; 
         });
@@ -3359,7 +3359,7 @@ resetPositionBtn.addEventListener("click", resetToStartPosition);
 
 function resetToStartPosition() {
     currentSpeed = 0;
-    playerMesh.position.set(-3780, 330, -3980);
+    playerMesh.position.set(0, 0, 0);
     camera.rotation.y = 0;
     
     // Resetear cronómetro
@@ -3680,11 +3680,11 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "spa.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "laguna_seca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(-3780, 330, -3980); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
