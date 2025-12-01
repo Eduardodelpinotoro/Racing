@@ -1168,7 +1168,7 @@ const auth = firebase.auth();
 // CONFIGURACIÓN PRINCIPAL - ESCALA 1:10
 // =========================
 const SCALE_FACTOR = 0.1; // El circuito es 10 veces más pequeño
-const MAX_SPEED = 30; // km/h máximos (extremadamente lento para la escala)
+const MAX_SPEED = 350; // km/h máximos (extremadamente lento para la escala)
 const ACCELERATION = 0.1; // Aceleración muy lenta
 const BRAKE_FORCE = 0.1; // Freno suave
 const AIR_FRICTION = 0.2; // Fricción del aire
@@ -3621,9 +3621,9 @@ let hasCrossedFinishLine = false;
 let prevPosZ = 0;
 
 const finishLine = {
-    minX: -3800,
-    maxX: -3700, 
-    z: -4025,
+    minX: 0,
+    maxX: -1, 
+    z: 0,
     width: 30,
     resetThresholdExtra: 10
 };
@@ -3712,7 +3712,7 @@ BABYLON.SceneLoader.Append("", "lg.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
     });
-    playerMesh.position.set(0, 1, 0); 
+    playerMesh.position.set(0, 10, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
@@ -3739,7 +3739,7 @@ function keepGround() {
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
-const maxRealKmH = 30; // REDUCIDO
+const maxRealKmH = 350; // REDUCIDO
 const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
 
 // NUEVO: Actualizar posición del jugador en pantalla
