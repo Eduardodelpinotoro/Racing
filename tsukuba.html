@@ -3711,7 +3711,7 @@ BABYLON.SceneLoader.Append("", "lg.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
-        m.rotation.y -= Math.PI;
+        m.rotation.x -= Math.PI;
     });
     playerMesh.position.set(258, 52, 300); 
     prevPosZ = playerMesh.position.z;
