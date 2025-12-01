@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Selección de Circuitos - Racing Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(20, 20, 40, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(40, 10, 20, 0.6) 0%, transparent 50%),
+                linear-gradient(135deg, #0c0c14 0%, #1a1a2e 30%, #0f0f1a 70%, #05050a 100%);
+            font-family: 'Arial', sans-serif;
+            color: white;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Efectos de velocidad en el fondo */
+        .speed-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: 
+                linear-gradient(90deg, transparent 95%, rgba(255, 100, 0, 0.1) 100%),
+                linear-gradient(90deg, transparent 90%, rgba(255, 60, 0, 0.08) 100%),
+                linear-gradient(90deg, transparent 85%, rgba(255, 40, 0, 0.06) 100%);
+            background-size: 100px 100%, 150px 100%, 200px 100%;
+            animation: speedEffect 15s linear infinite;
+        }
+
+        @keyframes speedEffect {
+            0% { background-position: 0 0, 0 0, 0 0; }
+            100% { background-position: 100px 0, 150px 0, 200px 0; }
+        }
+
+        .header-gradient {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(to bottom, 
+                rgba(255, 50, 0, 0.3) 0%,
+                rgba(255, 50, 0, 0.1) 30%,
+                transparent 100%);
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-top: 40px;
+            position: relative;
+        }
+
+        .title-container {
+            display: inline-block;
+            position: relative;
+            padding: 20px 40px;
+            margin-bottom: 20px;
+        }
+
+        .title-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                rgba(255, 50, 0, 0.2) 0%,
+                rgba(255, 100, 0, 0.3) 50%,
+                rgba(255, 50, 0, 0.2) 100%);
+            border-radius: 10px;
+            filter: blur(10px);
+            z-index: -1;
+        }
+
+        .title {
+            font-size: 3.5rem;
+            background: linear-gradient(to right, #ff6b00, #ffa500, #ffd700);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 100, 0, 0.5);
+            font-weight: 900;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+        }
+
+        .track-counter {
+            background: rgba(255, 50, 0, 0.2);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: 20px;
+            padding: 10px 30px;
+            display: inline-block;
+            font-size: 1.1rem;
+            color: #ffa500;
+        }
+
+        .tracks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .track-card {
+            background: linear-gradient(145deg, 
+                rgba(30, 30, 40, 0.9) 0%,
+                rgba(20, 20, 30, 0.9) 100%);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .track-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b00, #ffa500, #ffd700);
+        }
+
+        .track-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(255, 100, 0, 0.2);
+            border-color: rgba(255, 100, 0, 0.6);
+        }
+
+        .track-card::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 100, 0, 0.1), 
+                transparent);
+            transform: translateY(-50%);
+            transition: left 0.5s;
+        }
+
+        .track-card:hover::after {
+            left: 100%;
+        }
+
+        .track-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .track-number {
+            background: linear-gradient(45deg, #ff6b00, #ffa500);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .track-icon {
+            font-size: 2.5rem;
+            margin-right: 15px;
+        }
+
+        .track-name {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, #fff, #ffa500);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .track-location {
+            display: flex;
+            align-items: center;
+            color: #aaa;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+        }
+
+        .flag {
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+
+        .track-details {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .track-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255, 100, 0, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 100, 0, 0.2);
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            color: #ffa500;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .track-description {
+            color: #bbb;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+
+        .difficulty-bar {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .difficulty-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff00, #ffa500, #ff0000);
+            border-radius: 4px;
+        }
+
+        .difficulty-label {
+            display: flex;
+            justify-content: space-between;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        .play-button {
+            width: 100%;
+            background: linear-gradient(45deg, #ff6b00, #ffa500);
+            color: #000;
+            border: none;
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .play-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 100, 0, 0.3);
+            background: linear-gradient(45deg, #ffa500, #ffd700);
+        }
+
+        .play-button::after {
+            content: '▶';
+            position: absolute;
+            right: 20px;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .play-button:hover::after {
+            opacity: 1;
+            right: 15px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 100, 0, 0.2);
+        }
+
+        .controls-hint {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 100, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        .controls-hint kbd {
+            background: rgba(255, 100, 0, 0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin: 0 5px;
+            font-family: monospace;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2.5rem;
+            }
+            
+            .tracks-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .track-card {
+                padding: 20px;
+            }
+            
+            .controls-hint {
+                position: static;
+                margin-top: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Efectos de velocidad en el fondo -->
+    <div class="speed-lines"></div>
+    <div class="header-gradient"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-container">
+                <div class="title-bg"></div>
+                <h1 class="title">GT RACING CHALLENGE</h1>
+            </div>
+            <p class="subtitle">Selecciona tu circuito y domina el asfalto</p>
+            <div class="track-counter">3 CIRCUITOS DISPONIBLES</div>
+        </div>
+
+        <div class="tracks-grid">
+            <!-- Circuito SPA -->
+            <div class="track-card" onclick="selectTrack('spa')">
+                <div class="track-header">
+                    <div class="track-number">01</div>
+                    <div class="track-icon">🏁</div>
+                </div>
+                <h2 class="track-name">CIRCUIT DE SPA-FRANCORCHAMPS</h2>
+                <div class="track-location">
+                    <span class="flag">🇧🇪</span> Stavelot, Bélgica
+                </div>
+                
+                <div class="track-details">
+                    <div class="track-stats">
+                        <div class="stat">
+                            <div class="stat-value">7.004 km</div>
+                            <div class="stat-label">LONGITUD</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">19</div>
+                            <div class="stat-label">CURVAS</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">1:41.2</div>
+                            <div class="stat-label">RÉCORD</div>
+                        </div>
+                    </div>
+                    
+                    <p class="track-description">
+                        El circuito más rápido y exigente del campeonato. Conocido por sus cambios de elevación y la famosa curva Eau Rouge.
+                    </p>
+                    
+                    <div class="difficulty-bar">
+                        <div class="difficulty-fill" style="width: 95%"></div>
+                    </div>
+                    <div class="difficulty-label">
+                        <span>FÁCIL</span>
+                        <span>EXTREMO</span>
+                    </div>
+                </div>
+
+                <button class="play-button">CARRERA EN SPA</button>
+            </div>
+
+            <!-- Circuito TERMAS DE RÍO -->
+            <div class="track-card" onclick="selectTrack('termasderio')">
+                <div class="track-header">
+                    <div class="track-number">02</div>
+                    <div class="track-icon">🏁</div>
+                </div>
+                <h2 class="track-name">TERMAS DE RÍO HONDO</h2>
+                <div class="track-location">
+                    <span class="flag">🇦🇷</span> Santiago del Estero, Argentina
+                </div>
+                
+                <div class="track-details">
+                    <div class="track-stats">
+                        <div class="stat">
+                            <div class="stat-value">4.804 km</div>
+                            <div class="stat-label">LONGITUD</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">14</div>
+                            <div class="stat-label">CURVAS</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">1:39.8</div>
+                            <div class="stat-label">RÉCORD</div>
+                        </div>
+                    </div>
+                    
+                    <p class="track-description">
+                        Circuito técnico con rectas largas y curvas cerradas. Perfecto para demostrar dominio del frenado y salidas de curva.
+                    </p>
+                    
+                    <div class="difficulty-bar">
+                        <div class="difficulty-fill" style="width: 60%"></div>
+                    </div>
+                    <div class="difficulty-label">
+                        <span>FÁCIL</span>
+                        <span>EXTREMO</span>
+                    </div>
+                </div>
+
+                <button class="play-button">CARRERA EN TERMAS</button>
+            </div>
+
+            <!-- Circuito SPIELBERG -->
+            <div class="track-card" onclick="selectTrack('spielberg')">
+                <div class="track-header">
+                    <div class="track-number">03</div>
+                    <div class="track-icon">🏁</div>
+                </div>
+                <h2 class="track-name">RED BULL RING</h2>
+                <div class="track-location">
+                    <span class="flag">🇦🇹</span> Spielberg, Austria
+                </div>
+                
+                <div class="track-details">
+                    <div class="track-stats">
+                        <div class="stat">
+                            <div class="stat-value">4.318 km</div>
+                            <div class="stat-label">LONGITUD</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">10</div>
+                            <div class="stat-label">CURVAS</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-value">1:05.6</div>
+                            <div class="stat-label">RÉCORD</div>
+                        </div>
+                    </div>
+                    
+                    <p class="track-description">
+                        Circuito rápido y fluido con vistas a los Alpes. Pocas curvas pero gran exigencia aerodinámica y velocidad punta.
+                    </p>
+                    
+                    <div class="difficulty-bar">
+                        <div class="difficulty-fill" style="width: 40%"></div>
+                    </div>
+                    <div class="difficulty-label">
+                        <span>FÁCIL</span>
+                        <span>EXTREMO</span>
+                    </div>
+                </div>
+
+                <button class="play-button">CARRERA EN SPIELBERG</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 GT RACING CHALLENGE - Desarrollado para verdaderos pilotos | Controles optimizados para PC y móvil</p>
+        </div>
+
+        <div class="controls-hint">
+            <p>CONTROLES RÁPIDOS: <kbd>1</kbd> Spa | <kbd>2</kbd> Termas | <kbd>3</kbd> Spielberg</p>
+        </div>
+    </div>
+
+    <script>
+        // Redirigir a la página del circuito seleccionado
+        function selectTrack(track) {
+            // Efecto de sonido (simulado)
+            const audio = new Audio();
+            audio.src = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEAQB8AAEAfAAABAAgAZGF0YQ';
+            audio.play().catch(e => console.log("Audio no disponible"));
+            
+            // Efecto visual de carga
+            document.body.style.opacity = '0.8';
+            document.body.style.transition = 'opacity 0.3s ease';
+            
+            // Mostrar mensaje de carga
+            const loadingMsg = document.createElement('div');
+            loadingMsg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.9);
+                padding: 30px 50px;
+                border-radius: 10px;
+                border: 2px solid #ff6b00;
+                color: #ffa500;
+                font-size: 1.2rem;
+                z-index: 10000;
+                text-align: center;
+            `;
+            loadingMsg.innerHTML = `
+                <div style="margin-bottom: 15px;">CARGANDO CIRCUITO...</div>
+                <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
+                    <div id="loadingBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #ff6b00, #ffa500); transition: width 1s;"></div>
+                </div>
+            `;
+            document.body.appendChild(loadingMsg);
+            
+            // Animación de barra de carga
+            setTimeout(() => {
+                const bar = document.getElementById('loadingBar');
+                if (bar) bar.style.width = '100%';
+            }, 100);
+            
+            // Redirigir después del efecto
+            setTimeout(() => {
+                if (track === 'spa') {
+                    window.location.href = 'spa.html';
+                } else if (track === 'termasderio') {
+                    window.location.href = 'termasderio.html';
+                } else if (track === 'spielberg') {
+                    window.location.href = 'spielberg.html';
+                }
+            }, 1200);
+        }
+
+        // También hacer que los botones funcionen
+        document.querySelectorAll('.play-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const trackCard = this.closest('.track-card');
+                const trackNumber = trackCard.querySelector('.track-number').textContent;
+                
+                if (trackNumber === '01') {
+                    selectTrack('spa');
+                } else if (trackNumber === '02') {
+                    selectTrack('termasderio');
+                } else if (trackNumber === '03') {
+                    selectTrack('spielberg');
+                }
+            });
+        });
+
+        // Efecto de teclado para accesibilidad
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '1') {
+                selectTrack('spa');
+            } else if (e.key === '2') {
+                selectTrack('termasderio');
+            } else if (e.key === '3') {
+                selectTrack('spielberg');
+            }
+        });
+
+        // Efecto de entrada
+        document.addEventListener('DOMContentLoaded', function() {
+            // Efecto de entrada escalonada para las tarjetas
+            setTimeout(() => {
+                document.body.style.opacity = '0';
+                setTimeout(() => {
+                    document.body.style.transition = 'opacity 0.8s ease';
+                    document.body.style.opacity = '1';
+                    
+                    // Animar tarjetas una por una
+                    const cards = document.querySelectorAll('.track-card');
+                    cards.forEach((card, index) => {
+                        setTimeout(() => {
+                            card.style.opacity = '0';
+                            card.style.transform = 'translateY(20px)';
+                            card.style.transition = 'all 0.5s ease';
+                            
+                            setTimeout(() => {
+                                card.style.opacity = '1';
+                                card.style.transform = 'translateY(0)';
+                            }, 100);
+                        }, index * 200);
+                    });
+                }, 100);
+            }, 100);
+        });
+
+        // Efecto de sonido al pasar sobre botones
+        document.querySelectorAll('.play-button, .track-card').forEach(element => {
+            element.addEventListener('mouseenter', function() {
+                // Efecto sutil de hover
+                this.style.cursor = 'pointer';
+            });
+        });
+    </script>
+</body>
+</html>
