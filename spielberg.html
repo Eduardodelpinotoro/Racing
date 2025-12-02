@@ -3717,6 +3717,8 @@ let prevPosZ = 0;
 const finishLine = {
     minX: 30,
     maxX: 32,
+    minY: 1,
+    maxY: 2,
     minZ: -7,
     maxZ: -4,
     width: 50,
@@ -3809,7 +3811,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     });
     playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = -80; // 180 grados - mira al contrario
+    camera.rotation.y = -180; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
