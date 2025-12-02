@@ -3684,7 +3684,7 @@ BABYLON.SceneLoader.Append("", "laguna_seca.glb", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
     });
-    playerMesh.position.set(0, 10, 0); 
+    playerMesh.position.set(0, 100, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
