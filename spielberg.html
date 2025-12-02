@@ -3714,19 +3714,7 @@ let isRacing = false;
 let hasCrossedFinishLine = false;
 let prevPosZ = 0;
 
-const finishLine = {
-    minX: 30,
-    maxX: 32,
-    minY: 1,
-    maxY: 2,
-    minZ: -7,
-    maxZ: -4,
-    width: 50,
-    resetThresholdExtra: 10
-};
 
-finishLine.centerX = (finishLine.minX + finishLine.maxX) / 2;
-finishLine.resetThreshold = finishLine.width + finishLine.resetThresholdExtra;
 
 function formatTime(ms) {
     const m = Math.floor(ms / 60000);
@@ -3785,23 +3773,58 @@ function registerCross() {
     }
 }
 
-function checkFinishLine() { 
-    const pos = playerMesh.position; 
-    const insideX = (pos.x >= finishLine.minX && pos.x <= finishLine.maxX); 
-    
-    if (insideX) { 
-        if (!hasCrossedFinishLine && prevPosZ < finishLine.z && pos.z >= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
-            hasCrossedFinishLine = true; 
-            registerCross(); 
-        } else if (!hasCrossedFinishLine && prevPosZ > finishLine.z && pos.z <= finishLine.z && Math.abs(pos.z - finishLine.z) <= finishLine.width) { 
-            hasCrossedFinishLine = true; 
-            registerCross(); 
-        } 
-    } 
-    
-    if (Math.abs(pos.z - finishLine.z) > finishLine.resetThreshold) hasCrossedFinishLine = false; 
-    prevPosZ = pos.z; 
+// =========================
+// NUEVA LÍNEA DE META REAL
+// =========================
+
+// Puntos exactos que definiste
+const finishA = new BABYLON.Vector3(30, 1.5, -4);
+const finishB = new BABYLON.Vector3(31, 2, -6);
+
+// Crear plano invisible
+const finishPlane = BABYLON.MeshBuilder.CreatePlane("finishPlane", {
+    width: 5,
+    height: 3,
+}, scene);
+
+finishPlane.position = finishA.add(finishB).scale(0.5);  // centro entre A y B
+finishPlane.isVisible = false;
+finishPlane.checkCollisions = false;
+
+// Calcular orientación del plano basado en A y B
+const AB = finishB.subtract(finishA);
+const angle = Math.atan2(AB.x, AB.z);
+finishPlane.rotation.y = angle;
+
+// Vector normal para detectar cruce
+let finishNormal = finishPlane.forward;
+
+// Para detectar cambio de lado
+let lastSide = null;
+
+function checkFinishLine() {
+    const carPos = playerMesh.position;
+
+    // Lado actual respecto al plano
+    const offset = carPos.subtract(finishPlane.position);
+    const side = BABYLON.Vector3.Dot(offset, finishNormal);
+
+    // Si ya tenemos lado previo
+    if (lastSide !== null) {
+        // Detectar cruce (signo cambia)
+        if (lastSide > 0 && side < 0) {
+            if (!hasCrossedFinishLine) {
+                hasCrossedFinishLine = true;
+                registerCross();
+            }
+        }
+        if (Math.abs(side) > 10) hasCrossedFinishLine = false;
+    }
+
+    lastSide = side;
 }
+    
+
 
 // CARGAR CIRCUITO
 BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
