@@ -20,12 +20,102 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 #speedBarContainer{position:absolute;top:10px;left:100px;width:200px;height:20px;background:#444;border:1px solid #fff}
 #speedBar{height:100%;width:0%;background:#0f0;transition:width .15s}
 #debug{position:absolute;top:40px;left:10px;color:#fff;font-size:14px;font-family:monospace;z-index:9}
-#joystickContainer { position: absolute; bottom: 30px; left: 50px; width: 160px; height: 120px; pointer-events: auto; z-index: 10; }
-#joystickBase { position: absolute; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.15); border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.3); }
-#joystickHandle { position: absolute; width: 50px; height: 100px; background: rgba(255, 255, 255, 0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%); transition: transform 0.05s; }
-#joystickAxis { position: absolute; width: 100%; height: 1px; background: rgba(255, 255, 255, 0.2); top: 50%; left: 0; transform: translateY(-50%); }
-.joystick-disabled { opacity: 0.5; pointer-events: none; }
+/* JOYSTICK MEJORADO - SLIDER HORIZONTAL ROBUSTO */
+#joystickContainer {
+    position: absolute;
+    bottom: 30px;
+    left: 50px;
+    width: 200px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 40px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    pointer-events: auto;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
 
+#joystickBase {
+    position: relative;
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#joystickHandle {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform 0.1s ease-out;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+#joystickAxis {
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.2);
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+/* Indicadores de dirección */
+#joystickBase::before,
+#joystickBase::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
+    font-weight: bold;
+    z-index: 1;
+}
+
+#joystickBase::before {
+    content: '◀';
+    left: -25px;
+}
+
+#joystickBase::after {
+    content: '▶';
+    right: -25px;
+}
+
+/* Estados del joystick */
+.joystick-disabled {
+    opacity: 0.2;
+    pointer-events: none;
+}
+
+.joystick-disabled #joystickHandle {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Efecto al estar activo */
+#joystickContainer.active {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+#joystickContainer.active #joystickHandle {
+    background: rgba(255, 255, 255, 0.6);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+    }
 /* CRONÓMETRO MOVIDO A LA DERECHA ARRIBA */
 #timerPanel { 
     position: absolute; 
