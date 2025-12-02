@@ -3809,7 +3809,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
     });
-    playerMesh.position.set(0, 0, 0); 
+    playerMesh.position.set(0, 1.9, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = -180; // 180 grados - mira al contrario
     
