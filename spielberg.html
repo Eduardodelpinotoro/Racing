@@ -2210,45 +2210,36 @@ function updateGhostCar() {
     }
 }
 
-// 🔥 NUEVA FUNCIÓN MEJORADA: Mantener fantasma en el suelo
+// 🔥 FUNCIÓN CORREGIDA: Mantener fantasma en el suelo
 function keepGhostOnGround(ghostCar) {
     if (!ghostCar) return;
     
-    // Crear un rayo más preciso para detectar el suelo
-    const rayOrigin = new BABYLON.Vector3(
-        ghostCar.position.x,
-        ghostCar.position.y + 20, // Más alto para asegurar que comience por encima
-        ghostCar.position.z
-    );
-    
+    // Crear rayo desde el coche hacia abajo
     const ray = new BABYLON.Ray(
-        rayOrigin,
-        new BABYLON.Vector3(0, -1, 0), // Rayo hacia abajo
-        40 // Longitud suficiente
+        ghostCar.position.add(new BABYLON.Vector3(0, 5, 0)), // Empezar un poco más alto
+        new BABYLON.Vector3(0, -1, 0), // Dirección hacia abajo
+        10 // Longitud del rayo
     );
     
-    // Configuración del raycast para detectar mejor el terreno
+    // Configurar filtro para solo detectar el terreno
     const hit = scene.pickWithRay(ray, (mesh) => {
-        // Filtrar meshes que no deben ser considerados como suelo
+        // Solo detectar el circuito/terreno
         return mesh !== ghostCar && 
                mesh !== playerMesh && 
                !mesh.name.includes('otherPlayer') &&
                !mesh.name.includes('nameTag') &&
                mesh !== skySphere &&
-               mesh.isPickable !== false &&
-               mesh.isVisible;
-    }, true); // El true activa la detección rápida
+               mesh.name !== "skySphere" &&
+               !mesh.name.includes('ghost');
+    });
     
     if (hit && hit.hit && hit.pickedPoint) {
-        // Ajustar la altura del fantasma al suelo + compensación para tamaño del coche
-        // Usar una altura base constante en lugar de variable
+        // Ajustar altura: posición del suelo + altura base del coche
         const groundHeight = hit.pickedPoint.y;
-        const carBaseHeight = 0.1; // Altura base para el chasis
-        
-        ghostCar.position.y = groundHeight + carBaseHeight;
+        ghostCar.position.y = groundHeight + 0.2; // Ajusta este valor según necesites
     } else {
-        // Si no detecta suelo, poner en altura mínima
-        ghostCar.position.y = 0.1;
+        // Si no hay suelo detectado, mantener altura mínima
+        ghostCar.position.y = 0.2;
     }
 }
 
@@ -3554,81 +3545,84 @@ function registerCross() {
 // =========================
 
 // =========================
-// LÍNEA DE META MEJORADA - MÉTODO DE DETECCIÓN SIMPLIFICADO
+// =========================
+// LÍNEA DE META ORIGINAL CORREGIDA
 // =========================
 
 // Variables para control de línea de meta
-let lastCheckpointPassed = false;
-let checkpointDistanceThreshold = 0.5; // Distancia para considerar que pasó el checkpoint
+let lastSide = null;
+let lastCrossTime = 0;
+const crossCooldown = 2000; // 2 segundos entre cruces
 
 function checkFinishLine() {
     const carPos = playerMesh.position;
     
-    // Coordenadas de la línea de meta basadas en tu descripción
-    const finishLineXStart = 30;
-    const finishLineXEnd = 32;
-    const finishLineZ = -5; // Valor Z constante
+    // Línea de meta entre estos puntos (ajusta según tus coordenadas reales)
+    const finishLineStart = new BABYLON.Vector3(30, 1.9, -5);
+    const finishLineEnd = new BABYLON.Vector3(31, 1.9, -5);
     
-    // Verificar si el coche está cerca de la línea en X
-    if (carPos.x >= finishLineXStart && carPos.x <= finishLineXEnd) {
-        // Verificar si está en la posición Z correcta con un margen
-        if (Math.abs(carPos.z - finishLineZ) < 2) {
-            // Verificar dirección de movimiento (para detectar cruce en dirección correcta)
-            const movementDirection = Math.sin(camera.rotation.y);
+    // Vector de la línea
+    const lineVector = finishLineEnd.subtract(finishLineStart);
+    const lineLength = lineVector.length();
+    const lineDirection = lineVector.normalize();
+    
+    // Vector desde el inicio de la línea hasta el coche
+    const toCar = carPos.subtract(finishLineStart);
+    
+    // Proyección sobre la línea
+    const projection = BABYLON.Vector3.Dot(toCar, lineDirection);
+    
+    // Verificar si el coche está dentro del segmento de línea
+    if (projection >= 0 && projection <= lineLength) {
+        // Distancia perpendicular desde el coche hasta la línea
+        const pointOnLine = finishLineStart.add(lineDirection.scale(projection));
+        const perpendicularDistance = BABYLON.Vector3.Distance(carPos, pointOnLine);
+        
+        // Si está lo suficientemente cerca de la línea (menos de 1 unidad)
+        if (perpendicularDistance < 1) {
+            // Calcular en qué lado de la línea está
+            // Usar vector perpendicular (girar 90 grados)
+            const perpendicular = new BABYLON.Vector3(-lineDirection.z, 0, lineDirection.x);
+            const side = BABYLON.Vector3.Dot(toCar, perpendicular);
             
-            // Solo registrar cruce si se mueve en dirección apropiada
-            // y no ha cruzado recientemente
-            if (!hasCrossedFinishLine && Math.abs(movementDirection) > 0.3) {
-                hasCrossedFinishLine = true;
-                registerCross();
-                
-                // Agregar pequeño retraso para evitar múltiples detecciones
-                setTimeout(() => {
-                    hasCrossedFinishLine = false;
-                }, 1000); // 1 segundo de cooldown
+            const currentTime = Date.now();
+            
+            // Detectar cambio de lado (cruce)
+            if (lastSide !== null) {
+                if ((lastSide > 0 && side < 0) || (lastSide < 0 && side > 0)) {
+                    // Verificar cooldown para evitar múltiples detecciones
+                    if (currentTime - lastCrossTime > crossCooldown) {
+                        if (!hasCrossedFinishLine) {
+                            hasCrossedFinishLine = true;
+                            registerCross();
+                            lastCrossTime = currentTime;
+                            
+                            // Resetear después de un tiempo
+                            setTimeout(() => {
+                                hasCrossedFinishLine = false;
+                            }, 1000);
+                        }
+                    }
+                }
             }
-        }
-    } else if (Math.abs(carPos.z - finishLineZ) > 5) {
-        // Resetear el estado de cruce si se aleja suficiente
-        hasCrossedFinishLine = false;
-    }
-    
-    // Método alternativo usando vector dirección para detectar cruce
-    const finishLineCenter = new BABYLON.Vector3(
-        (finishLineXStart + finishLineXEnd) / 2,
-        1.5, // Altura
-        finishLineZ
-    );
-    
-    const distanceToFinishLine = BABYLON.Vector3.Distance(carPos, finishLineCenter);
-    
-    // Si está muy cerca del centro de la línea de meta
-    if (distanceToFinishLine < 1.5 && !hasCrossedFinishLine) {
-        // Verificar dirección hacia la línea
-        const toFinishLine = finishLineCenter.subtract(carPos).normalize();
-        const forward = new BABYLON.Vector3(
-            Math.sin(camera.rotation.y),
-            0,
-            Math.cos(camera.rotation.y)
-        );
-        
-        const dotProduct = BABYLON.Vector3.Dot(forward, toFinishLine);
-        
-        // Si se dirige hacia la línea de meta
-        if (dotProduct > 0.5) {
-            hasCrossedFinishLine = true;
-            registerCross();
             
-            // Cooldown para evitar múltiples detecciones
-            setTimeout(() => {
-                hasCrossedFinishLine = false;
-            }, 1500);
+            lastSide = side;
+            
+            // Debug en pantalla
+            debug.textContent = `Línea Meta: D=${perpendicularDistance.toFixed(2)} Lado=${side.toFixed(2)} Cruzado=${hasCrossedFinishLine}`;
+            return;
         }
     }
     
-    // Debug visual (puedes remover esto después)
-    debug.textContent = `Pos: X:${carPos.x.toFixed(1)} Y:${carPos.y.toFixed(1)} Z:${carPos.z.toFixed(1)} | Cruzado: ${hasCrossedFinishLine}`;
+    // Si estamos lejos de la línea, resetear lastSide
+    if (lastSide !== null) {
+        const distanceToLine = BABYLON.Vector3.Distance(carPos, finishLineStart);
+        if (distanceToLine > 10) {
+            lastSide = null;
+            hasCrossedFinishLine = false;
+        }
     }
+                                                                    }
     
 
 
