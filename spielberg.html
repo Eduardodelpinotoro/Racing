@@ -2187,132 +2187,11 @@ function createGhostCar() {
     ghostStartTime = Date.now();
 }
 
-// 🔥 NUEVA FUNCIÓN: Crear coche fantasma en el retrovisor
-function createGhostCarInRearview() {
-    if (!ghostEnabled || currentBestLapGhostData.length === 0) return;
-    
-    // Crear grupo principal para el coche fantasma en el retrovisor
-    ghostCarRearview = new BABYLON.TransformNode("ghostCarRearview", rearviewScene);
-    
-    // CHASIS PRINCIPAL - Forma aerodinámica de F1 (MISMO DISEÑO)
-    const mainChassis = BABYLON.MeshBuilder.CreateCylinder("ghostChassisRearview", {
-        diameterTop: 0.8,
-        diameterBottom: 1.2,
-        height: 5,
-        tessellation: 6
-    }, rearviewScene);
-    mainChassis.parent = ghostCarRearview;
-    mainChassis.rotation.x = Math.PI / 2;
-    
-    // CABINA - Cockpit tipo F1
-    const cockpit = BABYLON.MeshBuilder.CreateBox("ghostCockpitRearview", {
-        width: 0.9,
-        height: 0.4,
-        depth: 1.2
-    }, rearviewScene);
-    cockpit.parent = ghostCarRearview;
-    cockpit.position.y = 0.3;
-    cockpit.position.z = -0.5;
-    
-    // ALERÓN TRASERO - Ala posterior grande
-    const rearWing = BABYLON.MeshBuilder.CreateBox("ghostRearWingRearview", {
-        width: 2.5,
-        height: 0.1,
-        depth: 0.4
-    }, rearviewScene);
-    rearWing.parent = ghostCarRearview;
-    rearWing.position.z = -2.2;
-    rearWing.position.y = 0.8;
-    
-    // SOPORTES ALERÓN TRASERO
-    const wingSupport1 = BABYLON.MeshBuilder.CreateCylinder("wingSupport1Rearview", {
-        height: 0.7,
-        diameter: 0.08
-    }, rearviewScene);
-    wingSupport1.parent = ghostCarRearview;
-    wingSupport1.position.set(-0.8, 0.35, -2.2);
-    
-    const wingSupport2 = BABYLON.MeshBuilder.CreateCylinder("wingSupport2Rearview", {
-        height: 0.7,
-        diameter: 0.08
-    }, rearviewScene);
-    wingSupport2.parent = ghostCarRearview;
-    wingSupport2.position.set(0.8, 0.35, -2.2);
-    
-    // ALERÓN DELANTERO
-    const frontWing = BABYLON.MeshBuilder.CreateBox("ghostFrontWingRearview", {
-        width: 2.2,
-        height: 0.05,
-        depth: 0.6
-    }, rearviewScene);
-    frontWing.parent = ghostCarRearview;
-    frontWing.position.z = 2.0;
-    frontWing.position.y = 0.1;
-    
-    // RUEDAS MÁS GRANDES Y DETALLADAS
-    const wheelPositions = [
-        { x: 0.7, y: -0.3, z: 1.3 },
-        { x: -0.7, y: -0.3, z: 1.3 },
-        { x: 0.7, y: -0.3, z: -1.3 },
-        { x: -0.7, y: -0.3, z: -1.3 }
-    ];
-    
-    wheelPositions.forEach((pos, index) => {
-        const wheel = BABYLON.MeshBuilder.CreateCylinder("ghostWheelRearview" + index, {
-            diameter: 1.0,
-            height: 0.5
-        }, rearviewScene);
-        wheel.parent = ghostCarRearview;
-        wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(pos.x, pos.y, pos.z);
-        
-        const tire = BABYLON.MeshBuilder.CreateTorus("ghostTireRearview" + index, {
-            diameter: 1.0,
-            thickness: 0.15,
-            tessellation: 16
-        }, rearviewScene);
-        tire.parent = ghostCarRearview;
-        tire.rotation.z = Math.PI / 2;
-        tire.position.set(pos.x, pos.y, pos.z);
-    });
-    
-    // Aleta laterales
-    const sidePod1 = BABYLON.MeshBuilder.CreateBox("sidePod1Rearview", {
-        width: 0.3,
-        height: 0.2,
-        depth: 2.5
-    }, rearviewScene);
-    sidePod1.parent = ghostCarRearview;
-    sidePod1.position.set(0.5, 0.1, 0);
-    
-    const sidePod2 = BABYLON.MeshBuilder.CreateBox("sidePod2Rearview", {
-        width: 0.3,
-        height: 0.2,
-        depth: 2.5
-    }, rearviewScene);
-    sidePod2.parent = ghostCarRearview;
-    sidePod2.position.set(-0.5, 0.1, 0);
-    
-    // ESCALA FINAL
-    ghostCarRearview.scaling.set(0.5, 0.5, 0.5);
-    
-    // Material para el retrovisor (mismo que el principal)
-    const ghostMaterialRearview = new BABYLON.StandardMaterial("ghostMaterialRearview", rearviewScene);
-    ghostMaterialRearview.diffuseColor = new BABYLON.Color3(0.4, 0.7, 1.0);
-    ghostMaterialRearview.alpha = 0.8;
-    ghostMaterialRearview.specularColor = new BABYLON.Color3(0.3, 0.3, 0.3);
-    ghostMaterialRearview.emissiveColor = new BABYLON.Color3(0.2, 0.4, 0.6);
-    
-    // Aplicar material a todas las partes
-    ghostCarRearview.getChildMeshes().forEach(mesh => {
-        mesh.material = ghostMaterialRearview;
-        mesh.checkCollisions = false;
-        mesh.isPickable = false;
-    });
-}
+
+
 
 function updateGhostCar() {
-    if ((!ghostCar && !ghostCarRearview) || currentBestLapGhostData.length === 0) return;
+    if ((!ghostCar) || currentBestLapGhostData.length === 0) return;
     
     const currentTime = Date.now() - ghostStartTime;
     
@@ -2347,10 +2226,7 @@ function updateGhostCar() {
             ghostCar.rotation.y = rotationY;
         }
         
-        if (ghostCarRearview) {
-            ghostCarRearview.position.set(x, y, z);
-            ghostCarRearview.rotation.y = rotationY;
-        }
+        
     } else {
         removeGhostCar();
     }
@@ -2366,14 +2242,7 @@ function removeGhostCar() {
         ghostCar = null;
     }
     
-    // 🔥 NUEVO: Eliminar también el coche fantasma del retrovisor
-    if (ghostCarRearview) {
-        ghostCarRearview.getChildMeshes().forEach(mesh => {
-            mesh.dispose();
-        });
-        ghostCarRearview.dispose();
-        ghostCarRearview = null;
-    }
+    
     
     ghostPlaybackIndex = 0;
 }
