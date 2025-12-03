@@ -2270,7 +2270,7 @@ function createGhostCar() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
-    ghostCar.scaling.set(4, 4, 4);
+    ghostCar.scaling.set(2, 2, 2);
     
     // Material fantasma mejorado - MÁS VISIBLE
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
@@ -2401,7 +2401,7 @@ function createGhostCarInRearview() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL
-    ghostCarRearview.scaling.set(4, 4, 4);
+    ghostCarRearview.scaling.set(2, 2, 2);
     
     // Material para el retrovisor (mismo que el principal)
     const ghostMaterialRearview = new BABYLON.StandardMaterial("ghostMaterialRearview", rearviewScene);
@@ -3783,7 +3783,7 @@ const finishB = new BABYLON.Vector3(31, 2, -6);
 
 // Crear plano invisible
 const finishPlane = BABYLON.MeshBuilder.CreatePlane("finishPlane", {
-    width: 5,
+    width: 1,
     height: 3,
 }, scene);
 
@@ -3834,7 +3834,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     });
     playerMesh.position.set(0, 1.9, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = -180; // 180 grados - mira al contrario
+    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
