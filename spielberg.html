@@ -678,38 +678,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     z-index: 101;
 }
 
-/* NUEVO: ESPEJO RETROVISOR - CENTRADO Y MÁS PEQUEÑO */
-#rearviewMirror {
-    display: none;
-    position: absolute;
-    top: 10px;
-    right: -100px;
-    transform: translateX(-50%);
-    width: 200px;
-    height: 50px; /* Reducido a la mitad de altura */
-    background: rgba(0,0,0,0.8);
-    border: 2px solid #fff;
-    border-radius: 5px;
-    z-index: 10;
-    overflow: hidden;
-    box-shadow: 0 0 10px rgba(255,255,255,0.3);
-}
 
-#rearviewCanvas {
-    width: 100%;
-    height: 100%;
-}
-
-#mirrorLabel {
-    position: absolute;
-    top: 2px;
-    left: 5px;
-    color: #fff;
-    font-size: 10px;
-    font-family: monospace;
-    z-index: 11;
-    text-shadow: 1px 1px 1px #000;
-}
 
 /* NUEVO: ESTILOS PARA EL SISTEMA DE CLASIFICACIÓN */
 .leaderboard-panel {
@@ -931,11 +900,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 <!-- NUEVO: Vista en primera persona del F1 MEJORADA -->
 <div id="f1CockpitView"></div>
 
-<!-- NUEVO: Espejo retrovisor CENTRADO Y MÁS PEQUEÑO -->
-<div id="rearviewMirror">
-    <canvas id="rearviewCanvas"></canvas>
-    <div id="mirrorLabel"></div>
-</div>
+
 
 <!-- NUEVO: Indicador de posición del jugador -->
 <div id="playerPosition">X: 0 | Y: 0 | Z: 0</div>
@@ -1933,89 +1898,15 @@ async function submitBestTime() {
 }
 
 // =========================
-// NUEVO: ESPEJO RETROVISOR
-// =========================
-const rearviewCanvas = document.getElementById("rearviewCanvas");
-const rearviewEngine = new BABYLON.Engine(rearviewCanvas, true);
-const rearviewScene = new BABYLON.Scene(rearviewEngine);
-let rearviewCamera = null;
 
-// Función para inicializar el espejo retrovisor
-function initRearviewMirror() {
-    // Crear cámara para el espejo retrovisor
-    rearviewCamera = new BABYLON.FreeCamera("rearviewCam", new BABYLON.Vector3(0, cameraHeight, 0), rearviewScene);
-    rearviewCamera.parent = playerMesh;
-    rearviewCamera.detachControl(rearviewCanvas);
     
-    // Configurar la cámara para mirar hacia atrás
-    rearviewCamera.rotation.y = Math.PI; // 180 grados - mira hacia atrás
     
-    // Ajustar el campo de visión para una vista más amplia
-    rearviewCamera.fov = 1.2; // Campo de visión más amplio
     
-    // Crear el mismo cielo para la escena del espejo
-    const mirrorSkySphere = BABYLON.MeshBuilder.CreateSphere("mirrorSkySphere", { 
-        diameter: 10000, 
-        segments: 64 
-    }, rearviewScene);
-
-    const mirrorSkyMaterial = new BABYLON.StandardMaterial("mirrorSkyMaterial", rearviewScene);
-    mirrorSkyMaterial.diffuseTexture = new BABYLON.Texture("https://i.ibb.co/Vc4x5sTq/cielo.jpg", rearviewScene);
-    mirrorSkyMaterial.emissiveColor = new BABYLON.Color3(1, 1, 1);
-    mirrorSkyMaterial.specularColor = new BABYLON.Color3(0, 0, 0);
-    mirrorSkyMaterial.disableLighting = true;
-    mirrorSkyMaterial.backFaceCulling = false;
-    mirrorSkySphere.material = mirrorSkyMaterial;
-    mirrorSkySphere.infiniteDistance = true;
-
-    // Luces para la escena del espejo
-    const mirrorHemiLight = new BABYLON.HemisphericLight("mirrorHemi", new BABYLON.Vector3(0, 1, 0), rearviewScene);
-    mirrorHemiLight.diffuse = new BABYLON.Color3(0.8, 0.9, 1);
-    mirrorHemiLight.groundColor = new BABYLON.Color3(0.2, 0.4, 0.8);
-    mirrorHemiLight.intensity = 1.2;
-
-    const mirrorDirLight = new BABYLON.DirectionalLight("mirrorSun", new BABYLON.Vector3(-0.5, -1, 0.5), rearviewScene);
-    mirrorDirLight.diffuse = new BABYLON.Color3(1, 0.95, 0.8);
-    mirrorDirLight.intensity = 0.8;
-
-    rearviewScene.ambientColor = new BABYLON.Color3(0.4, 0.5, 0.7);
     
-    // Cargar el circuito en la escena del espejo
-    BABYLON.SceneLoader.Append("", "lagunaseca.glb", rearviewScene, () => {
-        rearviewScene.meshes.forEach(m => { 
-            if (m !== mirrorSkySphere) m.checkCollisions = true; 
-        });
-    }, null, (s, msg) => { 
-        console.error("Error cargando circuito en espejo:", msg); 
-    });
     
-    // Bucle de renderizado para el espejo
-    rearviewEngine.runRenderLoop(() => {
-        // Sincronizar la posición y rotación de la cámara del espejo con la cámara principal
-        if (camera && rearviewCamera) {
-            rearviewCamera.position.copyFrom(camera.position);
-            rearviewCamera.rotation.y = camera.rotation.y + Math.PI; // Mirar en dirección opuesta
-        }
         
-        // Sincronizar el clima
-        switch(weatherSelect.value) {
-            case 'sunny': 
-                rearviewScene.clearColor = new BABYLON.Color4(0.4, 0.7, 1, 1); 
-                break;
-            case 'gray': 
-                rearviewScene.clearColor = new BABYLON.Color4(0.5, 0.5, 0.5, 1); 
-                break;
-            case 'sunset': 
-                rearviewScene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.2, 1); 
-                break;
-        }
         
-        rearviewScene.render();
-    });
-    
-    // Redimensionar el espejo cuando cambie el tamaño de la ventana
-    window.addEventListener('resize', () => rearviewEngine.resize());
-}
+
 
 // =========================
 // NUEVO: VISTA EN PRIMERA PERSONA DEL F1 MEJORADO
@@ -3844,7 +3735,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     initLeaderboardSystem(); // NUEVO: Inicializar sistema de clasificación
     initMultiplayerSystem(); // NUEVO: Inicializar sistema multijugador
     updateCockpitView(); // NUEVO: Inicializar vista en primera persona
-    initRearviewMirror(); // NUEVO: Inicializar espejo retrovisor
+     // NUEVO: Inicializar espejo retrovisor
     
 }, null, (s, msg) => { 
     console.error(msg); 
