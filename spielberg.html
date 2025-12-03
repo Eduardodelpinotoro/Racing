@@ -680,6 +680,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 
 /* NUEVO: ESPEJO RETROVISOR - CENTRADO Y MÁS PEQUEÑO */
 #rearviewMirror {
+    display: none;
     position: absolute;
     top: 10px;
     right: -100px;
@@ -908,6 +909,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
 
 /* NUEVO: Indicador de posición del jugador */
 #playerPosition {
+    display: none;
     position: absolute;
     top: 10px;
     left: 300px;
@@ -1033,7 +1035,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <input type="range" id="brakeRange" min="1" max="10" value="5">
 
     <label>Altura de Cámara: <span id="cameraHeightLabel">0.2</span> m</label>
-    <input type="range" id="cameraHeightRange" min="-3.0" max="10.0" step="0.1" value="0.2">
+    <input type="range" id="cameraHeightRange" min="-1.0" max="3.0" step="0.1" value="0.2">
 
     <!-- NUEVO: Control de sensibilidad del joystick -->
     <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
@@ -1562,7 +1564,7 @@ function createOtherPlayerCar(playerId, carType) {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (IGUAL QUE FANTASMA)
-    carGroup.scaling.set(4, 4, 4);
+    carGroup.scaling.set(1, 1, 1);
     
     // Material con color único por jugador - MÁS VISIBLE
     const playerColor = getPlayerColor(playerId);
@@ -2270,7 +2272,7 @@ function createGhostCar() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
-    ghostCar.scaling.set(2, 2, 2);
+    ghostCar.scaling.set(1, 1, 1);
     
     // Material fantasma mejorado - MÁS VISIBLE
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
@@ -2401,7 +2403,7 @@ function createGhostCarInRearview() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL
-    ghostCarRearview.scaling.set(2, 2, 2);
+    ghostCarRearview.scaling.set(1, 1, 1);
     
     // Material para el retrovisor (mismo que el principal)
     const ghostMaterialRearview = new BABYLON.StandardMaterial("ghostMaterialRearview", rearviewScene);
@@ -3834,7 +3836,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
     });
     playerMesh.position.set(0, 1.9, 0); 
     prevPosZ = playerMesh.position.z;
-    camera.rotation.y = Math.PI; // 180 grados - mira al contrario
+    camera.rotation.y = Math.PI +45; // 180 grados - mira al contrario
     
     // Inicializar sistemas
     initDamageSystem();
