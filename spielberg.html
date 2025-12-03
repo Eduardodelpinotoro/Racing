@@ -1564,7 +1564,7 @@ function createOtherPlayerCar(playerId, carType) {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (IGUAL QUE FANTASMA)
-    carGroup.scaling.set(1, 1, 1);
+    carGroup.scaling.set(0.5, 0.5, 0.5);
     
     // Material con color único por jugador - MÁS VISIBLE
     const playerColor = getPlayerColor(playerId);
@@ -2272,7 +2272,7 @@ function createGhostCar() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL - Hacer el coche más grande (aproximadamente 2x)
-    ghostCar.scaling.set(1, 1, 1);
+    ghostCar.scaling.set(0.5, 0.5, 0.5);
     
     // Material fantasma mejorado - MÁS VISIBLE
     const ghostMaterial = new BABYLON.StandardMaterial("ghostMaterial", scene);
@@ -2403,7 +2403,7 @@ function createGhostCarInRearview() {
     sidePod2.position.set(-0.5, 0.1, 0);
     
     // ESCALA FINAL
-    ghostCarRearview.scaling.set(1, 1, 1);
+    ghostCarRearview.scaling.set(0.5, 0.5, 0.5);
     
     // Material para el retrovisor (mismo que el principal)
     const ghostMaterialRearview = new BABYLON.StandardMaterial("ghostMaterialRearview", rearviewScene);
@@ -3780,8 +3780,8 @@ function registerCross() {
 // =========================
 
 // Puntos exactos que definiste
-const finishA = new BABYLON.Vector3(30, 1.5, -4);
-const finishB = new BABYLON.Vector3(31, 2, -6);
+const finishA = new BABYLON.Vector3(30, 1.5, -5);
+const finishB = new BABYLON.Vector3(31, 2, -5);
 
 // Crear plano invisible
 const finishPlane = BABYLON.MeshBuilder.CreatePlane("finishPlane", {
@@ -3834,7 +3834,7 @@ BABYLON.SceneLoader.Append("", "lagunaseca.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
     });
-    playerMesh.position.set(0, 1.9, 0); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI +45; // 180 grados - mira al contrario
     
