@@ -3680,7 +3680,7 @@ function checkFinishLine() {
 }
 
 // CARGAR CIRCUITO
-BABYLON.SceneLoader.Append("", "laguna_seca.glb", scene, () => {
+BABYLON.SceneLoader.Append("", "laguna_seca.stl", scene, () => {
     scene.meshes.forEach(m => { 
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
