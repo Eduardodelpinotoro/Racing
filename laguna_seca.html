@@ -921,7 +921,7 @@ html,body{margin:0;overflow:hidden;height:100%;background:#000}
     <input type="range" id="brakeRange" min="20" max="300" value="150">
 
     <label>Altura de Cámara: <span id="cameraHeightLabel">3.0</span> m</label>
-    <input type="range" id="cameraHeightRange" min="1.0" max="6.0" step="0.1" value="3.0">
+    <input type="range" id="cameraHeightRange" min="0" max="6.0" step="0.1" value="3.0">
 
     <!-- NUEVO: Control de sensibilidad del joystick -->
     <div style="margin-top: 15px; border-top: 1px solid #444; padding-top: 10px;">
@@ -2633,9 +2633,9 @@ const brakeLabel = document.getElementById("brakeLabel");
 const cameraHeightLabel = document.getElementById("cameraHeightLabel");
 
 // Variables del juego
-let maxSpeed = 330;
-let targetAccelerationTime = 2.0;
-let brakeFriction = 150;
+let maxSpeed = 3;
+let targetAccelerationTime = 0.002;
+let brakeFriction = 0.002;
 let cameraHeight = 3.0;
 let currentCar = 'f1';
 
@@ -3712,7 +3712,7 @@ function keepGround() {
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
-const maxRealKmH = 330;
+const maxRealKmH = 3;
 const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
 
 // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
