@@ -1225,9 +1225,9 @@ const auth = firebase.auth();
 // CONFIGURACIÓN PRINCIPAL - ESCALA 1:10
 // =========================
 const SCALE_FACTOR = 0.1; // El circuito es 10 veces más pequeño
-const MAX_SPEED = 30; // km/h máximos (extremadamente lento para la escala)
-const ACCELERATION = 0.001; // Aceleración muy lenta
-const BRAKE_FORCE = 0.1; // Freno suave
+const MAX_SPEED = 300; // km/h máximos (extremadamente lento para la escala)
+const ACCELERATION = 1; // Aceleración muy lenta
+const BRAKE_FORCE = 1; // Freno suave
 const AIR_FRICTION = 0.00/2; // Fricción del aire
 
 // =========================
@@ -3593,8 +3593,8 @@ function keepGround() {
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
-const maxRealKmH = 30; // REDUCIDO
-const speedFactor = maxRealKmH / maxSpeed * 1.3; // Aumentado para sensación más rápida
+const maxRealKmH = 300; // REDUCIDO
+const speedFactor = maxRealKmH / maxSpeed * 1.5; // Aumentado para sensación más rápida
 
 // NUEVO: Actualizar posición del jugador en pantalla
 function updatePlayerPositionDisplay() {
