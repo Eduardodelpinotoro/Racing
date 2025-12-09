@@ -2492,7 +2492,7 @@ const cameraHeightLabel = document.getElementById("cameraHeightLabel");
 let maxSpeed = 3; // REDUCIDO SIGNIFICATIVAMENTE (3 km/h)
 let targetAccelerationTime = 0.01; // AUMENTADO (más lento)
 let brakeFriction = 0.5; // REDUCIDO
-let cameraHeight = 0.2; // BAJADO PARA ADAPTARSE A LA ESCALA
+let cameraHeight = -2.6; // BAJADO PARA ADAPTARSE A LA ESCALA
 let currentCar = 'f1';
 
 // =========================
@@ -3567,7 +3567,7 @@ BABYLON.SceneLoader.Append("", "laguna_seca.glb", scene, () => {
         if (m !== playerMesh && m !== ghostCar) m.checkCollisions = true; 
         m.scaling = new BABYLON.Vector3(1, 1, 1);
     });
-    playerMesh.position.set(0, -2.5, 0); 
+    playerMesh.position.set(0, 0, 0); 
     prevPosZ = playerMesh.position.z;
     camera.rotation.y = Math.PI +45; // 180 grados - mira al contrario
     
