@@ -444,9 +444,9 @@
         
         // Variables de juego
         let currentSpeed = 0;
-        let maxSpeed = 330;
-        let acceleration = 30;
-        let brakeForce = 60;
+        let maxSpeed = 30;
+        let acceleration = 3;
+        let brakeForce = 6;
         let friction = 8;
         let steering = 0;
         let steeringSpeed = 0.03;
@@ -477,8 +477,8 @@
         
         // Cámara
         let cameraMode = 'follow'; // 'follow', 'orbit', 'hood'
-        let cameraDistance = 10;
-        let cameraHeight = 3;
+        let cameraDistance = 3;
+        let cameraHeight = 1;
         
         // Variables para seguimiento del circuito
         let finishLine = {
@@ -490,7 +490,7 @@
         
         // FACTOR DE ESCALA DEL CIRCUITO - ¡AUMENTADO!
         const CIRCUIT_SCALE = 10; // El circuito original es muy grande, lo escalamos para que sea manejable
-        const CIRCUIT_POSITION_Y = 3; // Bajamos el circuito a la altura 0
+        const CIRCUIT_POSITION_Y = 5; // Bajamos el circuito a la altura 0
         
         // Inicialización
         init();
