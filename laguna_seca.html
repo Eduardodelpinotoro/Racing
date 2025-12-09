@@ -489,8 +489,8 @@
         };
         
         // FACTOR DE ESCALA DEL CIRCUITO - ¡AUMENTADO!
-        const CIRCUIT_SCALE = 10; // El circuito original es muy grande, lo escalamos para que sea manejable
-        const CIRCUIT_POSITION_Y = 5; // Bajamos el circuito a la altura 0
+        const CIRCUIT_SCALE = 20; // El circuito original es muy grande, lo escalamos para que sea manejable
+        const CIRCUIT_POSITION_Y = 0; // Bajamos el circuito a la altura 0
         
         // Inicialización
         init();
@@ -519,7 +519,7 @@
             
             // Crear cámara
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 10000);
-            camera.position.set(0, 5, 10);
+            camera.position.set(0, 1, 3);
             
             // Añadir luces
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
