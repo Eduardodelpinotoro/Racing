@@ -3583,13 +3583,30 @@ BABYLON.SceneLoader.Append("", "laguna_seca.glb", scene, () => {
 });
 
 function keepGround() { 
+    // RAZO MÁS LARGO Y AUMENTADO
     const ray = new BABYLON.Ray(
-        playerMesh.position.add(new BABYLON.Vector3(0, 10, 0)), 
+        playerMesh.position.add(new BABYLON.Vector3(0, 50, 0)),  // ↑ Aumentado de 10 a 50
         new BABYLON.Vector3(0, -1, 0), 
-        50
-    ); 
-    const hit = scene.pickWithRay(ray, m => m !== playerMesh && m !== ghostCar); 
-    if (hit && hit.hit) playerMesh.position.y = hit.pickedPoint.y + 2; 
+        100  // ↑ Aumentado de 50 a 100
+    );
+    
+    // FILTRO MEJORADO para encontrar el suelo
+    const hit = scene.pickWithRay(ray, m => {
+        return m !== playerMesh && 
+               m !== ghostCar &&
+               m !== skySphere &&
+               !m.name.includes('otherPlayer') &&
+               !m.name.includes('nameTag') &&
+               !m.name.includes('finish'); // Añade esto
+    });
+    
+    if (hit && hit.hit) {
+        // AUMENTAR EL OFFSET para asegurar contacto
+        playerMesh.position.y = hit.pickedPoint.y + 3;  // ↑ Aumentado de 2 a 3
+    } else {
+        // Si no detecta suelo, poner a altura fija
+        playerMesh.position.y = 2;  // Altura por defecto
+    }
 }
 
 // CORRECCIÓN: Ajustar factor de velocidad para sensación más realista
