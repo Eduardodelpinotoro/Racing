@@ -3604,7 +3604,7 @@ function updatePlayerPositionDisplay() {
 }
 
                 
-    // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
+   // BUCLE PRINCIPAL - FÍSICA CON SISTEMA DE MARCHAS REALISTA CORREGIDO
 engine.runRenderLoop(() => {
     // Clima
     switch(weatherSelect.value) {
@@ -3621,178 +3621,142 @@ engine.runRenderLoop(() => {
 
     const dt = engine.getDeltaTime() / 1000;
     
-    // FÍSICA F1 AVANZADA
-    if (window.fisicaF1) {
-        const inputs = {
-            throttle: throttlePressure,
-            brake: brakePressure,
-            steering: gyroEnabled ? gyroRotation * 0.5 : (isJoystickActive ? joystickRotation * 0.7 : 0),
-            gear: currentGear,
-            clutch: currentGear === 0 ? 1.0 : 0.0
-        };
-        
-        const resultado = window.fisicaF1.update(dt, inputs);
-        
-        if (resultado) {
-            playerMesh.position.x = resultado.position.x;
-            playerMesh.position.z = resultado.position.z;
-            camera.rotation.y = resultado.rotation.yaw;
-            currentSpeed = resultado.speed / 3.6;
-            currentRPM = resultado.rpm;
-            updateRPMIndicator(currentRPM);
-            
-            // Sistema automático de cambio de marchas basado en RPM
-            const config = getCurrentGearConfig();
-            if (!isManualTransmission && currentGear >= 0) {
-                if (currentRPM > config.redlineRPM * 0.9 && currentGear < maxGear) {
-                    currentGear++;
-                    updateGearIndicator();
-                } else if (currentRPM < config.redlineRPM * 0.4 && currentGear > 1) {
-                    currentGear--;
-                    updateGearIndicator();
-                }
-                gearIndicator.textContent = currentGear.toString();
-            }
-        }
-    } else {
-        // FÍSICA ORIGINAL SI NO HAY F1
-        // NUEVO: Sincronizar vista F1 con la rotación de la cámara
-        if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
-            const rotation = camera.rotation.y;
-            const maxRotation = 20;
-            const offsetX = Math.sin(rotation) * maxRotation;
-            const tilt = Math.sin(rotation) * 2;
-            f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
-        }
-        
-        // CALCULAR RPM
-        const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
-        currentRPM = calculateRPM(currentSpeedKmh, currentGear);
-        updateRPMIndicator(currentRPM);
-        
-        // OBTENER CONFIGURACIÓN ACTUAL DE MARCHAS
-        const config = getCurrentGearConfig();
-        
-        // FÍSICA MEJORADA CON LÓGICA DE MARCHAS CORREGIDA
-        let accelerationForce = accel * throttlePressure;
-        let brakingForce = brakeFriction * brakePressure;
+    // NUEVO: Sincronizar vista F1 con la rotación de la cámara
+    if (currentCar === 'f1' && f1CockpitView.style.display !== 'none') {
+        const rotation = camera.rotation.y;
+        const maxRotation = 20;
+        const offsetX = Math.sin(rotation) * maxRotation;
+        const tilt = Math.sin(rotation) * 2;
+        f1CockpitView.style.transform = `translateX(${offsetX}px) rotate(${tilt}deg)`;
+    }
+    
+    // CALCULAR RPM
+    const currentSpeedKmh = Math.abs(currentSpeed * speedFactor);
+    currentRPM = calculateRPM(currentSpeedKmh, currentGear);
+    updateRPMIndicator(currentRPM);
+    
+    // OBTENER CONFIGURACIÓN ACTUAL DE MARCHAS
+    const config = getCurrentGearConfig();
+    
+    // FÍSICA MEJORADA CON LÓGICA DE MARCHAS CORREGIDA
+    let accelerationForce = accel * throttlePressure;
+    let brakingForce = brakeFriction * brakePressure;
 
-        // Si el coche está destruido, reducir la capacidad de control
-        if (isCarDestroyed) {
-            accelerationForce *= 0.3;
-            brakingForce *= 0.5;
-            
-            // Añadir efectos de pérdida de control
-            camera.rotation.y += (Math.random() * 0.1 - 0.05) * dt * 10;
-        }
+    // Si el coche está destruido, reducir la capacidad de control
+    if (isCarDestroyed) {
+        accelerationForce *= 0.3;
+        brakingForce *= 0.5;
+        
+        // Añadir efectos de pérdida de control
+        camera.rotation.y += (Math.random() * 0.1 - 0.05) * dt * 10;
+    }
 
-        // Lógica de movimiento con sistema de marchas REALISTA CORREGIDO
-        if (throttlePressure > 0) {
-            if (isManualTransmission) {
-                if (currentGear === 0) {
-                    // En neutral, no acelera - SOLO FRICCIÓN
-                    if (currentSpeed > 0) {
-                        currentSpeed = Math.max(currentSpeed - (airFriction * 2) * dt, 0);
-                    } else if (currentSpeed < 0) {
-                        currentSpeed = Math.min(currentSpeed + (airFriction * 2) * dt, 0);
-                    }
-                } else if (currentGear > 0) {
-                    // CORRECCIÓN: En marcha adelante - RESTRINGIR por velocidad mínima de la marcha
-                    const minSpeedForCurrentGear = getMinSpeedForGear(currentGear);
-                    const maxSpeedForCurrentGear = getSpeedLimitForGear(currentGear);
-                    
-                    if (currentSpeedKmh >= minSpeedForCurrentGear) {
-                        // Puede acelerar hasta el límite de la marcha actual
-                        currentSpeed = Math.min(currentSpeed + accelerationForce * dt, maxSpeedForCurrentGear);
-                    } else {
-                        // Si la velocidad es demasiado baja para la marcha, el motor NO RESPONDE
-                        const dragMultiplier = currentGear >= 3 ? 5 : 3;
-                        currentSpeed = Math.max(currentSpeed - (airFriction * dragMultiplier) * dt, 0);
-                    }
-                } else if (currentGear === -1) {
-                    // Marcha atrás
-                    currentSpeed = Math.max(currentSpeed - accelerationForce * dt, -maxReverse);
+    // Lógica de movimiento con sistema de marchas REALISTA CORREGIDO
+    if (throttlePressure > 0) {
+        if (isManualTransmission) {
+            if (currentGear === 0) {
+                // En neutral, no acelera - SOLO FRICCIÓN
+                if (currentSpeed > 0) {
+                    currentSpeed = Math.max(currentSpeed - (airFriction * 2) * dt, 0);
+                } else if (currentSpeed < 0) {
+                    currentSpeed = Math.min(currentSpeed + (airFriction * 2) * dt, 0);
                 }
-            } else {
-                // Modo automático - velocidad completa
-                currentSpeed = Math.min(currentSpeed + accelerationForce * dt, maxSpeed);
+            } else if (currentGear > 0) {
+                // CORRECCIÓN: En marcha adelante - RESTRINGIR por velocidad mínima de la marcha
+                const minSpeedForCurrentGear = getMinSpeedForGear(currentGear);
+                const maxSpeedForCurrentGear = getSpeedLimitForGear(currentGear);
+                
+                if (currentSpeedKmh >= minSpeedForCurrentGear) {
+                    // Puede acelerar hasta el límite de la marcha actual
+                    currentSpeed = Math.min(currentSpeed + accelerationForce * dt, maxSpeedForCurrentGear);
+                } else {
+                    // Si la velocidad es demasiado baja para la marcha, el motor NO RESPONDE
+                    const dragMultiplier = currentGear >= 3 ? 5 : 3;
+                    currentSpeed = Math.max(currentSpeed - (airFriction * dragMultiplier) * dt, 0);
+                }
+            } else if (currentGear === -1) {
+                // Marcha atrás
+                currentSpeed = Math.max(currentSpeed - accelerationForce * dt, -maxReverse);
             }
+        } else {
+            // Modo automático - velocidad completa
+            currentSpeed = Math.min(currentSpeed + accelerationForce * dt, maxSpeed);
+        }
+    } 
+    else if (brakePressure > 0) {
+        // Lógica de frenado
+        if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - (brakingForce + airFriction) * dt, 0);
         } 
-        else if (brakePressure > 0) {
-            // Lógica de frenado
-            if (currentSpeed > 0) {
-                currentSpeed = Math.max(currentSpeed - (brakingForce + airFriction) * dt, 0);
-            } 
-            else if (currentSpeed < 0) {
-                currentSpeed = Math.min(currentSpeed + (brakingForce + airFriction) * dt, 0);
-            }
+        else if (currentSpeed < 0) {
+            currentSpeed = Math.min(currentSpeed + (brakingForce + airFriction) * dt, 0);
         }
-        else {
-            // Fricción natural
-            if (currentSpeed > 0) {
-                currentSpeed = Math.max(currentSpeed - airFriction * dt, 0);
-            } else if (currentSpeed < 0) {
-                currentSpeed = Math.min(currentSpeed + airFriction * dt, 0);
-            }
+    }
+    else {
+        // Fricción natural
+        if (currentSpeed > 0) {
+            currentSpeed = Math.max(currentSpeed - airFriction * dt, 0);
+        } else if (currentSpeed < 0) {
+            currentSpeed = Math.min(currentSpeed + airFriction * dt, 0);
         }
+    }
 
-        updateJoystickState();
-        
-        // CONTROL DE DIRECCIÓN - CON SENSIBILIDAD AJUSTABLE
-        let steeringRotation = 0;
-        if (gyroEnabled && Math.abs(currentSpeed) >= minSpeedForSteering) {
-            steeringRotation = gyroRotation * rotationSpeed * dt;
-        } else if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
-            // APLICAR SENSIBILIDAD DEL JOYSTICK
-            steeringRotation = joystickRotation * rotationSpeed * joystickSensitivity * dt;
+    updateJoystickState();
+    
+    // CONTROL DE DIRECCIÓN - CON SENSIBILIDAD AJUSTABLE
+    let steeringRotation = 0;
+    if (gyroEnabled && Math.abs(currentSpeed) >= minSpeedForSteering) {
+        steeringRotation = gyroRotation * rotationSpeed * dt;
+    } else if (isJoystickActive && Math.abs(joystickRotation) > 0.1 && Math.abs(currentSpeed) >= minSpeedForSteering) {
+        // APLICAR SENSIBILIDAD DEL JOYSTICK
+        steeringRotation = joystickRotation * rotationSpeed * joystickSensitivity * dt;
+    }
+    
+    // Si el coche está dañado, reducir el control de dirección
+    if (carHealth < 50) {
+        steeringRotation *= (carHealth / 50);
+    }
+    
+    if (steeringRotation !== 0) {
+        camera.rotation.y += steeringRotation;
+    }
+    
+    // SISTEMA AUTOMÁTICO DE CAMBIO DE MARCHAS
+    if (!isManualTransmission && currentGear >= 0) {
+        // Cambio automático basado en RPM
+        if (currentRPM > config.redlineRPM * 0.9 && currentGear < maxGear) {
+            currentGear++;
+            updateGearIndicator();
+        } else if (currentRPM < config.redlineRPM * 0.4 && currentGear > 1) {
+            currentGear--;
+            updateGearIndicator();
         }
         
-        // Si el coche está dañado, reducir el control de dirección
-        if (carHealth < 50) {
-            steeringRotation *= (carHealth / 50);
+        // Determinar marcha en automático para el indicador
+        if (currentSpeed > 0) {
+            gearIndicator.textContent = currentGear.toString();
+        } else if (currentSpeed < 0) {
+            gearIndicator.textContent = "R";
+        } else {
+            gearIndicator.textContent = "N";
         }
-        
-        if (steeringRotation !== 0) {
-            camera.rotation.y += steeringRotation;
-        }
-        
-        // SISTEMA AUTOMÁTICO DE CAMBIO DE MARCHAS
-        if (!isManualTransmission && currentGear >= 0) {
-            // Cambio automático basado en RPM
-            if (currentRPM > config.redlineRPM * 0.9 && currentGear < maxGear) {
-                currentGear++;
-                updateGearIndicator();
-            } else if (currentRPM < config.redlineRPM * 0.4 && currentGear > 1) {
-                currentGear--;
-                updateGearIndicator();
-            }
-            
-            // Determinar marcha en automático para el indicador
-            if (currentSpeed > 0) {
-                gearIndicator.textContent = currentGear.toString();
-            } else if (currentSpeed < 0) {
-                gearIndicator.textContent = "R";
-            } else {
-                gearIndicator.textContent = "N";
-            }
-        }
-        
-        // Actualizar barra de velocidad
-        speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
-        speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
-        
-        // Grabar datos para el fantasma
-        recordGhostData();
-        
-        // Actualizar fantasma
-        updateGhostCar();
-        
-        // Mover el coche
-        if (Math.abs(currentSpeed) > 0.001) { 
-            const yaw = camera.rotation.y; 
-            const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); 
-            playerMesh.moveWithCollisions(forward.scale(currentSpeed * speedFactor * dt)); 
-        }
+    }
+    
+    // Actualizar barra de velocidad
+    speedBar.style.width = (Math.min(Math.abs(currentSpeed) / maxSpeed, 1) * 100) + "%";
+    speedBar.style.background = currentSpeed >= 0 ? "#0f0" : "#f00";
+    
+    // Grabar datos para el fantasma
+    recordGhostData();
+    
+    // Actualizar fantasma
+    updateGhostCar();
+    
+    // Mover el coche
+    if (Math.abs(currentSpeed) > 0.001) { 
+        const yaw = camera.rotation.y; 
+        const forward = new BABYLON.Vector3(Math.sin(yaw), 0, Math.cos(yaw)); 
+        playerMesh.moveWithCollisions(forward.scale(currentSpeed * speedFactor * dt)); 
     }
     
     // Verificar colisiones
@@ -3812,43 +3776,6 @@ window.addEventListener('resize', () => engine.resize());
 
 // Inicializar el coche por defecto
 changeCar('f1');
-
-// =========================
-// LLAMAR A F1-CORE.JS
-// =========================
-
-function cargarFisicaF1() {
-    const script = document.createElement('script');
-    script.src = 'f1-core.js';
-    
-    script.onload = function() {
-        console.log('✅ F1 Physics Core cargado');
-        iniciarFisicaF1();
-    };
-    
-    script.onerror = function() {
-        console.error('❌ Error al cargar f1-core.js');
-    };
-    
-    document.head.appendChild(script);
-}
-
-function iniciarFisicaF1() {
-    if (typeof F1PhysicsCore === 'undefined') {
-        console.error('F1PhysicsCore no disponible');
-        return;
-    }
-    
-    try {
-        window.fisicaF1 = new F1PhysicsCore();
-        console.log('✅ Física F1 iniciada');
-    } catch (error) {
-        console.error('Error iniciando física F1:', error);
-    }
-}
-
-// LLAMAR LA FUNCIÓN AUTOMÁTICAMENTE
-cargarFisicaF1();
 </script>
 </body>
-</html>
+</html> 
